@@ -72,7 +72,11 @@ $ResolvedPluginPath = if ($PluginPath) { (Resolve-Path $PluginPath).Path } else 
 Write-Color "[INFO] Percorso Plugin: $ResolvedPluginPath" "Green"
 
 # 2. Pre-flight & Build Plugin
-if (-not $SkipBuild) {
+$DistDir = Join-Path $ResolvedPluginPath "dist"
+if (Test-Path $DistDir) {
+    Write-Color "`n=== FASE 1: Bundle Pre-compilato 'dist' Rilevato ===" "Cyan"
+    Write-Color "[OK] File compilati gia' pronti in dist/. Installazione istantanea senza download dipendenze." "Green"
+} elseif (-not $SkipBuild) {
     Write-Color "`n=== FASE 1: Verifica Dipendenze e Compilazione Plugin ===" "Cyan"
     $NpmCmd = Get-Command "npm" -ErrorAction SilentlyContinue
     if ($NpmCmd) {
