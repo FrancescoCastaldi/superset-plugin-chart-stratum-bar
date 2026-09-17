@@ -59,6 +59,24 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
 
   const echartsSeries: any[] = [];
 
+  const numSeries = series.length || 1;
+  const isStacked = props.stacking !== 'none';
+
+  // If stacked, precompute accumulated bottoms for each series
+  const stackBottoms: number[][] = series.map(() => categories.map(() => 0));
+  if (isStacked) {
+    for (let c = 0; c < categories.length; c++) {
+      let accum = 0;
+      for (let s = 0; s < series.length; s++) {
+        stackBottoms[s][c] = accum;
+        const v = series[s].data[c];
+        if (typeof v === 'number' && !isNaN(v)) {
+          accum += v;
+        }
+      }
+    }
+  }
+
   // Render 3D Isometric Bar using ECharts Custom Series (renderItem)
   series.forEach((s, seriesIdx) => {
     const baseColor = colorScheme[seriesIdx % colorScheme.length] || '#0284c7';
@@ -73,17 +91,40 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
         const val = api.value(1);
         if (val === null || val === undefined || isNaN(val)) return null;
 
-        // Coordinates in 2D space
-        const startPoint = api.coord([categoryIndex, 0]);
-        const endPoint = api.coord([categoryIndex, val]);
+        let yBase: number;
+        let yTop: number;
+        let x0: number;
+        let x1: number;
 
         if (isVertical) {
           // Vertical 3D Column / Prism
-          const barWidth = Math.min(Math.max(api.size([1, 0])[0] * 0.45, 14), 48);
-          const x0 = endPoint[0] - barWidth / 2;
-          const x1 = endPoint[0] + barWidth / 2;
-          const yTop = endPoint[1];
-          const yBase = startPoint[1];
+          const bandWidth = api.size([1, 0])[0];
+          if (isStacked) {
+            const barWidth = Math.min(Math.max(bandWidth * 0.45, 14), 48);
+            const startPoint = api.coord([categoryIndex, 0]);
+            const baseVal = stackBottoms[seriesIdx]?.[categoryIndex] || 0;
+            const topVal = baseVal + val;
+            const ptBase = api.coord([categoryIndex, baseVal]);
+            const ptTop = api.coord([categoryIndex, topVal]);
+
+            x0 = startPoint[0] - barWidth / 2;
+            x1 = startPoint[0] + barWidth / 2;
+            yBase = ptBase[1];
+            yTop = ptTop[1];
+          } else {
+            // Grouped side-by-side with dynamic offset
+            const maxGroupWidth = Math.min(bandWidth * 0.75, 140);
+            const barWidth = Math.min(Math.max(maxGroupWidth / numSeries - 3, 6), 40);
+            const gap = numSeries > 1 ? 2 : 0;
+            const groupOffset = (seriesIdx - (numSeries - 1) / 2) * (barWidth + gap);
+            const pt = api.coord([categoryIndex, val]);
+            const ptBase = api.coord([categoryIndex, 0]);
+
+            x0 = pt[0] + groupOffset - barWidth / 2;
+            x1 = pt[0] + groupOffset + barWidth / 2;
+            yTop = pt[1];
+            yBase = ptBase[1];
+          }
 
           const children: any[] = [];
 
@@ -217,11 +258,37 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
           };
         } else {
           // Horizontal 3D Bar
-          const barHeight = Math.min(Math.max(api.size([0, 1])[1] * 0.45, 14), 48);
-          const y0 = endPoint[1] - barHeight / 2;
-          const y1 = endPoint[1] + barHeight / 2;
-          const xBase = startPoint[0];
-          const xEnd = endPoint[0];
+          const bandHeight = api.size([0, 1])[1];
+          let xBase: number;
+          let xEnd: number;
+          let y0: number;
+          let y1: number;
+
+          if (isStacked) {
+            const barHeight = Math.min(Math.max(bandHeight * 0.45, 14), 48);
+            const startPoint = api.coord([0, categoryIndex]);
+            const baseVal = stackBottoms[seriesIdx]?.[categoryIndex] || 0;
+            const topVal = baseVal + val;
+            const ptBase = api.coord([baseVal, categoryIndex]);
+            const ptEnd = api.coord([topVal, categoryIndex]);
+
+            y0 = startPoint[1] - barHeight / 2;
+            y1 = startPoint[1] + barHeight / 2;
+            xBase = ptBase[0];
+            xEnd = ptEnd[0];
+          } else {
+            const maxGroupHeight = Math.min(bandHeight * 0.75, 140);
+            const barHeight = Math.min(Math.max(maxGroupHeight / numSeries - 3, 6), 40);
+            const gap = numSeries > 1 ? 2 : 0;
+            const groupOffset = (seriesIdx - (numSeries - 1) / 2) * (barHeight + gap);
+            const pt = api.coord([val, categoryIndex]);
+            const ptBase = api.coord([0, categoryIndex]);
+
+            y0 = pt[1] + groupOffset - barHeight / 2;
+            y1 = pt[1] + groupOffset + barHeight / 2;
+            xBase = ptBase[0];
+            xEnd = pt[0];
+          }
 
           const children: any[] = [];
 
@@ -306,7 +373,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
         }
       },
       data: s.data.map((v, i) => [i, v]),
-      z: 2,
+      z: 2 + seriesIdx,
     };
 
     // Benchmark line

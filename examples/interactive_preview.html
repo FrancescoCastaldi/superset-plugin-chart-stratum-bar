@@ -270,22 +270,36 @@
     let showBenchmark = true;
     const benchmarkVal = 10000;
 
-    // IDI Slice 430 Data
-    const categories = ['Sportello', 'Call Center', 'Portale Web', 'CUP Regionale', 'App Mobile'];
+    // IDI Slice 430 Real Data (Canale x Regime)
+    const categories = ['App', 'Call center', 'CUP fisico', 'Web', 'Non definito'];
     const seriesData = [
       {
-        name: 'Convenzionato',
-        color: '#0284c7',
-        colorTop: '#38bdf8',
-        colorRight: '#0369a1',
-        data: [14200, 9100, 16800, 11400, 6300]
+        name: 'SSN',
+        color: '#1d4ed8',
+        colorTop: '#60a5fa',
+        colorRight: '#1e40af',
+        data: [4820, 18450, 12900, 8400, 1200]
       },
       {
-        name: 'Privato',
-        color: '#10b981',
+        name: 'Libera professione',
+        color: '#059669',
         colorTop: '#34d399',
-        colorRight: '#059669',
-        data: [5200, 3100, 7400, 2100, 3400]
+        colorRight: '#047857',
+        data: [2100, 6800, 5400, 3900, 450]
+      },
+      {
+        name: 'Convenzioni',
+        color: '#d97706',
+        colorTop: '#fbbf24',
+        colorRight: '#b45309',
+        data: [850, 2400, 1950, 1100, 180]
+      },
+      {
+        name: 'Solventi',
+        color: '#7c3aed',
+        colorTop: '#a78bfa',
+        colorRight: '#6d28d9',
+        data: [320, 1100, 890, 620, 95]
       }
     ];
 
@@ -364,8 +378,8 @@
               if (val === null || val === undefined || isNaN(val)) return;
 
               const seriesCount = seriesData.length;
-              const barTotalWidth = 28;
-              const spacing = 8;
+              const barTotalWidth = seriesCount > 2 ? 18 : 28;
+              const spacing = seriesCount > 2 ? 4 : 8;
               const groupOffset = (sIdx - (seriesCount - 1) / 2) * (barTotalWidth + spacing);
 
               if (isVertical) {

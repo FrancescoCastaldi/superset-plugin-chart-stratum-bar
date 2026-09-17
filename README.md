@@ -51,12 +51,12 @@ Dashboard viewers can dynamically interact with the chart without entering Super
 
 ```mermaid
 flowchart LR
-    A[Superset Explore / Dashboard] -->|FormData & Controls| B[buildQuery.ts]
-    B -->|API v1 Chart Data Request| C[Superset Backend / Database]
+    A[Superset Explore or Dashboard] -->|FormData and Controls| B[buildQuery.ts]
+    B -->|API v1 Chart Data Request| C[Superset Backend Engine]
     C -->|Tabular SQL Records| D[transformProps.ts]
-    D -->|Series Grouping & Delta Calculations| E[StratumBar.tsx]
-    E -->|Dual Engine: 2D Curved / 3D Isometric| F[Apache ECharts 5.x Canvas]
-    F -->|User Bar Click| G[setDataMask / Cross-Filtering]
+    D -->|Series Grouping and Delta Calculations| E[StratumBar.tsx]
+    E -->|Dual Engine: 2D Curved or 3D Isometric| F[Apache ECharts 5.x Canvas]
+    F -->|User Bar Click| G[setDataMask Cross-Filtering]
     G -->|Emitted Filter Event| A
 ```
 
@@ -160,25 +160,36 @@ Open `http://localhost:8088`, create a new chart, and select **StratumBar**!
 
 ## 🛠️ Explore Control Panel Reference
 
-| Section | Control | Type | Description |
-|:---|:---|:---|:---|
-| **Query Configuration** | `X-Axis / Category` | Select | Primary category dimension (e.g., `Department`, `Channel`, `Month`). |
-| | `Breakdown Dimension` | Multi-Select | Secondary dimension to split bars into series (e.g., `Regime`, `Tier`). |
-| | `Metrics` | Metrics | Quantitative metric measuring bar height (e.g., `Requests`, `Revenue`). |
-| | `Target Metric` | Metric | Optional dynamic metric providing individual target lines per category. |
-| **3D Isometric Options** | `Default View Mode` | Select | Initial view mode: `3d` (Isometric Volumetric) or `2d` (Modern Curved). |
-| | `3D Bar Shape` | Select | Column geometry: `prism` (Rectangular Prism) or `cylinder` (Cylindrical). |
-| | `3D Depth` | Slider | Isometric extrusion depth in pixels (10px - 60px). |
-| | `3D Tilt Angle` | Slider | Isometric vertical tilt angle in degrees (15° - 60°). |
-| | `3D Ground Shadows` | Checkbox | Renders realistic ambient drop shadows at the base of columns. |
-| **Layout & Orientation** | `Orientation` | Select | Layout orientation: `vertical` (column chart) or `horizontal` (bar chart). |
-| | `Stacking` | Select | Arrangement: `none` (Grouped side-by-side) or `stack` (Stacked bars). |
-| | `Show Runtime Toolbar` | Checkbox | Displays floating runtime toolbar for dashboard viewers. |
-| **Benchmark & Delta %** | `Show Benchmark` | Checkbox | Displays target benchmark reference line on the chart. |
-| | `Benchmark Type` | Select | Benchmark source: `fixed_value`, `average`, `median`, or `target_metric`. |
-| | `Fixed Target Value` | Text | Constant reference value when using `fixed_value` mode. |
-| | `Show Delta %` | Checkbox | Enables percentage deviation badges in tooltips and bar labels. |
-| | `Invert Delta Polarity`| Checkbox | Inverts color coding (*"Lower is Better"*): reductions green, gains red. |
+| Section | Control (`name`) | UI Label | Type | Default | Description |
+|:---|:---|:---|:---|:---|:---|
+| **Query Configuration** | `x_axis` | X-Axis / Category Dimension | Select | — | Primary category dimension (e.g., `Department`, `Channel`, `Month`). |
+| | `groupby` | Breakdown Dimension (Series) | Multi-Select | — | Secondary dimension to break bars into series (e.g., `Regime`, `Tier`). |
+| | `metrics` | Metrics | Metrics | — | Quantitative metrics to measure bar height. |
+| | `target_metric` | Target / Benchmark Metric | Metric | — | Dynamic metric providing individual target benchmark values per category. |
+| **3D Isometric Options** | `viewMode` | Default View Mode | Select | `3d` | Initial mode: `3d` (Isometric Volumetric) or `2d` (Modern Curved). |
+| | `barShape3D` | 3D Bar Shape | Select | `prism` | Geometry: `prism` (Rectangular Prism) or `cylinder` (Cylindrical). |
+| | `depth3D` | 3D Depth (px) | Slider | `20` | Isometric extrusion depth in pixels (range: 5px – 50px). |
+| | `tilt3D` | 3D Tilt Angle (deg) | Slider | `25` | Isometric vertical projection tilt angle (range: 15° – 60°). |
+| | `shadow3D` | 3D Ground Shadows | Checkbox | `true` | Renders realistic ambient drop shadows at the base of 3D columns. |
+| | `enableToolbar` | Runtime Interactive Toolbar | Checkbox | `true` | Displays floating toolbar for instant 2D/3D toggling, orientation, and export. |
+| **Layout & 2D Styling** | `orientation` | Orientation | Select | `vertical` | Layout direction: `vertical` (columns) or `horizontal` (bars). |
+| | `stacking` | Stacking Mode | Select | `none` | Arrangement: `none` (Grouped side-by-side) or `stack` (Stacked bars). |
+| | `barBorderRadius` | Bar Border Radius (2D) | Slider | `6` | Corner rounding radius for 2D bars (0px – 20px). |
+| | `showTrackBackground` | Show Track Background | Checkbox | `false` | Subtle background rail behind each bar indicating maximum scale. |
+| | `showValue` | Show Values on Bars | Checkbox | `true` | Displays formatted metric numbers directly on or above bars. |
+| | `valuePosition` | Value Position | Select | `top` | Label position: `top`, `inside`, or `outside`. |
+| | `numberFormat` | Number Format | Select/Free | `,.0f` | D3 number format string (e.g. `,.0f`, `,.2f`, `.2%`, `~s`). |
+| | `color_scheme` | Color Scheme | Palette | `supersetColors` | Color palette for bars and series. |
+| **Benchmark & Delta %** | `showBenchmark` | Show Benchmark Line | Checkbox | `false` | Draws highlighted target benchmark reference line across the chart. |
+| | `benchmarkType` | Benchmark Type | Select | `fixed_value` | Calculation mode: `fixed_value`, `average`, `median`, or `target_metric`. |
+| | `benchmarkValue` | Fixed Benchmark Value | Text | `100` | Target value when Benchmark Calculation is set to `fixed_value`. |
+| | `showDeltaBadge` | Show Delta % Badges | Checkbox | `true` | Computes and displays percentage variance badges against benchmark. |
+| | `deltaPolarity` | Delta Polarity | Select | `normal` | `normal` (green = positive) or `inverted` (*"Lower is Better"*, e.g., wait times/costs). |
+| **Axes & Interactivity** | `x_axis_title` | X-Axis Title | Text | `""` | Custom label displayed at the end of the X axis. |
+| | `y_axis_title` | Y-Axis Title | Text | `""` | Custom label displayed at the top of the Y axis. |
+| | `show_legend` | Show Legend | Checkbox | `true` | Displays series legend. |
+| | `legendOrientation` | Legend Position | Select | `top` | Legend placement: `top`, `bottom`, or `right`. |
+| | `emit_filter` | Enable Cross-Filtering | Checkbox | `true` | Emits native `setDataMask` filter events across companion dashboard charts. |
 
 ---
 
