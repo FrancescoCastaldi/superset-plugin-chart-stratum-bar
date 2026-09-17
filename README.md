@@ -1,109 +1,216 @@
-# StratumBar — 3D Isometric & Advanced Bar Chart Plugin for Apache Superset
+# StratumBar - 3D Isometric & Advanced Bar Chart Plugin for Apache Superset
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Superset Version](https://img.shields.io/badge/Apache%20Superset-3.x%20|%204.x%20|%206.x-green.svg)](https://superset.apache.org/)
+[![Apache Superset](https://img.shields.io/badge/Apache%20Superset-3.x%20%7C%204.x%20%7C%206.x-green.svg)](https://superset.apache.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg)](https://www.typescriptlang.org/)
-[![ECharts](https://img.shields.io/badge/Apache%20ECharts-5.5.0-red.svg)](https://echarts.apache.org/)
+[![Apache ECharts](https://img.shields.io/badge/Apache%20ECharts-5.5.0-red.svg)](https://echarts.apache.org/)
+[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#)
 
-**StratumBar** è un plugin di visualizzazione ad alte prestazioni per Apache Superset che espande le capacità del bar chart classico (`echarts_timeseries_bar`) introducendo un **doppio motore di rendering (2D Moderno e 3D Isometrico Volumetrico)**, linee guida di **Benchmark Target**, calcolo automatico di **Badge di Scostamento Percentuale (Delta %)**, e una **Toolbar di Controllo a Runtime** per manipolare la visualizzazione in tempo reale.
-
----
-
-## 📸 Anteprima Grafica
-
-![StratumBar 3D Preview](./src/images/thumbnail.png)
+**StratumBar** is an enterprise-grade visualization plugin for **Apache Superset** that expands the analytical and aesthetic capabilities of the standard bar chart (`echarts_timeseries_bar`). It introduces a **dual rendering engine (Modern 2D Curved & Volumetric 3D Isometric)**, reference **Benchmark Target Lines**, automated **Percentage Variance Badges (Delta %)**, an **Interactive Runtime Control Toolbar**, and native **Dashboard Cross-Filtering (`setDataMask`)**.
 
 ---
 
-## 🌟 Funzionalità Chiave
+## 📸 Visual Preview
 
-### 1. 🧊 Doppio Motore di Rendering: 2D & 3D Isometrico
-- **3D Isometrico Volumetrico**: Barre tridimensionali renderizzate tramite coordinate isometriche vettoriali con 3 facce distinte (frontale, laterale destra, cappuccio superiore) e illuminazione direzionale graduata.
-- **Zero WebGL Overhead**: Funziona a 60 fps su canvas 2D nativo di Apache ECharts, eliminando il rischio di crash da memoria WebGL o perdita di contesto su dashboard dense.
-- **Ombre Portate Ambientali (Ground Shadows)**: Ombre morbide proiettate alla base di ciascuna colonna 3D per conferire profondità e realismo.
-- **2D Moderno**: Barre con angoli arrotondati configurabili (`barBorderRadius`), gradienti verticali/orizzontali e supporto opzionale per guide di scala di fondo (**Track Background**).
+![StratumBar 3D Isometric Preview](./src/images/thumbnail.png)
 
-### 2. 🎯 Benchmark Target & Scostamento Percentuale (Delta %)
-- **Linee Guida di Riferimento**: Imposta un benchmark target fisso o dinamico (calcolato automaticamente come **Media** o **Mediana** della serie corrente, oppure tramite una **Metrica Target** dedicata).
-- **Badge Delta % Intelligenti**: Calcolo istantaneo della variazione percentuale `((valore - target) / target) * 100` visualizzato direttamente nei tooltip e nei dettagli delle metriche.
-- **Polarità del Delta**:
-  - *Normale*: l'incremento è positivo (verde), il calo è negativo (rosso).
-  - *Invertito*: l'incremento è negativo/critico (rosso, es. tempi di attesa o costi), il calo è favorevole (verde).
-
-### 3. 🎛️ Toolbar Interattiva a Runtime
-Toolbar flottante o integrata nella testata del grafico che consente agli utenti della dashboard di:
-- Alternare istantaneamente la modalità **2D** e **3D**.
-- Cambiare l'orientamento da **Verticale** (colonne) a **Orizzontale** (barre).
-- Commutare tra barre **Raggruppate** (side-by-side) e **Impilate** (stacked).
-- Regolare in tempo reale **Inclinazione (Tilt)** e **Profondità (Depth)** in modalità 3D.
-- Esportare l'immagine renderizzata in **PNG** ad alta risoluzione o scaricare i dati aggregati in formato **CSV**.
-
-### 4. 🔄 Cross-Filtering Nativo Superset
-- Cliccando su qualsiasi barra o colonna 3D, viene emesso il filtro interattivo nativo Superset (`setDataMask` / `onAddFilter`) sincronizzando tutte le tabelle, heatmap e KPI della dashboard.
+*Figure 1: Volumetric 3D Isometric view with directional shading, depth extrusion, reference benchmark line, and percentage delta badges.*
 
 ---
 
-## 🚀 Installazione Rapida in Apache Superset
+## 🌟 Key Features
 
-### Metodo Automatico (PowerShell)
+### 1. 🧊 Dual Rendering Engine: Modern 2D & Volumetric 3D Isometric
+- **Volumetric 3D Isometric Projection**: Renders 3D columns using isometric vector mathematics with three distinct lighted faces (front, side, and top cap) and directional lighting gradients.
+- **Zero WebGL Overhead**: Built on Apache ECharts' native 2D Canvas engine, delivering smooth 60 fps performance with zero WebGL context crashes or memory exhaustion on dense multi-chart dashboards.
+- **Ambient Ground Shadows**: Realistic soft ambient drop shadows projected beneath each 3D column, anchoring bars to the baseline plane.
+- **Modern 2D Styling**: Configurable corner radii (`barBorderRadius`), vertical and horizontal color gradients, and optional full-height track background guides.
 
-Dalla cartella del plugin, eseguire lo script di installazione unificato:
+### 2. 🎯 Benchmark Targets & Percentage Variance (Delta %)
+- **Dynamic Reference Lines**: Configure target benchmarks from a fixed numeric value, dynamic statistical calculations (**Average** or **Median** across current series), or a dedicated **Target Metric** column from your SQL query.
+- **Smart Delta % Badges**: Automatic mathematical evaluation of percentage deviation `((Value - Target) / Target) * 100` displayed directly in tooltips and bar labels.
+- **Configurable Variance Polarity**:
+ - *Normal ("Higher is Better")*: Positive gains are highlighted in green; drops appear in red.
+ - *Inverted ("Lower is Better")*: Essential for healthcare wait times, patient cancellations, operational delays, and financial costs - drops are green and increases are flagged in red.
+
+### 3. 🎛️ Interactive Runtime Toolbar
+Dashboard viewers can dynamically interact with the chart without entering Superset's Explore edit mode:
+- **Dimension Switcher**: Instant toggle between **2D Modern** and **3D Isometric** rendering modes.
+- **Orientation Toggle**: Rotate layout between **Vertical** (columns) and **Horizontal** (bars).
+- **Stacking Modes**: Switch between **Grouped** (side-by-side) and **Stacked** series.
+- **3D Geometry Controls**: Adjust **Tilt Angle** and **Extrusion Depth** sliders on the fly.
+- **Export Capabilities**: One-click export to high-resolution **PNG** images or aggregated **CSV** data.
+
+### 4. 🔄 Native Superset Cross-Filtering (`emit_filter`)
+- Clicking any bar, column, or category node dispatches Superset's native `setDataMask` event.
+- Coordinates with all companion charts, tables, KPIs, and heatmaps on the dashboard.
+
+---
+
+## 🏛️ Architecture Overview
+
+```mermaid
+flowchart LR
+    A[Superset Explore / Dashboard] -->|FormData & Controls| B[buildQuery.ts]
+    B -->|API v1 Chart Data Request| C[Superset Backend / Database]
+    C -->|Tabular SQL Records| D[transformProps.ts]
+    D -->|Series Grouping & Delta Calculations| E[StratumBar.tsx]
+    E -->|Dual Engine: 2D Curved / 3D Isometric| F[Apache ECharts 5.x Canvas]
+    F -->|User Bar Click| G[setDataMask / Cross-Filtering]
+    G -->|Emitted Filter Event| A
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+superset-plugin-chart-stratum-bar/
+├── package.json                    # Package manifest & peer dependencies
+├── tsconfig.json                   # TypeScript configuration
+├── install-plugin.ps1              # Unified PowerShell installer with auto-registration
+├── install.bat                     # Quick Windows batch launcher
+├── src/
+│   ├── index.ts                    # Plugin entry point & export
+│   ├── types.ts                    # TypeScript types & interfaces
+│   ├── plugin/
+│   │   ├── index.ts                # ChartPlugin registration & metadata
+│   │   ├── buildQuery.ts           # Superset query builder
+│   │   ├── controlPanel.tsx        # Explore UI form controls
+│   │   └── transformProps.ts       # Series aggregation, 3D math & delta calculation
+│   ├── components/
+│   │   ├── StratumBar.tsx          # Main React visualization component
+│   │   └── StratumBarToolbar.tsx   # Runtime interactive floating toolbar
+│   ├── utils/
+│   │   ├── geometry3d.ts           # 3D isometric polygon computation
+│   │   └── benchmark.ts            # Target metrics & variance calculations
+│   └── images/
+│       ├── thumbnail.png           # Light chart picker thumbnail
+│       ├── thumbnail-dark.png      # Dark chart picker thumbnail
+│       └── example.png             # Full gallery preview image
+├── test/
+│   └── plugin/                     # Jest unit test suite
+└── examples/
+    └── interactive_preview.html    # Standalone browser demonstration
+```
+
+---
+
+## 🚀 Installation Guide
+
+### Option 1: Automated PowerShell Installer (Recommended)
+
+Run the installer script specifying your Apache Superset root directory:
 
 ```powershell
 .\install-plugin.ps1 -SupersetPath "D:\Sviluppo\superset"
 ```
 
-Lo script esegue automaticamente:
-1. Pre-flight check: verifica e installa le dipendenze mancanti (`npm install`).
-2. Compilazione TypeScript del plugin (`npm run build`).
-3. Copia dei file in `superset-frontend/plugins/superset-plugin-chart-stratum-bar`.
-4. Creazione del backup `MainPreset.ts.bak` e registrazione di `StratumBarChartPlugin` con chiave `stratum_bar`.
-5. Pulizia della cache Webpack/Babel.
+The script autonomously handles the entire installation lifecycle:
+1. **Pre-flight Checks**: Verifies and installs missing npm dependencies (`npm install`).
+2. **TypeScript Compilation**: Builds the plugin bundle (`npm run build`).
+3. **Plugin Sync**: Copies all necessary assets to `superset-frontend/plugins/superset-plugin-chart-stratum-bar`.
+4. **Idempotent Registration**: Creates a safety backup `MainPreset.ts.bak` and registers `StratumBarChartPlugin` with the key `stratum_bar`.
+5. **Cache Invalidation**: Flushes stale Webpack and Babel caches (`node_modules/.cache`).
 
-### Metodo Batch (Doppio Clic)
-È sufficiente fare doppio clic su `install.bat`.
+### Option 2: Quick Batch Launcher (Windows)
+Double-click `install.bat` and select option `[1]` for automated installation.
 
----
+### Option 3: Manual Registration
 
-## 🛠️ Configurazione nel Pannello Explore di Superset
+If you prefer to configure Superset manually:
 
-| Sezione | Controllo | Descrizione |
-|:---|:---|:---|
-| **Query** | `X-Axis / Category` | Dimensione principale (es. `CANALE`, `REPARTO`, `MESE`). |
-| **Query** | `Breakdown Dimension` | Dimensione secondaria di suddivisione (es. `REGIME`: Convenzionato / Privato). |
-| **Query** | `Metrics` | Metrica da misurare (es. `Richieste`, `Fatturato`). |
-| **Query** | `Target Metric` | Metrica opzionale usata come target di riferimento per ciascuna categoria. |
-| **3D Options** | `Default View Mode` | Modalità predefinita (`3d` o `2d`). |
-| **3D Options** | `3D Depth` & `Tilt` | Profondità dell'estrusione (px) e angolo di inclinazione (gradi). |
-| **3D Options** | `3D Ground Shadows` | Abilita ombre ambientali sul piano d'appoggio. |
-| **Layout** | `Orientation` | Orientamento `vertical` (colonne) o `horizontal` (barre). |
-| **Layout** | `Stacking` | Raggruppate (`none`) o Impilate (`stack`). |
-| **Benchmark** | `Show Benchmark` | Attiva linea guida di target. |
-| **Benchmark** | `Benchmark Type` | Tipo di calcolo: `fixed_value`, `average`, `median`, `target_metric`. |
-| **Benchmark** | `Show Delta %` | Mostra badge percentuali di scostamento nei tooltip. |
+1. Copy the plugin folder into `superset-frontend/plugins/superset-plugin-chart-stratum-bar`.
+2. In `superset-frontend/src/visualizations/presets/MainPreset.ts` (or `MainPreset.js`), add:
+   ```typescript
+   import { StratumBarChartPlugin } from '../../../plugins/superset-plugin-chart-stratum-bar/src';
+
+   new StratumBarChartPlugin().configure({ key: 'stratum_bar' }).register(),
+   ```
+3. Remove stale Webpack cache:
+   ```bash
+   rm -rf superset-frontend/node_modules/.cache
+   ```
 
 ---
 
-## 🧪 Esecuzione dei Test Unitari
+## 🐳 Docker Compose Deployment
 
-Il plugin include una suite di test Jest completa:
-
+### Production / Staging (Non-Dev Mode)
+Rebuild the Superset frontend image and launch the containers:
 ```bash
-npm test
+cd /path/to/superset
+docker compose -f docker-compose-non-dev.yml up -d --build superset
 ```
 
-I test validano:
-- Raggruppamento multi-serie con dimensioni di breakdown (es. `REGIME` e `CANALE`).
-- Calcolo esatto dei benchmark (fisso, media, mediana).
-- Calcolo matematico dei badge Delta % positivi e negativi.
-- Generazione opzioni ECharts per rendering 2D e 3D isometrico.
-- Corretta emissione degli eventi di cross-filtering.
+### Local Frontend Development (Hot Reloading)
+Restart the node service or start the local dev server:
+```bash
+# In Docker:
+docker compose restart superset-node
+
+# Or on host:
+cd superset-frontend
+npm run dev-server
+```
+
+Open `http://localhost:8088`, create a new chart, and select **StratumBar**!
 
 ---
 
-## 🌐 Demo Standalone Interattiva
+## 🛠️ Explore Control Panel Reference
 
-Per testare immediatamente il rendering 2D e 3D con il dataset reale di IDI Slice 430:
-1. Aprire con qualsiasi browser web il file:
-   `examples/interactive_preview.html`
-2. Utilizzare la toolbar per passare da 2D a 3D, inclinare le barre, attivare lo stacking e visualizzare i badge Delta %.
+| Section | Control | Type | Description |
+|:---|:---|:---|:---|
+| **Query Configuration** | `X-Axis / Category` | Select | Primary category dimension (e.g., `Department`, `Channel`, `Month`). |
+| | `Breakdown Dimension` | Multi-Select | Secondary dimension to split bars into series (e.g., `Regime`, `Tier`). |
+| | `Metrics` | Metrics | Quantitative metric measuring bar height (e.g., `Requests`, `Revenue`). |
+| | `Target Metric` | Metric | Optional dynamic metric providing individual target lines per category. |
+| **3D Isometric Options** | `Default View Mode` | Select | Initial view mode: `3d` (Isometric Volumetric) or `2d` (Modern Curved). |
+| | `3D Bar Shape` | Select | Column geometry: `prism` (Rectangular Prism) or `cylinder` (Cylindrical). |
+| | `3D Depth` | Slider | Isometric extrusion depth in pixels (10px - 60px). |
+| | `3D Tilt Angle` | Slider | Isometric vertical tilt angle in degrees (15° - 60°). |
+| | `3D Ground Shadows` | Checkbox | Renders realistic ambient drop shadows at the base of columns. |
+| **Layout & Orientation** | `Orientation` | Select | Layout orientation: `vertical` (column chart) or `horizontal` (bar chart). |
+| | `Stacking` | Select | Arrangement: `none` (Grouped side-by-side) or `stack` (Stacked bars). |
+| | `Show Runtime Toolbar` | Checkbox | Displays floating runtime toolbar for dashboard viewers. |
+| **Benchmark & Delta %** | `Show Benchmark` | Checkbox | Displays target benchmark reference line on the chart. |
+| | `Benchmark Type` | Select | Benchmark source: `fixed_value`, `average`, `median`, or `target_metric`. |
+| | `Fixed Target Value` | Text | Constant reference value when using `fixed_value` mode. |
+| | `Show Delta %` | Checkbox | Enables percentage deviation badges in tooltips and bar labels. |
+| | `Invert Delta Polarity`| Checkbox | Inverts color coding (*"Lower is Better"*): reductions green, gains red. |
+
+---
+
+## 🧪 Unit Testing & Quality Assurance
+
+StratumBar includes a comprehensive Jest test suite:
+
+```bash
+# Run all unit tests
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+```
+
+The test suite validates:
+- Multi-series aggregation and breakdown dimension grouping.
+- Mathematical precision of fixed, average, median, and dynamic target benchmarks.
+- Delta % calculations across positive, negative, and zero-variance scenarios.
+- Isometric 3D polygon projection and ECharts option transformation.
+- Cross-filtering event emission and payload integrity.
+
+---
+
+## 🌐 Standalone Browser Demo
+
+A self-contained demo dataset is included for instant validation:
+1. Open `examples/interactive_preview.html` in any modern web browser.
+2. Experiment with 2D/3D mode toggling, depth/tilt sliders, stacked orientation, and Delta % badges in real time.
+
+---
+
+## 📄 License
+
+Distributed under the **Apache License 2.0**.
