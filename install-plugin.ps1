@@ -199,34 +199,51 @@ if (-not (Test-Path $MainPresetPath)) {
     }
 
     $ImportStatement = "import { StratumBarChartPlugin } from '../../../plugins/superset-plugin-chart-stratum-bar/src';"
-    $RegistrationCode = "new StratumBarChartPlugin().configure({ key: 'stratum_bar' }).register(),"
+    $RegistrationCode = "          new StratumBarChartPlugin().configure({ key: 'stratum_bar' }).register(),"
 
-    $Modified = $false
-
-    if ($MainPresetContent -notmatch "StratumBarChartPlugin") {
-        Write-Color "[INFO] Aggiunta import di StratumBarChartPlugin..." "Yellow"
-        if ($MainPresetContent -match "import .*? from '\.\./\.\./\.\./plugins/") {
-            $MainPresetContent = $MainPresetContent -replace "(import .*? from '\.\./\.\./\.\./plugins/[^;]+;)", "`$1`r`n$ImportStatement"
-        } else {
-            $MainPresetContent = "$ImportStatement`r`n$MainPresetContent"
-        }
-        $Modified = $true
-    }
-
-    if ($MainPresetContent -notmatch "key:\s*'stratum_bar'") {
-        Write-Color "[INFO] Aggiunta registrazione di StratumBar in plugins: [...]..." "Yellow"
-        if ($MainPresetContent -match "plugins:\s*\[") {
-            $MainPresetContent = $MainPresetContent -replace "(plugins:\s*\[)", "`$1`r`n          $RegistrationCode"
-            $Modified = $true
+    # 1. Clean all existing or duplicate StratumBarChartPlugin lines to guarantee clean state
+    $RawLines = $MainPresetContent -split "`r?`n"
+    $CleanLines = @()
+    foreach ($Line in $RawLines) {
+        if ($Line -notmatch "StratumBarChartPlugin" -and $Line -notmatch "key:\s*'stratum_bar'") {
+            $CleanLines += $Line
         }
     }
 
-    if ($Modified) {
-        [System.IO.File]::WriteAllText($MainPresetPath, $MainPresetContent, [System.Text.Encoding]::UTF8)
-        Write-Color "[OK] MainPreset.ts aggiornato e salvato in UTF-8." "Green"
+    # 2. Find last import statement
+    $LastImportIdx = -1
+    for ($i = 0; $i -lt $CleanLines.Count; $i++) {
+        if ($CleanLines[$i] -match "^import\s+") {
+            $LastImportIdx = $i
+        }
+    }
+
+    $WithImportLines = @()
+    if ($LastImportIdx -ge 0) {
+        for ($i = 0; $i -lt $CleanLines.Count; $i++) {
+            $WithImportLines += $CleanLines[$i]
+            if ($i -eq $LastImportIdx) {
+                $WithImportLines += $ImportStatement
+            }
+        }
     } else {
-        Write-Color "[OK] StratumBarChartPlugin gia' registrato in MainPreset.ts (idempotente)." "Green"
+        $WithImportLines = @($ImportStatement) + $CleanLines
     }
+
+    # 3. Insert registration in plugins: [
+    $FinalLines = @()
+    $InsertedReg = $false
+    foreach ($Line in $WithImportLines) {
+        $FinalLines += $Line
+        if (-not $InsertedReg -and $Line -match "plugins:\s*\[") {
+            $FinalLines += $RegistrationCode
+            $InsertedReg = $true
+        }
+    }
+
+    $FinalContent = $FinalLines -join "`r`n"
+    [System.IO.File]::WriteAllText($MainPresetPath, $FinalContent, [System.Text.Encoding]::UTF8)
+    Write-Color "[OK] MainPreset.ts aggiornato e deduplicato con successo." "Green"
 }
 
 # 6. Clean Webpack Cache
