@@ -58,8 +58,8 @@ function Write-Color([string]$Text, [string]$Color = "White") {
 function Write-Banner {
     Write-Color ""
     Write-Color "=================================================================" "Cyan"
-    Write-Color "   StratumBar — 3D Isometric & Advanced Bar Chart Plugin Installer" "Cyan"
-    Write-Color "   Apache Superset Plugin Suite © Maps Healthcare" "DarkCyan"
+    Write-Color "   StratumBar - 3D Isometric & Advanced Bar Chart Plugin" "Cyan"
+    Write-Color "   Apache Superset Plugin Suite (C) Maps Healthcare" "DarkCyan"
     Write-Color "=================================================================" "Cyan"
     Write-Color ""
 }
@@ -68,7 +68,7 @@ Write-Banner
 
 # 1. Resolve Plugin Path
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ResolvedPluginPath = if ($PluginPath) { Resolve-Path $PluginPath } else { $ScriptDir }
+$ResolvedPluginPath = if ($PluginPath) { (Resolve-Path $PluginPath).Path } else { $ScriptDir }
 Write-Color "[INFO] Percorso Plugin: $ResolvedPluginPath" "Green"
 
 # 2. Pre-flight & Build Plugin
@@ -201,11 +201,10 @@ if (-not (Test-Path $MainPresetPath)) {
 
     if ($MainPresetContent -notmatch "StratumBarChartPlugin") {
         Write-Color "[INFO] Aggiunta import di StratumBarChartPlugin..." "Yellow"
-        # Inserisci import dopo gli altri import dei plugin custom
         if ($MainPresetContent -match "import .*? from '\.\./\.\./\.\./plugins/") {
-            $MainPresetContent = $MainPresetContent -replace "(import .*? from '\.\./\.\./\.\./plugins/[^;]+;)", "`$1`n$ImportStatement"
+            $MainPresetContent = $MainPresetContent -replace "(import .*? from '\.\./\.\./\.\./plugins/[^;]+;)", "`$1`r`n$ImportStatement"
         } else {
-            $MainPresetContent = "$ImportStatement`n$MainPresetContent"
+            $MainPresetContent = "$ImportStatement`r`n$MainPresetContent"
         }
         $Modified = $true
     }
@@ -213,7 +212,7 @@ if (-not (Test-Path $MainPresetPath)) {
     if ($MainPresetContent -notmatch "key:\s*'stratum_bar'") {
         Write-Color "[INFO] Aggiunta registrazione di StratumBar in plugins: [...]..." "Yellow"
         if ($MainPresetContent -match "plugins:\s*\[") {
-            $MainPresetContent = $MainPresetContent -replace "(plugins:\s*\[)", "`$1`n          $RegistrationCode"
+            $MainPresetContent = $MainPresetContent -replace "(plugins:\s*\[)", "`$1`r`n          $RegistrationCode"
             $Modified = $true
         }
     }
@@ -222,7 +221,7 @@ if (-not (Test-Path $MainPresetPath)) {
         [System.IO.File]::WriteAllText($MainPresetPath, $MainPresetContent, [System.Text.Encoding]::UTF8)
         Write-Color "[OK] MainPreset.ts aggiornato e salvato in UTF-8." "Green"
     } else {
-        Write-Color "[OK] StratumBarChartPlugin già registrato in MainPreset.ts (idempotente)." "Green"
+        Write-Color "[OK] StratumBarChartPlugin gia' registrato in MainPreset.ts (idempotente)." "Green"
     }
 }
 
@@ -281,8 +280,8 @@ if ($RestartDocker -and -not $NoDocker) {
 }
 
 Write-Color "`n=================================================================" "Green"
-Write-Color "   Installazione di StratumBar completata con successo! 🎉" "Green"
+Write-Color "   Installazione di StratumBar completata con successo! [OK]" "Green"
 Write-Color "=================================================================" "Green"
 Write-Color "1. Riavviare o ricompilare il frontend Superset se non eseguito automaticamente."
-Write-Color "2. Il chart 'StratumBar — 3D Isometric & Advanced Bar Chart' apparirà nel chart gallery."
+Write-Color "2. Il chart 'StratumBar - 3D Isometric & Advanced Bar Chart' apparira' nel chart gallery."
 Write-Color ""
