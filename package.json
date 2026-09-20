@@ -1,6 +1,6 @@
 {
   "name": "superset-plugin-chart-stratum-bar",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "StratumBar — 3D Isometric & Advanced Bar Chart Plugin for Apache Superset with Benchmark, Delta % and Modern Controls",
   "homepage": "https://github.com/FrancescoCastaldi/superset-plugin-chart-stratum-bar",
   "repository": {
@@ -12,7 +12,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "assets"
   ],
   "scripts": {
     "build": "tsc --project tsconfig.json || node ./node_modules/typescript/lib/tsc.js --project tsconfig.json || npx tsc --project tsconfig.json",
@@ -45,11 +46,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
-  "dependencies": {
-    "classnames": "^2.3.2",
-    "d3-format": "^3.1.0",
-    "lodash": "^4.17.21"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@superset-ui/chart-controls": "^0.20.3",
     "@superset-ui/core": "^0.20.4",

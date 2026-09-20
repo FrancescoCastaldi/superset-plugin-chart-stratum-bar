@@ -4,6 +4,16 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.3] - 2026-09-21
+
+### Ottimizzato & Risolto
+- **Compatibilità Docker Compose & Frontend Superset 100% Affidabile**:
+  - Rimozione delle dipendenze superflue e non importate (`classnames`, `d3-format`, `lodash`) da `package.json`, eliminando qualsiasi potenziale conflitto o discrepanza nei controlli di integrità del lockfile durante `npm ci` nei container Docker (`superset-node`).
+  - Correzione automatica del mapping dei servizi in `install-plugin.ps1`: risoluzione dinamica di `superset-node` e `superset` (rispetto ai nomi legacy con underscore `superset_node` / `superset_app`).
+  - Pulizia e allineamento automatico dei file pre-compilati `dist/`, `src/` e `assets/` all'aggiornamento di istanze Apache Superset già esistenti, evitando residui o conflitti di cache Webpack/Babel.
+- **Showcase Visivo Ufficiale**:
+  - Aggiunta dell'immagine di anteprima ad alta risoluzione in `assets/stratumbar_preview.jpg` integrata nella documentazione master.
+
 ## [0.2.2] - 2026-09-20
 
 ### Aggiunto

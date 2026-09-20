@@ -158,16 +158,21 @@ if (-not (Test-Path $PluginsDir)) {
 }
 
 if (Test-Path $TargetPluginDir) {
+    Write-Color "[INFO] Aggiornamento installazione esistente in $TargetPluginDir..." "Yellow"
     if ($CleanReinstall) {
-        Write-Color "[INFO] Rimozione installazione precedente in $TargetPluginDir..." "Yellow"
         Remove-Item -Path $TargetPluginDir -Recurse -Force
+    } else {
+        $OldDist = Join-Path $TargetPluginDir "dist"
+        $OldSrc = Join-Path $TargetPluginDir "src"
+        if (Test-Path $OldDist) { Remove-Item -Path $OldDist -Recurse -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $OldSrc) { Remove-Item -Path $OldSrc -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
 
 Write-Color "[INFO] Copia file in $TargetPluginDir..." "Yellow"
 New-Item -ItemType Directory -Path $TargetPluginDir -Force | Out-Null
 
-$ExcludeItems = @("node_modules", ".git", ".github", "dist", ".cache")
+$ExcludeItems = @("node_modules", ".git", ".github", "dist", ".cache", "package-lock.json")
 Get-ChildItem -Path $ResolvedPluginPath | ForEach-Object {
     if ($ExcludeItems -notcontains $_.Name) {
         Copy-Item -Path $_.FullName -Destination $TargetPluginDir -Recurse -Force
@@ -289,9 +294,14 @@ if ($RestartDocker -and -not $NoDocker) {
         $OrigLoc = Get-Location
         try {
             Set-Location $ResolvedSupersetPath
-            Write-Color "[INFO] Esecuzione docker compose restart superset_node superset_app..." "Yellow"
-            & $DockerCmd.Source compose restart superset_node superset_app
-            Write-Color "[OK] Container Docker riavviati." "Green"
+            Write-Color "[INFO] Rilevamento servizi Docker Compose..." "Yellow"
+            $ServicesOutput = (& $DockerCmd.Source compose config --services 2>$null)
+            $NodeService = if ($ServicesOutput -and ($ServicesOutput -contains "superset-node")) { "superset-node" } elseif ($ServicesOutput -and ($ServicesOutput -contains "superset_node")) { "superset_node" } else { "superset-node" }
+            $AppService = if ($ServicesOutput -and ($ServicesOutput -contains "superset")) { "superset" } elseif ($ServicesOutput -and ($ServicesOutput -contains "superset_app")) { "superset_app" } else { "superset" }
+            
+            Write-Color "[INFO] Esecuzione docker compose restart $NodeService $AppService..." "Yellow"
+            & $DockerCmd.Source compose restart $NodeService $AppService
+            Write-Color "[OK] Container Docker ($NodeService, $AppService) riavviati con successo." "Green"
         } catch {
             Write-Color "[WARN] Errore durante il restart Docker: $_" "Yellow"
         } finally {

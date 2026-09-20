@@ -12,36 +12,39 @@
 
 ## 📸 Visual Preview
 
-![StratumBar 3D Isometric Preview](./src/images/thumbnail.png)
+![StratumBar 3D Isometric & Dual Y-Axis Showcase](./assets/stratumbar_preview.jpg)
 
-*Figure 1: Volumetric 3D Isometric view with directional shading, depth extrusion, reference benchmark line, and percentage delta badges.*
+*Figure 1: StratumBar v0.2.3 running inside Apache Superset — Volumetric 3D Isometric columns, secondary Y-axis with glowing area gradient trend line, reference benchmark line, dynamic breakdown dimension toggling, and interactive runtime toolbar.*
 
 ---
 
 ## 🌟 Key Features
 
-### 1. 🧊 Dual Rendering Engine: Modern 2D & Volumetric 3D Isometric
+### 1. 📈 Universal Dual Y-Axis & Hybrid Multi-Measure Visualization
+- **Independent Secondary Y-Axis**: Dual-scale analytics enabling direct comparison between volume metrics (e.g., *Totale Prestazioni*, *Ricavi*) on the primary axis and rate/percentage metrics (e.g., *Tasso Occupazione*, *Margine %*) on the right secondary axis.
+- **Hybrid Visual Presentation**: Combine primary volumetric 3D/2D bars with a smooth, glowing line trend (`secondary_area_gradient`) and synchronized color-coded axis labels.
+- **Dynamic Breakdown Aggregation**: In multi-dimension breakdowns (e.g., *Department* x *Regime*), toggle between granular grouped series and combined macro-category totals on the fly without query re-execution.
+
+### 2. 🧊 Dual Rendering Engine: Modern 2D & Volumetric 3D Isometric
 - **Volumetric 3D Isometric Projection**: Renders 3D columns using isometric vector mathematics with three distinct lighted faces (front, side, and top cap) and directional lighting gradients.
 - **Zero WebGL Overhead**: Built on Apache ECharts' native 2D Canvas engine, delivering smooth 60 fps performance with zero WebGL context crashes or memory exhaustion on dense multi-chart dashboards.
 - **Ambient Ground Shadows**: Realistic soft ambient drop shadows projected beneath each 3D column, anchoring bars to the baseline plane.
 - **Modern 2D Styling**: Configurable corner radii (`barBorderRadius`), vertical and horizontal color gradients, and optional full-height track background guides.
 
-### 2. 🎯 Benchmark Targets & Percentage Variance (Delta %)
+### 3. 🎯 Benchmark Targets & Percentage Variance (Delta %)
 - **Dynamic Reference Lines**: Configure target benchmarks from a fixed numeric value, dynamic statistical calculations (**Average** or **Median** across current series), or a dedicated **Target Metric** column from your SQL query.
 - **Smart Delta % Badges**: Automatic mathematical evaluation of percentage deviation `((Value - Target) / Target) * 100` displayed directly in tooltips and bar labels.
 - **Configurable Variance Polarity**:
  - *Normal ("Higher is Better")*: Positive gains are highlighted in green; drops appear in red.
  - *Inverted ("Lower is Better")*: Essential for healthcare wait times, patient cancellations, operational delays, and financial costs - drops are green and increases are flagged in red.
 
-### 3. 🎛️ Interactive Runtime Toolbar
-Dashboard viewers can dynamically interact with the chart without entering Superset's Explore edit mode:
-- **Dimension Switcher**: Instant toggle between **2D Modern** and **3D Isometric** rendering modes.
-- **Orientation Toggle**: Rotate layout between **Vertical** (columns) and **Horizontal** (bars).
-- **Stacking Modes**: Switch between **Grouped** (side-by-side) and **Stacked** series.
-- **3D Geometry Controls**: Adjust **Tilt Angle** and **Extrusion Depth** sliders on the fly.
-- **Export Capabilities**: One-click export to high-resolution **PNG** images or aggregated **CSV** data.
+### 4. 🎛️ Universal Runtime Toolbar & Granular Backend Controls
+Dashboard viewers can dynamically interact with the chart without entering Superset's Explore edit mode, while chart creators maintain full backend control:
+- **Universal Agnostic Architecture**: Zero hardcoding — dynamically inspects and extracts breakdown dimension names (`breakdownDimName`, e.g. `Combina Regime`, `Combina Canale`) dynamically adapting button text and grouping logic.
+- **Explore Control Panel ("k-end")**: Granular toggles to enable or disable individual toolbar buttons (`toolbar_show_view_mode`, `toolbar_show_orientation`, `toolbar_show_stacking`, `toolbar_show_dual_axis`, `toolbar_show_breakdown_toggle`, `toolbar_show_benchmark`, `toolbar_show_export`).
+- **One-Click Export**: Instant high-resolution **PNG** rasterization and **CSV** data extraction.
 
-### 4. 🔄 Native Superset Cross-Filtering (`emit_filter`)
+### 5. 🔄 Native Superset Cross-Filtering (`emit_filter`)
 - Clicking any bar, column, or category node dispatches Superset's native `setDataMask` event.
 - Coordinates with all companion charts, tables, KPIs, and heatmaps on the dashboard.
 
