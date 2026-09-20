@@ -60,6 +60,11 @@ export interface StratumBarFormData extends QueryFormData {
     enableToolbar?: boolean;
     y_axis_title?: string;
     x_axis_title?: string;
+    secondary_area_gradient?: boolean;
+    secondary_line_width?: number;
+    secondary_line_color?: string;
+    theme_mode?: 'light' | 'dark' | 'auto';
+    enable_a11y_decal?: boolean;
 }
 export interface StratumBarTransformedProps {
     width: number;
@@ -92,6 +97,11 @@ export interface StratumBarTransformedProps {
     hasDualYAxis?: boolean;
     yAxis2Title?: string;
     yAxis2Format?: string;
+    secondaryAreaGradient?: boolean;
+    secondaryLineWidth?: number;
+    secondaryLineColor?: string;
+    themeMode?: 'light' | 'dark' | 'auto';
+    enableA11yDecal?: boolean;
     formData: StratumBarFormData;
     onCrossFilter?: (category: string, seriesName?: string) => void;
 }

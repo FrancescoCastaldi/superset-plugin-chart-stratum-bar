@@ -13,7 +13,7 @@ export default function transformProps(chartProps) {
     const { width, height, formData, queriesData, hooks } = chartProps;
     const fd = (formData || {});
     const data = (queriesData?.[0]?.data || []);
-    const { x_axis, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, x_axis_title, y_axis_title, } = fd;
+    const { x_axis, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', secondary_area_gradient = true, secondary_line_width = 3, secondary_line_color = '#ea580c', theme_mode = 'light', enable_a11y_decal = false, combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, x_axis_title, y_axis_title, } = fd;
     // Helper to extract string column name from string, Column object, or adhoc column
     const getColName = (col) => {
         if (!col)
@@ -78,12 +78,19 @@ export default function transformProps(chartProps) {
     // 2. Determine Data Structure: PIVOTED vs UNPIVOTED
     // In Superset, Timeseries pivotOperator pivots the dataframe:
     // sampleRow has columns like: { CANALE: 'App', 'Convenzioni': 7, 'Libera professione': 13, 'SSN': 120, 'Solventi': 17 }
+    const secondaryMetricNames = ensureIsArray(secondary_metrics)
+        .map(m => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)))
+        .filter(Boolean)
+        .map(s => s.toLowerCase());
     const potentialPivotedKeys = Object.keys(sampleRow).filter(k => k.toLowerCase() !== actualXKey.toLowerCase() &&
         k !== '__timestamp' &&
         !k.startsWith('__') &&
         k !== targetMetricKey &&
+        !secondaryMetricNames.includes(k.toLowerCase()) &&
         typeof sampleRow[k] === 'number');
-    const isPivoted = potentialPivotedKeys.length > 0 && (!actualBreakdownKey || !(actualBreakdownKey in sampleRow));
+    const isPivoted = potentialPivotedKeys.length > 0 &&
+        (!actualBreakdownKey || !(actualBreakdownKey in sampleRow)) &&
+        !(potentialPivotedKeys.length === 1 && potentialPivotedKeys[0].toLowerCase() === primaryMetric.toLowerCase());
     // 3. Build Series
     const series = [];
     if (isPivoted) {
@@ -262,10 +269,11 @@ export default function transformProps(chartProps) {
                     rawData: matchingRows[0],
                 });
             });
+            const chosenColor = secIdx === 0 && secondary_line_color ? secondary_line_color : secPalette[secIdx % secPalette.length];
             series.push({
                 name: secMetricName,
                 key: `sec_${secMetricName}`,
-                color: secPalette[secIdx % secPalette.length],
+                color: chosenColor,
                 data: secData,
                 items: secItems,
                 yAxisIndex: 1,
@@ -382,6 +390,11 @@ export default function transformProps(chartProps) {
         hasDualYAxis: series.some(s => s.yAxisIndex === 1),
         yAxis2Title: y_axis_2_title,
         yAxis2Format: y_axis_2_format,
+        secondaryAreaGradient: secondary_area_gradient,
+        secondaryLineWidth: Number(secondary_line_width) || 3,
+        secondaryLineColor: secondary_line_color || '#ea580c',
+        themeMode: theme_mode,
+        enableA11yDecal: enable_a11y_decal,
         formData: fd,
         onCrossFilter,
     };

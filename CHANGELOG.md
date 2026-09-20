@@ -4,6 +4,18 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.1] - 2026-09-20
+
+### Aggiunto
+- **Design System & Estetica Avanzata Tangibile**:
+  - **Glassmorphism Tooltip con Backdrop Blur**: tooltip interattivi con effetto vetro smerigliato (`backdrop-filter: blur(8px)`), bordi semi-trasparenti, font tabular-nums e badge delta allineati per metriche primarie vs target.
+  - **Area Gradient Glowing**: gradiente luminoso e sfumato sotto la linea del secondo asse (`secondary_area_gradient`) per visualizzazione ibrida barre + trend.
+  - **Color-Coded Axis Matching**: sincronizzazione cromatico-visiva automatica tra linea secondaria, asse destro, etichette numeriche e titolo.
+  - **Dark Obsidian & Light Enterprise Mode**: supporto completo a temi chiari e scuri (`theme_mode: 'light' | 'dark'`) con contrasto ottimizzato WCAG.
+  - **Texture e Pattern Geometrici Accessibili (W3C A11y Decals)**: pattern geometrici differenziati abilitabili per utenti daltonici (`enable_a11y_decal`).
+- **Raffinamento Motore di Trasformazione Dati**:
+  - Risolto conflitto nell'estrazione delle serie nei dataframe non pivotati: isolamento rigoroso delle metriche secondarie rispetto alle barre primarie.
+
 ## [0.2.0] - 2026-09-20
 
 ### Aggiunto

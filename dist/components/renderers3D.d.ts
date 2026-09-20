@@ -1,7 +1,14 @@
 import { StratumBarTransformedProps } from '../types';
 export declare function get3DBarOption(props: StratumBarTransformedProps): {
+    backgroundColor: string;
     animationDuration: number;
     animationEasing: "cubicOut";
+    aria: {
+        enabled: boolean;
+        decal: {
+            show: boolean;
+        };
+    };
     grid: {
         top: number;
         bottom: number;
@@ -12,7 +19,12 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
     tooltip: {
         trigger: "axis";
         axisPointer: {
-            type: "shadow";
+            type: "cross";
+            crossStyle: {
+                color: string;
+                width: number;
+                type: "dashed";
+            };
         };
         backgroundColor: string;
         borderColor: string;
@@ -22,6 +34,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             color: string;
             fontSize: number;
         };
+        extraCssText: string;
         formatter: (params: any) => string;
     };
     legend: {
@@ -32,6 +45,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         textStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
         };
     };
     xAxis: {
@@ -101,6 +115,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         position: "top" | "right";
         axisLabel: {
             color: string;
+            fontWeight: number;
             fontSize: number;
             formatter: (val: number) => string;
         };
@@ -110,6 +125,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         name: string;
         nameTextStyle: {
             color: string;
+            fontWeight: number;
             fontSize: number;
             padding: number[];
         };
@@ -181,6 +197,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         position: "top" | "right";
         axisLabel: {
             color: string;
+            fontWeight: number;
             fontSize: number;
             formatter: (val: number) => string;
         };
@@ -190,6 +207,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         name: string;
         nameTextStyle: {
             color: string;
+            fontWeight: number;
             fontSize: number;
             padding: number[];
         };

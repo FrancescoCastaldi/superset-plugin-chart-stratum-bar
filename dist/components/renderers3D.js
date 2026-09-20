@@ -1,29 +1,41 @@
 export function get3DBarOption(props) {
-    const { categories, series, benchmark, orientation, barShape3D, depth3D = 20, tilt3D = 25, shadow3D = true, showBenchmark, showValue, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, } = props;
+    const { categories, series, benchmark, orientation, barShape3D, depth3D = 20, tilt3D = 25, shadow3D = true, showBenchmark, showValue, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, } = props;
+    const isDark = themeMode === 'dark';
     const isVertical = orientation === 'vertical';
     const tiltRad = (tilt3D * Math.PI) / 180;
     const offsetX = Math.round(depth3D * Math.cos(tiltRad));
     const offsetY = Math.round(depth3D * Math.sin(tiltRad));
+    // Helper convert hex to rgba
+    const hexToRgba = (hex, alpha) => {
+        if (!hex || !hex.startsWith('#'))
+            return `rgba(234, 88, 12, ${alpha})`;
+        const h = hex.replace('#', '');
+        const bigint = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
     // Category Axis
     const categoryAxis = {
         type: 'category',
         data: categories,
         axisLabel: {
-            color: '#4b5563',
+            color: isDark ? '#cbd5e1' : '#4b5563',
             fontSize: 12,
             interval: 0,
             rotate: categories.some(c => c.length > 12) && isVertical ? 25 : 0,
         },
-        axisLine: { lineStyle: { color: '#9ca3af', width: 2 } },
+        axisLine: { lineStyle: { color: isDark ? '#334155' : '#9ca3af', width: 2 } },
         axisTick: { show: false },
         name: isVertical ? xAxisTitle : yAxisTitle,
-        nameTextStyle: { color: '#6b7280', fontSize: 12, padding: [0, 0, 0, 8] },
+        nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 0, 0, 8] },
     };
     // Value Axis (Primary)
     const valueAxis = {
         type: 'value',
         axisLabel: {
-            color: '#6b7280',
+            color: isDark ? '#94a3b8' : '#6b7280',
             fontSize: 11,
             formatter: (val) => {
                 if (Math.abs(val) >= 1_000_000)
@@ -33,16 +45,17 @@ export function get3DBarOption(props) {
                 return String(val);
             },
         },
-        splitLine: { lineStyle: { color: '#e5e7eb', type: 'dashed' } },
+        splitLine: { lineStyle: { color: isDark ? '#1e293b' : '#e5e7eb', type: 'dashed' } },
         name: isVertical ? yAxisTitle : xAxisTitle,
-        nameTextStyle: { color: '#6b7280', fontSize: 12, padding: [0, 8, 0, 0] },
+        nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 8, 0, 0] },
     };
-    // Secondary Value Axis (Right Y-Axis)
+    // Secondary Value Axis (Right Y-Axis - Color-coded)
     const secondaryValueAxis = {
         type: 'value',
         position: isVertical ? 'right' : 'top',
         axisLabel: {
-            color: '#9a3412',
+            color: secondaryLineColor,
+            fontWeight: 600,
             fontSize: 11,
             formatter: (val) => {
                 if (yAxis2Format === '.2%') {
@@ -57,7 +70,7 @@ export function get3DBarOption(props) {
         },
         splitLine: { show: false },
         name: yAxis2Title || '',
-        nameTextStyle: { color: '#9a3412', fontSize: 12, padding: [0, 0, 0, 8] },
+        nameTextStyle: { color: secondaryLineColor, fontWeight: 700, fontSize: 12, padding: [0, 0, 0, 8] },
     };
     const echartsSeries = [];
     const numSeries = series.length || 1;
@@ -396,21 +409,30 @@ export function get3DBarOption(props) {
                 xAxisIndex: !isVertical ? (s.yAxisIndex ?? 0) : 0,
                 data: s.data,
                 lineStyle: {
-                    width: 3,
+                    width: secondaryLineWidth,
                     color: baseColor,
-                    shadowColor: 'rgba(0, 0, 0, 0.25)',
-                    shadowBlur: 5,
+                    shadowColor: hexToRgba(baseColor, 0.4),
+                    shadowBlur: 8,
+                    shadowOffsetY: 3,
                 },
                 itemStyle: {
                     color: baseColor,
-                    borderColor: '#ffffff',
-                    borderWidth: 2,
+                    borderColor: isDark ? '#111827' : '#ffffff',
+                    borderWidth: 2.5,
+                },
+                emphasis: {
+                    scale: true,
+                    itemStyle: {
+                        borderWidth: 3,
+                        shadowBlur: 10,
+                        shadowColor: hexToRgba(baseColor, 0.6),
+                    },
                 },
                 label: {
                     show: showValue,
                     position: 'top',
                     color: baseColor,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     fontSize: 11,
                     formatter: (params) => {
                         const val = params.value;
@@ -422,8 +444,23 @@ export function get3DBarOption(props) {
                         return typeof val === 'number' ? val.toLocaleString('it-IT') : String(val);
                     },
                 },
-                z: 20 + seriesIdx,
+                z: 25 + seriesIdx,
             };
+            if (secondaryAreaGradient) {
+                lineSeriesItem.areaStyle = {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            { offset: 0, color: hexToRgba(baseColor, 0.22) },
+                            { offset: 1, color: hexToRgba(baseColor, 0.0) },
+                        ],
+                    },
+                };
+            }
             echartsSeries.push(lineSeriesItem);
             return;
         }
@@ -432,39 +469,45 @@ export function get3DBarOption(props) {
     // Tooltip
     const tooltip = {
         trigger: 'axis',
-        axisPointer: { type: 'shadow' },
-        backgroundColor: 'rgba(17, 24, 39, 0.94)',
-        borderColor: '#374151',
+        axisPointer: { type: 'cross', crossStyle: { color: isDark ? '#475569' : '#94a3b8', width: 1, type: 'dashed' } },
+        backgroundColor: isDark ? 'rgba(17, 24, 39, 0.94)' : 'rgba(255, 255, 255, 0.96)',
+        borderColor: isDark ? '#374151' : '#e2e8f0',
         borderWidth: 1,
-        padding: [10, 14],
-        textStyle: { color: '#f9fafb', fontSize: 12 },
+        padding: [12, 16],
+        textStyle: { color: isDark ? '#f8fafc' : '#1f2937', fontSize: 13 },
+        extraCssText: isDark
+            ? 'backdrop-filter: blur(8px); box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.5); border-radius: 10px;'
+            : 'backdrop-filter: blur(8px); box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.12); border-radius: 10px;',
         formatter: (params) => {
             const items = Array.isArray(params) ? params : [params];
             if (items.length === 0)
                 return '';
             const catName = categories[items[0].dataIndex] || items[0].name;
-            let html = `<div style="font-weight: 700; margin-bottom: 6px; font-size: 13px; border-bottom: 1px solid #374151; padding-bottom: 4px;">${catName} <span style="font-size: 10px; color: #38bdf8; margin-left: 4px;">[3D View]</span></div>`;
+            let html = `<div style="font-weight: 700; margin-bottom: 8px; font-size: 14px; color: ${isDark ? '#f8fafc' : '#111827'};">${catName} <span style="font-size: 10px; color: #38bdf8; margin-left: 4px;">[3D View]</span></div>`;
             items.forEach(it => {
                 const val = it.value?.[1] ?? it.value;
-                const formatted = typeof val === 'number' ? val.toLocaleString('it-IT') : String(val ?? '-');
-                const color = colorScheme[it.seriesIndex % colorScheme.length] || '#38bdf8';
+                const isSec = it.seriesName === yAxis2Title || it.seriesType === 'line';
+                const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'
+                    ? `${(val * 100).toFixed(1)}%`
+                    : (typeof val === 'number' ? val.toLocaleString('it-IT') : String(val ?? '-'));
+                const color = isSec ? secondaryLineColor : (colorScheme[it.seriesIndex % colorScheme.length] || '#38bdf8');
                 html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 3px 0;">
-            <span style="display: flex; align-items: center; gap: 6px;">
-              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: ${color};"></span>
-              <span>${it.seriesName}</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;">
+            <span style="display: flex; align-items: center; gap: 7px;">
+              <span style="display: inline-block; width: 10px; height: 10px; border-radius: ${isSec ? '50%' : '2px'}; background: ${color};"></span>
+              <span style="font-weight: 500;">${it.seriesName}</span>
             </span>
-            <span style="font-weight: 700; font-variant-numeric: tabular-nums;">${formatted}</span>
+            <span style="font-weight: 700; font-variant-numeric: tabular-nums; color: ${isSec ? secondaryLineColor : 'inherit'};">${formatted}</span>
           </div>
         `;
-                if (showBenchmark && benchmark && typeof benchmark.value === 'number' && typeof val === 'number') {
+                if (showBenchmark && benchmark && typeof benchmark.value === 'number' && typeof val === 'number' && !isSec) {
                     const delta = val - benchmark.value;
                     const deltaPct = benchmark.value !== 0 ? (delta / benchmark.value) * 100 : 0;
                     const isPositive = delta >= 0;
                     const badgeColor = isPositive ? '#10b981' : '#ef4444';
                     const sign = isPositive ? '+' : '';
                     html += `
-            <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 1px;">
+            <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 2px;">
               vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${delta.toLocaleString('it-IT')})
             </div>
           `;
@@ -473,10 +516,12 @@ export function get3DBarOption(props) {
             return html;
         },
     };
-    const rightPadding = hasDualYAxis ? 65 : 48;
+    const rightPadding = hasDualYAxis ? 70 : 48;
     return {
+        backgroundColor: 'transparent',
         animationDuration: 750,
         animationEasing: 'cubicOut',
+        aria: { enabled: true, decal: { show: enableA11yDecal } },
         grid: {
             top: legendOrientation === 'top' ? 48 : 36,
             bottom: legendOrientation === 'bottom' ? 48 : 40,
@@ -490,7 +535,7 @@ export function get3DBarOption(props) {
             orient: legendOrientation === 'left' || legendOrientation === 'right' ? 'vertical' : 'horizontal',
             top: legendOrientation === 'top' ? 8 : legendOrientation === 'bottom' ? 'bottom' : 'middle',
             left: legendOrientation === 'left' ? 8 : legendOrientation === 'right' ? 'right' : 'center',
-            textStyle: { color: '#374151', fontSize: 12 },
+            textStyle: { color: isDark ? '#cbd5e1' : '#374151', fontSize: 12, fontWeight: 500 },
         },
         xAxis: isVertical ? categoryAxis : hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis,
         yAxis: isVertical ? (hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis) : categoryAxis,

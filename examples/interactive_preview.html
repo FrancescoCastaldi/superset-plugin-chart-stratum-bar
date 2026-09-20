@@ -3,31 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StratumBar — 3D Isometric & Advanced Bar Chart Preview</title>
-  <!-- ECharts 5 -->
+  <title>StratumBar v0.2.0 — Dual Y-Axis & 3D Isometric Bar Chart Preview</title>
+  <!-- ECharts 5.5 -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
   <style>
     :root {
-      --primary: #0284c7;
-      --primary-hover: #0369a1;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary-axis: #ea580c;
       --bg-canvas: #f8fafc;
       --card-bg: #ffffff;
       --border-color: #e2e8f0;
       --text-main: #0f172a;
       --text-muted: #64748b;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.06), 0 4px 6px -2px rgba(0,0,0,0.03);
+    }
+
+    [data-theme="dark"] {
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --secondary-axis: #fb923c;
+      --bg-canvas: #0b0f19;
+      --card-bg: #111827;
+      --border-color: #1f2937;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.4);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     body {
       background-color: var(--bg-canvas);
       color: var(--text-main);
-      padding: 24px;
+      padding: 24px 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -36,7 +53,7 @@
 
     .header-panel {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1280px;
       margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
@@ -46,22 +63,32 @@
     }
 
     .badge-pill {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 4px 10px;
       border-radius: 9999px;
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      background: #e0f2fe;
-      color: #0284c7;
+      background: #eff6ff;
+      color: #2563eb;
       margin-bottom: 6px;
+      border: 1px solid #bfdbfe;
+    }
+
+    [data-theme="dark"] .badge-pill {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.3);
     }
 
     .title {
-      font-size: 22px;
-      font-weight: 700;
-      color: #0f172a;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
     }
 
     .subtitle {
@@ -73,15 +100,19 @@
     .kpi-cards {
       display: flex;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
     .kpi-card {
-      background: #ffffff;
+      background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 10px 16px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      min-width: 140px;
+      box-shadow: var(--shadow-sm);
+      min-width: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .kpi-title {
@@ -89,22 +120,28 @@
       color: var(--text-muted);
       text-transform: uppercase;
       font-weight: 600;
+      letter-spacing: 0.03em;
     }
 
     .kpi-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f172a;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
       margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-value.dual {
+      color: var(--secondary-axis);
     }
 
     .chart-wrapper {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1280px;
       background: var(--card-bg);
-      border-radius: 12px;
+      border-radius: 14px;
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--shadow-lg);
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -116,8 +153,8 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      padding: 10px 16px;
-      background: #f8fafc;
+      padding: 12px 18px;
+      background: var(--bg-canvas);
       border-bottom: 1px solid var(--border-color);
       font-size: 12px;
     }
@@ -126,66 +163,90 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .btn-group {
       display: inline-flex;
-      background: #e2e8f0;
-      border-radius: 6px;
+      background: var(--border-color);
+      border-radius: 8px;
       padding: 2px;
+      gap: 2px;
     }
 
     .btn {
       border: none;
       outline: none;
       background: transparent;
-      padding: 5px 12px;
+      padding: 6px 12px;
       font-size: 11px;
       font-weight: 600;
-      color: #475569;
-      border-radius: 4px;
+      color: var(--text-muted);
+      border-radius: 6px;
       cursor: pointer;
       transition: all 0.15s ease-in-out;
+      user-select: none;
     }
 
     .btn:hover {
-      color: #0f172a;
+      color: var(--text-main);
     }
 
     .btn.active {
-      background: #ffffff;
+      background: var(--card-bg);
       color: var(--primary);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn.active-secondary {
+      background: var(--card-bg);
+      color: var(--secondary-axis);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
 
     .slider-control {
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #64748b;
+      color: var(--text-muted);
       font-size: 11px;
       font-weight: 500;
     }
 
     .slider-control input[type="range"] {
-      width: 70px;
+      width: 75px;
       accent-color: var(--primary);
       cursor: pointer;
     }
 
     #chart-container {
       width: 100%;
-      height: 540px;
+      height: 560px;
     }
 
     .footer-info {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1280px;
       margin-top: 14px;
       display: flex;
       justify-content: space-between;
       font-size: 12px;
       color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .legend-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 12px;
+    }
+
+    .indicator-circle {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
     }
   </style>
 </head>
@@ -193,18 +254,25 @@
 
   <div class="header-panel">
     <div>
-      <span class="badge-pill">Superset Chart Plugin</span>
-      <h1 class="title">StratumBar — 3D Isometric & Advanced Bar Chart</h1>
-      <p class="subtitle">Dataset IDI IRCCS Slice 430: Richieste per Canale di Prenotazione e Regime con Benchmark e Delta %</p>
+      <span class="badge-pill">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        StratumBar v0.2.0 • Dual Y-Axis Engine
+      </span>
+      <h1 class="title">Anteprima Grafico 3D & Doppio Asse Y (Dual Axis)</h1>
+      <p class="subtitle">Visualizzazione combinata: Volume Richieste per Canale e Regime (Asse SX) + Tasso di Conversione / Occupazione % (Asse DX)</p>
     </div>
     <div class="kpi-cards">
       <div class="kpi-card">
-        <div class="kpi-title">Totale Richieste</div>
+        <div class="kpi-title">Totale Richieste (SX)</div>
         <div class="kpi-value" id="kpi-total">57,800</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-title">Benchmark Target</div>
+        <div class="kpi-title">Target Benchmark</div>
         <div class="kpi-value">10,000 / cat</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Tasso Medio (DX)</div>
+        <div class="kpi-value dual" id="kpi-secondary">78.4%</div>
       </div>
     </div>
   </div>
@@ -226,28 +294,43 @@
 
         <!-- Stacking Toggle -->
         <div class="btn-group">
-          <button id="btn-grouped" class="btn active" onclick="setStacking('none')">Raggruppate</button>
+          <button id="btn-grouped" class="btn active" onclick="setStacking('none')">Affiancate</button>
           <button id="btn-stacked" class="btn" onclick="setStacking('stack')">Impilate</button>
+        </div>
+
+        <!-- Dual Y-Axis Toggle -->
+        <div class="btn-group">
+          <button id="btn-dual" class="btn active-secondary" onclick="toggleDualAxis()">Doppio Asse Y: ON</button>
+        </div>
+
+        <!-- Combine Breakdown Toggle -->
+        <div class="btn-group">
+          <button id="btn-combine" class="btn" onclick="toggleCombineBreakdown()">Regime su Asse: OFF</button>
         </div>
       </div>
 
       <div class="toolbar-group">
         <!-- 3D Sliders -->
         <div class="slider-control" id="control-tilt">
-          <span>Inclinazione:</span>
+          <span>Tilt:</span>
           <input type="range" min="15" max="55" value="25" id="slider-tilt" oninput="updateTilt(this.value)">
           <span id="label-tilt">25°</span>
         </div>
 
         <div class="slider-control" id="control-depth">
-          <span>Profondità:</span>
+          <span>Depth:</span>
           <input type="range" min="10" max="45" value="22" id="slider-depth" oninput="updateDepth(this.value)">
           <span id="label-depth">22px</span>
         </div>
 
         <!-- Benchmark Toggle -->
         <div class="btn-group">
-          <button id="btn-bench" class="btn active" onclick="toggleBenchmark()">Benchmark: ON</button>
+          <button id="btn-bench" class="btn active" onclick="toggleBenchmark()">Target: ON</button>
+        </div>
+
+        <!-- Theme Toggle -->
+        <div class="btn-group">
+          <button id="btn-theme" class="btn" onclick="toggleTheme()">Dark Theme</button>
         </div>
       </div>
     </div>
@@ -256,8 +339,8 @@
   </div>
 
   <div class="footer-info">
-    <span>💡 <em>Suggerimento:</em> Passa con il mouse sulle colonne 3D per visualizzare le sfaccettature volumetriche, il benchmark e i badge di scostamento percentuale.</span>
-    <span>Stratum Plugin Architecture © Maps Healthcare</span>
+    <span>💡 <em>Interattività attiva:</em> Passa con il mouse su colonne e linea per verificare la sincronizzazione del tooltip a doppio asse e le percentuali relative.</span>
+    <span>Stratum Plugin Architecture © Maps Healthcare • Apache Superset Custom Visualization</span>
   </div>
 
   <script>
@@ -268,16 +351,19 @@
     let tilt3D = 25;
     let depth3D = 22;
     let showBenchmark = true;
+    let hasDualAxis = true;
+    let combineBreakdown = false;
+    let isDark = false;
     const benchmarkVal = 10000;
 
-    // IDI Slice 430 Real Data (Canale x Regime)
-    const categories = ['App', 'Call center', 'CUP fisico', 'Web', 'Non definito'];
+    // Dataset IDI Slice 430 + Secondary Metric (Tasso di conversione / occupazione)
+    const baseCategories = ['App', 'Call center', 'CUP fisico', 'Web', 'Non definito'];
     const seriesData = [
       {
         name: 'SSN',
-        color: '#1d4ed8',
+        color: '#2563eb',
         colorTop: '#60a5fa',
-        colorRight: '#1e40af',
+        colorRight: '#1d4ed8',
         data: [4820, 18450, 12900, 8400, 1200]
       },
       {
@@ -303,6 +389,14 @@
       }
     ];
 
+    // Secondary Metric: Tasso di conferma/occupazione (%)
+    const secondaryMetric = {
+      name: 'Tasso di Conferma %',
+      color: '#ea580c',
+      colorTop: '#fb923c',
+      data: [0.88, 0.76, 0.94, 0.81, 0.52] // Percentuali
+    };
+
     const chart = echarts.init(document.getElementById('chart-container'));
 
     function renderChart() {
@@ -313,33 +407,55 @@
       document.getElementById('control-tilt').style.display = is3D ? 'flex' : 'none';
       document.getElementById('control-depth').style.display = is3D ? 'flex' : 'none';
 
-      // Axes
+      // Categories
+      const categories = combineBreakdown
+        ? ['App [SSN]', 'App [Privato]', 'Call Center [SSN]', 'Call Center [Privato]', 'CUP [SSN]', 'CUP [Privato]', 'Web [SSN]', 'Web [Privato]']
+        : baseCategories;
+
+      // Primary Axes
       const catAxis = {
         type: 'category',
         data: categories,
-        axisLine: { lineStyle: { color: is3D ? '#94a3b8' : '#cbd5e1', width: is3D ? 2 : 1 } },
+        axisLine: { lineStyle: { color: isDark ? '#334155' : (is3D ? '#94a3b8' : '#cbd5e1'), width: is3D ? 2 : 1 } },
         axisTick: { show: false },
-        axisLabel: { color: '#334155', fontWeight: 500, fontSize: 12 }
+        axisLabel: { color: isDark ? '#cbd5e1' : '#334155', fontWeight: 600, fontSize: 12, rotate: combineBreakdown ? 25 : 0 }
       };
 
-      const valAxis = {
+      const valAxisPrimary = {
         type: 'value',
+        name: isVertical ? 'Volume Richieste' : '',
+        nameTextStyle: { color: '#2563eb', fontWeight: 700, fontSize: 12, padding: [0, 8, 0, 0] },
         axisLabel: {
-          color: '#64748b',
+          color: isDark ? '#94a3b8' : '#64748b',
           formatter: v => v >= 1000 ? (v / 1000) + 'k' : v
         },
-        splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } }
+        splitLine: { lineStyle: { color: isDark ? '#1e293b' : '#f1f5f9', type: 'dashed' } }
+      };
+
+      // Secondary Y-Axis
+      const valAxisSecondary = {
+        type: 'value',
+        name: isVertical ? 'Tasso % (Asse 2)' : '',
+        position: isVertical ? 'right' : 'top',
+        nameTextStyle: { color: '#ea580c', fontWeight: 700, fontSize: 12, padding: [0, 0, 0, 8] },
+        axisLabel: {
+          color: '#ea580c',
+          formatter: v => (v * 100).toFixed(0) + '%'
+        },
+        splitLine: { show: false } // No grid collision
       };
 
       let seriesConfig = [];
 
       if (!is3D) {
-        // 2D Renderer
+        // 2D Modern Bar Renderer
         seriesConfig = seriesData.map((s, idx) => ({
           name: s.name,
           type: 'bar',
           stack: stacking === 'stack' ? 'total' : undefined,
-          data: s.data,
+          yAxisIndex: 0,
+          xAxisIndex: 0,
+          data: combineBreakdown ? [4820, 2100, 18450, 6800, 12900, 5400, 8400, 3900] : s.data,
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, isVertical ? 0 : 1, isVertical ? 1 : 0, [
               { offset: 0, color: s.colorTop },
@@ -349,230 +465,234 @@
           },
           label: {
             show: true,
-            position: 'top',
-            formatter: p => p.value.toLocaleString('it-IT'),
+            position: isVertical ? (stacking === 'stack' ? 'inside' : 'top') : 'right',
+            color: stacking === 'stack' ? '#ffffff' : (isDark ? '#e2e8f0' : '#1e293b'),
             fontSize: 11,
-            color: '#475569'
+            fontWeight: 600,
+            formatter: p => p.value >= 1000 ? (p.value / 1000).toFixed(1) + 'k' : p.value
           },
-          markLine: (showBenchmark && idx === 0) ? {
-            symbol: ['none', 'none'],
-            lineStyle: { color: '#ef4444', width: 2, type: 'dashed' },
-            data: [{ [isVertical ? 'yAxis' : 'xAxis']: benchmarkVal, name: 'Target (10,000)' }],
-            label: { formatter: 'Target: 10k', position: 'end', color: '#ef4444', fontWeight: 600 }
-          } : undefined
+          z: 2
         }));
       } else {
-        // 3D Isometric Custom Series Renderer
+        // 3D Isometric Renderer
         const tiltRad = (tilt3D * Math.PI) / 180;
         const offsetX = Math.round(depth3D * Math.cos(tiltRad));
         const offsetY = Math.round(depth3D * Math.sin(tiltRad));
 
-        seriesConfig = seriesData.map((s, sIdx) => {
-          return {
-            name: s.name,
-            type: 'custom',
-            data: s.data.map((val, catIdx) => [catIdx, val, s.name]),
-            renderItem: function (params, api) {
-              const catIdx = api.value(0);
-              const val = api.value(1);
-              if (val === null || val === undefined || isNaN(val)) return;
+        seriesConfig = seriesData.map((s, sIdx) => ({
+          name: s.name,
+          type: 'custom',
+          yAxisIndex: 0,
+          xAxisIndex: 0,
+          renderItem: (params, api) => {
+            const catIdx = api.value(0);
+            const val = api.value(1);
+            if (val === null || val === undefined || isNaN(val)) return;
 
-              const seriesCount = seriesData.length;
-              const barTotalWidth = seriesCount > 2 ? 18 : 28;
-              const spacing = seriesCount > 2 ? 4 : 8;
-              const groupOffset = (sIdx - (seriesCount - 1) / 2) * (barTotalWidth + spacing);
+            const isStacked = stacking === 'stack';
+            const numSeries = isStacked ? 1 : seriesData.length;
 
-              if (isVertical) {
-                const baseCoord = api.coord([catIdx, 0]);
-                const topCoord = api.coord([catIdx, val]);
-                const x0 = baseCoord[0] + groupOffset - barTotalWidth / 2;
-                const x1 = x0 + barTotalWidth;
-                const yBase = baseCoord[1];
-                const yTop = topCoord[1];
+            let ptBase = api.coord(isVertical ? [catIdx, 0] : [0, catIdx]);
+            let ptTop = api.coord(isVertical ? [catIdx, val] : [val, catIdx]);
 
-                const children = [];
+            const bandWidth = api.size([1, 0])[0];
+            const colWidth = Math.max(12, Math.min(48, Math.floor((bandWidth * 0.75) / numSeries)));
 
-                // Ground Shadow
-                children.push({
-                  type: 'polygon',
-                  shape: {
-                    points: [
-                      [x0, yBase],
-                      [x1, yBase],
-                      [x1 + offsetX * 0.7, yBase - offsetY * 0.4],
-                      [x0 + offsetX * 0.7, yBase - offsetY * 0.4]
-                    ]
-                  },
-                  style: { fill: 'rgba(0, 0, 0, 0.08)' }
-                });
-
-                // Front Face
-                children.push({
-                  type: 'rect',
-                  shape: { x: x0, y: yTop, width: barTotalWidth, height: yBase - yTop },
-                  style: { fill: s.color }
-                });
-
-                // Top Cap Face
-                children.push({
-                  type: 'polygon',
-                  shape: {
-                    points: [
-                      [x0, yTop],
-                      [x1, yTop],
-                      [x1 + offsetX, yTop - offsetY],
-                      [x0 + offsetX, yTop - offsetY]
-                    ]
-                  },
-                  style: { fill: s.colorTop }
-                });
-
-                // Right Lateral Face
-                children.push({
-                  type: 'polygon',
-                  shape: {
-                    points: [
-                      [x1, yTop],
-                      [x1 + offsetX, yTop - offsetY],
-                      [x1 + offsetX, yBase - offsetY],
-                      [x1, yBase]
-                    ]
-                  },
-                  style: { fill: s.colorRight }
-                });
-
-                return { type: 'group', children: children };
-              } else {
-                // Horizontal
-                const baseCoord = api.coord([0, catIdx]);
-                const rightCoord = api.coord([val, catIdx]);
-                const y0 = baseCoord[1] + groupOffset - barTotalWidth / 2;
-                const y1 = y0 + barTotalWidth;
-                const xBase = baseCoord[0];
-                const xRight = rightCoord[0];
-
-                const children = [];
-
-                // Front Face
-                children.push({
-                  type: 'rect',
-                  shape: { x: xBase, y: y0, width: xRight - xBase, height: barTotalWidth },
-                  style: { fill: s.color }
-                });
-
-                // Top Face
-                children.push({
-                  type: 'polygon',
-                  shape: {
-                    points: [
-                      [xBase, y0],
-                      [xRight, y0],
-                      [xRight + offsetX, y0 - offsetY],
-                      [xBase + offsetX, y0 - offsetY]
-                    ]
-                  },
-                  style: { fill: s.colorTop }
-                });
-
-                // Right Extrusion Face
-                children.push({
-                  type: 'polygon',
-                  shape: {
-                    points: [
-                      [xRight, y0],
-                      [xRight + offsetX, y0 - offsetY],
-                      [xRight + offsetX, y1 - offsetY],
-                      [xRight, y1]
-                    ]
-                  },
-                  style: { fill: s.colorRight }
-                });
-
-                return { type: 'group', children: children };
-              }
+            let shift = 0;
+            if (!isStacked) {
+              const totalSpan = numSeries * colWidth;
+              shift = -totalSpan / 2 + sIdx * colWidth + colWidth / 2;
             }
-          };
-        });
 
-        // Benchmark MarkLine in 3D
-        if (showBenchmark) {
-          seriesConfig.push({
-            name: 'Benchmark Target',
-            type: 'line',
-            data: [],
-            markLine: {
-              symbol: ['none', 'none'],
-              lineStyle: { color: '#ef4444', width: 2, type: 'dashed' },
-              data: [{ [isVertical ? 'yAxis' : 'xAxis']: benchmarkVal }],
-              label: {
-                formatter: 'Target (10,000)',
-                position: 'end',
-                color: '#ef4444',
-                fontWeight: 600,
-                fontSize: 11
-              }
-            }
-          });
-        }
+            const x0 = isVertical ? ptBase[0] + shift - colWidth / 2 : ptBase[0];
+            const x1 = isVertical ? x0 + colWidth : ptTop[0];
+            const y0 = isVertical ? ptBase[1] : ptBase[1] + shift - colWidth / 2;
+            const y1 = isVertical ? ptTop[1] : y0 + colWidth;
+
+            const children = [];
+
+            // Ground ambient shadow
+            children.push({
+              type: 'polygon',
+              shape: {
+                points: isVertical ? [
+                  [x0, y0], [x1, y0], [x1 + offsetX * 0.7, y0 + offsetY * 0.4], [x0 + offsetX * 0.7, y0 + offsetY * 0.4]
+                ] : [
+                  [x0, y0], [x0, y1], [x0 + offsetX * 0.4, y1 + offsetY * 0.7], [x0 + offsetX * 0.4, y0 + offsetY * 0.7]
+                ]
+              },
+              style: { fill: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(15,23,42,0.12)' },
+              z2: 0
+            });
+
+            // Front face
+            children.push({
+              type: 'polygon',
+              shape: { points: [[x0, y0], [x1, y0], [x1, y1], [x0, y1]] },
+              style: { fill: s.color },
+              z2: 1
+            });
+
+            // Top Cap
+            children.push({
+              type: 'polygon',
+              shape: { points: [[x0, y1], [x1, y1], [x1 + offsetX, y1 - offsetY], [x0 + offsetX, y1 - offsetY]] },
+              style: { fill: s.colorTop },
+              z2: 2
+            });
+
+            // Right side
+            children.push({
+              type: 'polygon',
+              shape: { points: [[x1, y0], [x1 + offsetX, y0 - offsetY], [x1 + offsetX, y1 - offsetY], [x1, y1]] },
+              style: { fill: s.colorRight },
+              z2: 2
+            });
+
+            return { type: 'group', children };
+          },
+          data: (combineBreakdown ? [4820, 2100, 18450, 6800, 12900, 5400, 8400, 3900] : s.data).map((v, i) => [i, v]),
+          z: 2 + sIdx
+        }));
       }
 
-      const option = {
-        animationDuration: 600,
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: { type: 'shadow' },
-          backgroundColor: '#0f172a',
-          borderColor: '#1e293b',
-          textStyle: { color: '#f8fafc', fontSize: 12 },
-          formatter: function (params) {
-            let catName = params[0].name;
-            if (!catName && params[0].data && Array.isArray(params[0].data)) {
-              catName = categories[params[0].data[0]];
-            }
-            let html = `<div style="font-weight:700;margin-bottom:6px;border-bottom:1px solid #334155;padding-bottom:4px;">${catName}</div>`;
-            params.forEach(p => {
-              if (p.seriesName === 'Benchmark Target') return;
-              let v = p.value;
-              if (Array.isArray(v)) v = v[1];
-              if (v === null || v === undefined) return;
+      // Add Benchmark Line if ON
+      if (showBenchmark && seriesConfig.length > 0) {
+        seriesConfig[0].markLine = {
+          symbol: ['none', 'none'],
+          lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+          label: {
+            position: isVertical ? 'end' : 'start',
+            formatter: `Target: 10k`,
+            color: '#dc2626',
+            fontWeight: 700,
+            backgroundColor: isDark ? 'rgba(30,41,59,0.9)' : 'rgba(254, 242, 242, 0.95)',
+            borderColor: '#fca5a5',
+            borderWidth: 1,
+            borderRadius: 4,
+            padding: [3, 6]
+          },
+          data: [isVertical ? { yAxis: benchmarkVal } : { xAxis: benchmarkVal }]
+        };
+      }
 
-              let deltaHtml = '';
-              if (showBenchmark && benchmarkVal > 0) {
-                const delta = Math.round(((v - benchmarkVal) / benchmarkVal) * 1000) / 10;
-                const isPos = delta >= 0;
-                const color = isPos ? '#10b981' : '#ef4444';
-                const sign = isPos ? '+' : '';
-                deltaHtml = ` <span style="background:${color}22;color:${color};padding:2px 6px;border-radius:4px;font-weight:700;font-size:10px;">${sign}${delta}%</span>`;
-              }
-              html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:3px;">
-                <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color || '#0284c7'};margin-right:6px;"></span>${p.seriesName}:</span>
-                <span style="font-weight:600;">${v.toLocaleString('it-IT')}${deltaHtml}</span>
-              </div>`;
-            });
-            return html;
-          }
-        },
-        legend: {
-          data: seriesData.map(s => s.name),
-          top: 10,
-          textStyle: { color: '#475569', fontWeight: 600 }
-        },
+      // Add Secondary Metric (Dual Y-Axis Line) if ON
+      if (hasDualAxis) {
+        seriesConfig.push({
+          name: secondaryMetric.name,
+          type: 'line',
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 9,
+          yAxisIndex: isVertical ? 1 : 0,
+          xAxisIndex: !isVertical ? 1 : 0,
+          data: combineBreakdown ? [0.88, 0.72, 0.76, 0.68, 0.94, 0.85, 0.81, 0.77] : secondaryMetric.data,
+          lineStyle: {
+            width: 3.5,
+            color: secondaryMetric.color,
+            shadowColor: 'rgba(234, 88, 12, 0.4)',
+            shadowBlur: 8,
+            shadowOffsetY: 3
+          },
+          itemStyle: {
+            color: secondaryMetric.color,
+            borderColor: isDark ? '#111827' : '#ffffff',
+            borderWidth: 2.5
+          },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(234, 88, 12, 0.22)' },
+              { offset: 1, color: 'rgba(234, 88, 12, 0.0)' }
+            ])
+          },
+          label: {
+            show: true,
+            position: 'top',
+            color: '#ea580c',
+            fontWeight: 700,
+            fontSize: 11,
+            formatter: p => (p.value * 100).toFixed(0) + '%'
+          },
+          z: 25
+        });
+      }
+
+      // Tooltip Formatter
+      const tooltip = {
+        trigger: 'axis',
+        axisPointer: { type: 'cross', crossStyle: { color: '#94a3b8', width: 1, type: 'dashed' } },
+        backgroundColor: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+        borderColor: isDark ? '#374151' : '#e2e8f0',
+        borderWidth: 1,
+        padding: [12, 16],
+        textStyle: { color: isDark ? '#f8fafc' : '#0f172a', fontSize: 13 },
+        extraCssText: 'box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.2); border-radius: 10px;',
+        formatter: (params) => {
+          if (!Array.isArray(params) || params.length === 0) return '';
+          const cat = params[0].axisValueLabel || params[0].name;
+          let html = `<div style="font-weight: 800; font-size: 14px; margin-bottom: 8px; color: ${isDark ? '#f8fafc' : '#0f172a'};">${cat}</div>`;
+
+          params.forEach(it => {
+            const rawVal = it.value?.[1] ?? it.value;
+            const isSec = it.seriesName === secondaryMetric.name;
+            const formatted = isSec
+              ? `${(rawVal * 100).toFixed(1)}%`
+              : (typeof rawVal === 'number' ? rawVal.toLocaleString('it-IT') : rawVal);
+            const color = isSec ? secondaryMetric.color : (it.color?.colorStops?.[0]?.color || it.color || '#3b82f6');
+
+            html += `
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin: 4px 0; font-size: 12px;">
+                <span style="display: flex; align-items: center; gap: 7px;">
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: ${isSec ? '50%' : '2px'}; background: ${color};"></span>
+                  <span style="font-weight: 500;">${it.seriesName}:</span>
+                </span>
+                <span style="font-weight: 800; font-variant-numeric: tabular-nums; color: ${isSec ? '#ea580c' : 'inherit'};">${formatted}</span>
+              </div>
+            `;
+
+            if (showBenchmark && !isSec && typeof rawVal === 'number' && it.seriesIndex === 0) {
+              const delta = rawVal - benchmarkVal;
+              const deltaPct = ((delta / benchmarkVal) * 100).toFixed(1);
+              const isPos = delta >= 0;
+              const sign = isPos ? '+' : '';
+              const bColor = isPos ? '#10b981' : '#ef4444';
+              html += `
+                <div style="font-size: 11px; color: ${bColor}; text-align: right; margin-top: 2px;">
+                  vs Target 10k: <strong>${sign}${deltaPct}%</strong> (${sign}${delta.toLocaleString('it-IT')})
+                </div>
+              `;
+            }
+          });
+
+          return html;
+        }
+      };
+
+      const option = {
+        backgroundColor: 'transparent',
+        animationDuration: 650,
         grid: {
-          left: '3%',
-          right: '5%',
-          bottom: '5%',
-          top: '12%',
+          top: 50,
+          bottom: combineBreakdown ? 70 : 40,
+          left: isVertical ? 65 : 120,
+          right: hasDualAxis ? 70 : 40,
           containLabel: true
         },
-        xAxis: isVertical ? catAxis : valAxis,
-        yAxis: isVertical ? valAxis : catAxis,
+        tooltip,
+        legend: {
+          show: true,
+          top: 12,
+          textStyle: { color: isDark ? '#cbd5e1' : '#334155', fontSize: 12, fontWeight: 500 }
+        },
+        xAxis: isVertical ? catAxis : (hasDualAxis ? [valAxisPrimary, valAxisSecondary] : valAxisPrimary),
+        yAxis: isVertical ? (hasDualAxis ? [valAxisPrimary, valAxisSecondary] : valAxisPrimary) : catAxis,
         series: seriesConfig
       };
 
       chart.setOption(option, true);
     }
 
-    // Handlers
+    // UI Interactive Handlers
     function setViewMode(mode) {
       viewMode = mode;
       document.getElementById('btn-3d').classList.toggle('active', mode === '3d');
@@ -594,29 +714,51 @@
       renderChart();
     }
 
+    function toggleBenchmark() {
+      showBenchmark = !showBenchmark;
+      const btn = document.getElementById('btn-bench');
+      btn.innerText = `Target: ${showBenchmark ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', showBenchmark);
+      renderChart();
+    }
+
+    function toggleDualAxis() {
+      hasDualAxis = !hasDualAxis;
+      const btn = document.getElementById('btn-dual');
+      btn.innerText = `Doppio Asse Y: ${hasDualAxis ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active-secondary', hasDualAxis);
+      renderChart();
+    }
+
+    function toggleCombineBreakdown() {
+      combineBreakdown = !combineBreakdown;
+      const btn = document.getElementById('btn-combine');
+      btn.innerText = `Regime su Asse: ${combineBreakdown ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', combineBreakdown);
+      renderChart();
+    }
+
+    function toggleTheme() {
+      isDark = !isDark;
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      document.getElementById('btn-theme').innerText = isDark ? 'Light Theme' : 'Dark Theme';
+      document.getElementById('btn-theme').classList.toggle('active', isDark);
+      renderChart();
+    }
+
     function updateTilt(val) {
-      tilt3D = Number(val);
+      tilt3D = parseInt(val, 10);
       document.getElementById('label-tilt').innerText = val + '°';
       renderChart();
     }
 
     function updateDepth(val) {
-      depth3D = Number(val);
+      depth3D = parseInt(val, 10);
       document.getElementById('label-depth').innerText = val + 'px';
       renderChart();
     }
 
-    function toggleBenchmark() {
-      showBenchmark = !showBenchmark;
-      const btn = document.getElementById('btn-bench');
-      btn.innerText = 'Benchmark: ' + (showBenchmark ? 'ON' : 'OFF');
-      btn.classList.toggle('active', showBenchmark);
-      renderChart();
-    }
-
     window.addEventListener('resize', () => chart.resize());
-
-    // Initial render
     renderChart();
   </script>
 </body>

@@ -466,6 +466,71 @@ const config = {
                         },
                     },
                 ],
+                [
+                    {
+                        name: 'secondary_area_gradient',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Area Gradient Glow (Right Axis Line)'),
+                            description: t('Mostra un gradiente luminoso sfumato sotto la linea del secondo asse Y'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                    {
+                        name: 'secondary_line_width',
+                        config: {
+                            type: 'SelectControl',
+                            label: t('Secondary Line Width'),
+                            description: t('Spessore della linea del secondo asse (px)'),
+                            choices: [
+                                [2, '2px (Sottile)'],
+                                [3, '3px (Standard Moderno)'],
+                                [4, '4px (Marcato)'],
+                            ],
+                            default: 3,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'secondary_line_color',
+                        config: {
+                            type: 'TextControl',
+                            label: t('Secondary Line & Axis Color'),
+                            description: t('Colore esadecimale per la linea e asse secondario (es. #ea580c, #f59e0b, #ec4899)'),
+                            default: '#ea580c',
+                            renderTrigger: true,
+                        },
+                    },
+                    {
+                        name: 'theme_mode',
+                        config: {
+                            type: 'SelectControl',
+                            label: t('Color Theme Mode'),
+                            description: t('Tema cromatico: Light Enterprise o Dark Obsidian'),
+                            choices: [
+                                ['light', t('Light Enterprise')],
+                                ['dark', t('Dark Obsidian')],
+                            ],
+                            default: 'light',
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'enable_a11y_decal',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('A11y Texture Decal Patterns'),
+                            description: t('Abilita texture e pattern geometrici accessibili (W3C A11y / Colorblind Friendly)'),
+                            default: false,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
             ],
         },
     ],
