@@ -303,9 +303,9 @@
           <button id="btn-dual" class="btn active-secondary" onclick="toggleDualAxis()">Doppio Asse Y: ON</button>
         </div>
 
-        <!-- Combine Breakdown Toggle -->
+        <!-- Combine Breakdown Toggle (Dynamic Dimension) -->
         <div class="btn-group">
-          <button id="btn-combine" class="btn" onclick="toggleCombineBreakdown()">Regime su Asse: OFF</button>
+          <button id="btn-combine" class="btn" onclick="toggleCombineBreakdown()" title="Combina la dimensione di scomposizione sull'asse X (in Superset il nome si adatta dinamicamente alla colonna scelta)">Combina Dimensione: OFF</button>
         </div>
       </div>
 
@@ -733,7 +733,7 @@
     function toggleCombineBreakdown() {
       combineBreakdown = !combineBreakdown;
       const btn = document.getElementById('btn-combine');
-      btn.innerText = `Regime su Asse: ${combineBreakdown ? 'ON' : 'OFF'}`;
+      btn.innerText = `Combina Dimensione (Regime): ${combineBreakdown ? 'ON' : 'OFF'}`;
       btn.classList.toggle('active', combineBreakdown);
       renderChart();
     }

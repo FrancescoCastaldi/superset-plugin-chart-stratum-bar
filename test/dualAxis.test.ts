@@ -177,5 +177,44 @@ describe('StratumBar Dual Y-Axis & Combined Breakdown', () => {
     expect(secSeries2D.lineStyle.width).toBe(4);
     expect(secSeries2D.lineStyle.color).toBe('#f59e0b');
   });
+
+  it('should provide dynamic breakdownDimName, canCombineBreakdown and configurable toolbarConfig', () => {
+    const chartProps: Partial<ChartProps> = {
+      width: 800,
+      height: 500,
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '1__table',
+        x_axis: 'REPARTO',
+        groupby: ['REPARTO', 'REGIME'],
+        metrics: ['ricoveri'],
+        enableToolbar: true,
+        toolbar_show_view_mode: true,
+        toolbar_show_breakdown_toggle: true,
+        toolbar_show_dual_axis: false,
+      },
+      queriesData: [
+        {
+          data: hospitalData,
+        },
+      ],
+    };
+
+    const transformed = transformProps(chartProps as ChartProps);
+    expect(transformed.breakdownDimName).toBe('REGIME');
+    expect(transformed.canCombineBreakdown).toBe(true);
+    expect(transformed.standardCategories).toEqual(['Cardiologia', 'Ortopedia']);
+    expect(transformed.combinedCategories).toEqual([
+      'Cardiologia [SSN]',
+      'Cardiologia [Privato]',
+      'Ortopedia [SSN]',
+      'Ortopedia [Privato]',
+    ]);
+    expect(transformed.toolbarConfig).toBeDefined();
+    expect(transformed.toolbarConfig?.showViewMode).toBe(true);
+    expect(transformed.toolbarConfig?.showBreakdownToggle).toBe(true);
+    expect(transformed.toolbarConfig?.showDualAxis).toBe(false);
+  });
 });
+
 

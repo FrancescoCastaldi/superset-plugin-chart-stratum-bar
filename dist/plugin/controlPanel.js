@@ -533,6 +533,102 @@ const config = {
                 ],
             ],
         },
+        {
+            label: t('Barra degli Strumenti Runtime (Interactive Toolbar)'),
+            expanded: false,
+            controlSetRows: [
+                [
+                    {
+                        name: 'enableToolbar',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Abilita Toolbar Interattiva nel Grafico'),
+                            description: t('Mostra o nasconde la barra degli strumenti a runtime sopra il grafico'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'toolbar_show_view_mode',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Pulsante Switch 2D / 3D'),
+                            description: t('Consente all’utente finale di commutare tra vista 2D Moderna e 3D Isometrica'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                    {
+                        name: 'toolbar_show_orientation',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Pulsante Orientamento (Verticale / Orizzontale)'),
+                            description: t('Consente di ruotare l’orientamento del grafico tra colonne verticali e barre orizzontali'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'toolbar_show_stacking',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Pulsante Stacking (Affiancate / Impilate)'),
+                            description: t('Consente di alternare tra barre affiancate raggruppate e barre impilate'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                    {
+                        name: 'toolbar_show_dual_axis',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Pulsante Toggle Doppio Asse Y'),
+                            description: t('Consente di attivare/disattivare a runtime il secondo asse Y (se configurate metriche secondarie)'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'toolbar_show_breakdown_toggle',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Pulsante Combina Dimensione su Asse'),
+                            description: t('Consente di unificare/separare a runtime la dimensione di scomposizione sull’asse X (se presente)'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                    {
+                        name: 'toolbar_show_benchmark',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Pulsante Toggle Target/Benchmark'),
+                            description: t('Consente di attivare/disattivare a runtime la visualizzazione della soglia benchmark'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'toolbar_show_export',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Pulsanti Esportazione (PNG / CSV)'),
+                            description: t('Mostra i pulsanti di download per esportare lo screenshot PNG e i dati aggregati in CSV'),
+                            default: true,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+            ],
+        },
     ],
 };
 export default config;

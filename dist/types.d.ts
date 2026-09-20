@@ -65,6 +65,13 @@ export interface StratumBarFormData extends QueryFormData {
     secondary_line_color?: string;
     theme_mode?: 'light' | 'dark' | 'auto';
     enable_a11y_decal?: boolean;
+    toolbar_show_view_mode?: boolean;
+    toolbar_show_orientation?: boolean;
+    toolbar_show_stacking?: boolean;
+    toolbar_show_dual_axis?: boolean;
+    toolbar_show_breakdown_toggle?: boolean;
+    toolbar_show_benchmark?: boolean;
+    toolbar_show_export?: boolean;
 }
 export interface StratumBarTransformedProps {
     width: number;
@@ -102,6 +109,22 @@ export interface StratumBarTransformedProps {
     secondaryLineColor?: string;
     themeMode?: 'light' | 'dark' | 'auto';
     enableA11yDecal?: boolean;
+    breakdownDimName?: string;
+    canCombineBreakdown?: boolean;
+    combineCategoryBreakdown?: boolean;
+    combinedCategories?: string[];
+    combinedSeries?: StratumBarSeries[];
+    standardCategories?: string[];
+    standardSeries?: StratumBarSeries[];
+    toolbarConfig?: {
+        showViewMode: boolean;
+        showOrientation: boolean;
+        showStacking: boolean;
+        showDualAxis: boolean;
+        showBreakdownToggle: boolean;
+        showBenchmark: boolean;
+        showExport: boolean;
+    };
     formData: StratumBarFormData;
     onCrossFilter?: (category: string, seriesName?: string) => void;
 }

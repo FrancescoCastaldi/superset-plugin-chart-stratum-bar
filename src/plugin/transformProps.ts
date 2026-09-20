@@ -67,6 +67,13 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     legendOrientation = 'top',
     emit_filter = true,
     enableToolbar = true,
+    toolbar_show_view_mode = true,
+    toolbar_show_orientation = true,
+    toolbar_show_stacking = true,
+    toolbar_show_dual_axis = true,
+    toolbar_show_breakdown_toggle = true,
+    toolbar_show_benchmark = true,
+    toolbar_show_export = true,
     x_axis_title,
     y_axis_title,
   } = fd;
@@ -122,19 +129,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     }
   }
 
-  // 1. Collect unique ordered categories
-  const categoriesSet = new Set<string>();
-  data.forEach(row => {
-    const val = row[actualXKey];
-    if (val !== null && val !== undefined) {
-      if (combine_category_breakdown && actualBreakdownKey && row[actualBreakdownKey]) {
-        categoriesSet.add(`${val} [${row[actualBreakdownKey]}]`);
-      } else {
-        categoriesSet.add(String(val));
-      }
-    }
-  });
-  const categories = Array.from(categoriesSet);
 
   // 2. Determine Data Structure: PIVOTED vs UNPIVOTED
   // In Superset, Timeseries pivotOperator pivots the dataframe:
@@ -157,219 +151,271 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     (!actualBreakdownKey || !(actualBreakdownKey in sampleRow)) &&
     !(potentialPivotedKeys.length === 1 && potentialPivotedKeys[0].toLowerCase() === primaryMetric.toLowerCase());
 
-  // 3. Build Series
-  const series: StratumBarSeries[] = [];
+  // Determine actual metric column in row
+  const actualMetricKey = Object.keys(sampleRow).find(k => k.toLowerCase() === primaryMetric.toLowerCase()) || primaryMetric;
 
-  if (isPivoted) {
-    // PIVOTED DATAFRAME: Column keys are the series names!
-    potentialPivotedKeys.forEach((sName, sIdx) => {
-      const seriesData: (number | null)[] = [];
-      const seriesItems: StratumBarSeriesItem[] = [];
-
-      categories.forEach(cat => {
-        const row = data.find(r => String(r[actualXKey]) === cat);
-        const rawVal = row ? row[sName] : null;
-        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
-        seriesData.push(numVal);
-
-        const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
-        seriesItems.push({
-          category: cat,
-          value: numVal,
-          formattedValue: numVal !== null ? formatter(numVal) : undefined,
-          targetValue: targetVal,
-          rawData: row,
-        });
-      });
-
-      series.push({
-        name: sName,
-        key: sName,
-        color: getColor(sName, sIdx),
-        data: seriesData,
-        items: seriesItems,
-        yAxisIndex: 0,
-        seriesType: 'bar',
-      });
-    });
-  } else if (actualBreakdownKey && actualBreakdownKey in sampleRow) {
-    // UNPIVOTED DATAFRAME: Group by breakdown column value (e.g. REGIME)
-    const groupValuesSet = new Set<string>();
-    data.forEach(row => {
-      const gVal = row[actualBreakdownKey];
-      if (gVal !== null && gVal !== undefined) {
-        groupValuesSet.add(String(gVal));
-      }
-    });
-    const groupValues = Array.from(groupValuesSet);
-
-    // Map: groupVal -> (cat -> record)
-    const lookup = new Map<string, Map<string, DataRecord>>();
-    data.forEach(row => {
-      const rawCat = row[actualXKey] !== null && row[actualXKey] !== undefined ? String(row[actualXKey]) : 'N/D';
-      const cat = combine_category_breakdown && actualBreakdownKey && row[actualBreakdownKey]
-        ? `${rawCat} [${row[actualBreakdownKey]}]`
-        : rawCat;
-      const gVal = row[actualBreakdownKey] !== null && row[actualBreakdownKey] !== undefined ? String(row[actualBreakdownKey]) : 'N/D';
-      if (!lookup.has(gVal)) {
-        lookup.set(gVal, new Map());
-      }
-      lookup.get(gVal)!.set(cat, row);
-    });
-
-    groupValues.forEach((gVal, sIdx) => {
-      const gMap = lookup.get(gVal) || new Map();
-      const seriesData: (number | null)[] = [];
-      const seriesItems: StratumBarSeriesItem[] = [];
-
-      // Determine metric column in row
-      const actualMetricKey = Object.keys(sampleRow).find(k => k.toLowerCase() === primaryMetric.toLowerCase()) || primaryMetric;
-
-      categories.forEach(cat => {
-        const row = gMap.get(cat);
-        const rawVal = row ? row[actualMetricKey] : null;
-        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
-        seriesData.push(numVal);
-
-        const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
-        seriesItems.push({
-          category: cat,
-          value: numVal,
-          formattedValue: numVal !== null ? formatter(numVal) : undefined,
-          targetValue: targetVal,
-          rawData: row,
-        });
-      });
-
-      series.push({
-        name: gVal,
-        key: gVal,
-        color: getColor(gVal, sIdx),
-        data: seriesData,
-        items: seriesItems,
-        yAxisIndex: 0,
-        seriesType: 'bar',
-      });
-    });
-  } else if (metricList.length > 1) {
-    // Multiple metrics (e.g., Target vs Actual)
-    metricList.forEach((mKey, mIdx) => {
-      const seriesData: (number | null)[] = [];
-      const seriesItems: StratumBarSeriesItem[] = [];
-
-      categories.forEach(cat => {
-        const row = data.find(r => String(r[resolvedXAxis]) === cat);
-        const rawVal = row ? row[mKey] : null;
-        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
-        seriesData.push(numVal);
-
-        seriesItems.push({
-          category: cat,
-          value: numVal,
-          formattedValue: numVal !== null ? formatter(numVal) : undefined,
-          rawData: row,
-        });
-      });
-
-      series.push({
-        name: mKey,
-        key: mKey,
-        color: palette[mIdx % palette.length],
-        data: seriesData,
-        items: seriesItems,
-        yAxisIndex: 0,
-        seriesType: 'bar',
-      });
-    });
-  } else {
-    // Single metric, single dimension
-    const seriesData: (number | null)[] = [];
-    const seriesItems: StratumBarSeriesItem[] = [];
-
-    categories.forEach(cat => {
-      const row = data.find(r => String(r[resolvedXAxis]) === cat);
-      const rawVal = row ? row[primaryMetric] : null;
-      const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
-      seriesData.push(numVal);
-
-      const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
-      seriesItems.push({
-        category: cat,
-        value: numVal,
-        formattedValue: numVal !== null ? formatter(numVal) : undefined,
-        targetValue: targetVal,
-        rawData: row,
-      });
-    });
-
-    series.push({
-      name: primaryMetric,
-      key: primaryMetric,
-      color: palette[0],
-      data: seriesData,
-      items: seriesItems,
-      yAxisIndex: 0,
-      seriesType: 'bar',
-    });
-  }
-
-  // 2.bis Secondary Metrics for Right Y-Axis (Dual Axis)
+  // Secondary metrics setup
   const secondaryMetricList = ensureIsArray(secondary_metrics)
     .map(m => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)))
     .filter(Boolean);
+  const secFormatter = getNumberFormatter(y_axis_2_format);
+  const secPalette = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4'];
 
-  if (secondaryMetricList.length > 0) {
-    const secFormatter = getNumberFormatter(y_axis_2_format);
-    const secPalette = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4'];
+  // Helper to build categories and series for either separated or combined representation
+  const buildRepresentation = (combineFlag: boolean) => {
+    const categoriesSet = new Set<string>();
+    data.forEach(row => {
+      const val = row[actualXKey];
+      if (val !== null && val !== undefined) {
+        if (combineFlag && actualBreakdownKey && row[actualBreakdownKey]) {
+          categoriesSet.add(`${val} [${row[actualBreakdownKey]}]`);
+        } else {
+          categoriesSet.add(String(val));
+        }
+      }
+    });
+    const repCategories = Array.from(categoriesSet);
+    const repSeries: StratumBarSeries[] = [];
 
-    secondaryMetricList.forEach((secMetricName, secIdx) => {
-      const actualSecKey = Object.keys(sampleRow).find(
-        k => k.toLowerCase() === secMetricName.toLowerCase()
-      ) || secMetricName;
+    if (isPivoted) {
+      // PIVOTED DATAFRAME: Column keys are the series names
+      potentialPivotedKeys.forEach((sName, sIdx) => {
+        const seriesData: (number | null)[] = [];
+        const seriesItems: StratumBarSeriesItem[] = [];
 
-      const secData: (number | null)[] = [];
-      const secItems: StratumBarSeriesItem[] = [];
+        repCategories.forEach(cat => {
+          const row = data.find(r => String(r[actualXKey]) === cat);
+          const rawVal = row ? row[sName] : null;
+          const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+          seriesData.push(numVal);
 
-      categories.forEach(cat => {
-        // Trova tutte le righe corrispondenti a questa categoria
-        const matchingRows = data.filter(r => {
-          if (combine_category_breakdown && actualBreakdownKey && r[actualBreakdownKey]) {
-            return `${r[actualXKey]} [${r[actualBreakdownKey]}]` === cat;
-          }
-          return String(r[actualXKey]) === cat;
+          const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
+          seriesItems.push({
+            category: cat,
+            value: numVal,
+            formattedValue: numVal !== null ? formatter(numVal) : undefined,
+            targetValue: targetVal,
+            rawData: row,
+          });
         });
 
-        let numVal: number | null = null;
-        if (matchingRows.length > 0) {
-          const vals = matchingRows
-            .map(r => r[actualSecKey])
-            .filter(v => typeof v === 'number' && !isNaN(v)) as number[];
-          if (vals.length > 0) {
-            numVal = vals.reduce((a, b) => a + b, 0) / vals.length;
-          }
-        }
+        repSeries.push({
+          name: sName,
+          key: sName,
+          color: getColor(sName, sIdx),
+          data: seriesData,
+          items: seriesItems,
+          yAxisIndex: 0,
+          seriesType: 'bar',
+        });
+      });
+    } else if (actualBreakdownKey && actualBreakdownKey in sampleRow) {
+      if (combineFlag) {
+        // UNPIVOTED WITH BREAKDOWN COMBINED ON AXIS: Single series with compound category labels
+        const seriesData: (number | null)[] = [];
+        const seriesItems: StratumBarSeriesItem[] = [];
 
-        secData.push(numVal);
-        secItems.push({
+        repCategories.forEach(cat => {
+          const row = data.find(r => `${r[actualXKey]} [${r[actualBreakdownKey]}]` === cat);
+          const rawVal = row ? row[actualMetricKey] : null;
+          const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+          seriesData.push(numVal);
+
+          const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
+          seriesItems.push({
+            category: cat,
+            value: numVal,
+            formattedValue: numVal !== null ? formatter(numVal) : undefined,
+            targetValue: targetVal,
+            rawData: row,
+          });
+        });
+
+        repSeries.push({
+          name: primaryMetric,
+          key: primaryMetric,
+          color: palette[0],
+          data: seriesData,
+          items: seriesItems,
+          yAxisIndex: 0,
+          seriesType: 'bar',
+        });
+      } else {
+        // UNPIVOTED WITH SEPARATE BREAKDOWN SERIES: Group by breakdown column value (e.g. REGIME)
+        const groupValuesSet = new Set<string>();
+        data.forEach(row => {
+          const gVal = row[actualBreakdownKey];
+          if (gVal !== null && gVal !== undefined) {
+            groupValuesSet.add(String(gVal));
+          }
+        });
+        const groupValues = Array.from(groupValuesSet);
+
+        // Map: groupVal -> (cat -> record)
+        const lookup = new Map<string, Map<string, DataRecord>>();
+        data.forEach(row => {
+          const rawCat = row[actualXKey] !== null && row[actualXKey] !== undefined ? String(row[actualXKey]) : 'N/D';
+          const gVal = row[actualBreakdownKey] !== null && row[actualBreakdownKey] !== undefined ? String(row[actualBreakdownKey]) : 'N/D';
+          if (!lookup.has(gVal)) {
+            lookup.set(gVal, new Map());
+          }
+          lookup.get(gVal)!.set(rawCat, row);
+        });
+
+        groupValues.forEach((gVal, sIdx) => {
+          const gMap = lookup.get(gVal) || new Map();
+          const seriesData: (number | null)[] = [];
+          const seriesItems: StratumBarSeriesItem[] = [];
+
+          repCategories.forEach(cat => {
+            const row = gMap.get(cat);
+            const rawVal = row ? row[actualMetricKey] : null;
+            const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+            seriesData.push(numVal);
+
+            const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
+            seriesItems.push({
+              category: cat,
+              value: numVal,
+              formattedValue: numVal !== null ? formatter(numVal) : undefined,
+              targetValue: targetVal,
+              rawData: row,
+            });
+          });
+
+          repSeries.push({
+            name: gVal,
+            key: gVal,
+            color: getColor(gVal, sIdx),
+            data: seriesData,
+            items: seriesItems,
+            yAxisIndex: 0,
+            seriesType: 'bar',
+          });
+        });
+      }
+    } else if (metricList.length > 1) {
+      // Multiple metrics (e.g. Target vs Actual)
+      metricList.forEach((mKey, mIdx) => {
+        const seriesData: (number | null)[] = [];
+        const seriesItems: StratumBarSeriesItem[] = [];
+
+        repCategories.forEach(cat => {
+          const row = data.find(r => String(r[resolvedXAxis]) === cat);
+          const rawVal = row ? row[mKey] : null;
+          const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+          seriesData.push(numVal);
+
+          seriesItems.push({
+            category: cat,
+            value: numVal,
+            formattedValue: numVal !== null ? formatter(numVal) : undefined,
+            rawData: row,
+          });
+        });
+
+        repSeries.push({
+          name: mKey,
+          key: mKey,
+          color: palette[mIdx % palette.length],
+          data: seriesData,
+          items: seriesItems,
+          yAxisIndex: 0,
+          seriesType: 'bar',
+        });
+      });
+    } else {
+      // Single metric, single dimension
+      const seriesData: (number | null)[] = [];
+      const seriesItems: StratumBarSeriesItem[] = [];
+
+      repCategories.forEach(cat => {
+        const row = data.find(r => String(r[resolvedXAxis]) === cat);
+        const rawVal = row ? row[primaryMetric] : null;
+        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+        seriesData.push(numVal);
+
+        const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
+        seriesItems.push({
           category: cat,
           value: numVal,
-          formattedValue: numVal !== null ? secFormatter(numVal) : undefined,
-          rawData: matchingRows[0],
+          formattedValue: numVal !== null ? formatter(numVal) : undefined,
+          targetValue: targetVal,
+          rawData: row,
         });
       });
 
-      const chosenColor = secIdx === 0 && secondary_line_color ? secondary_line_color : secPalette[secIdx % secPalette.length];
-      series.push({
-        name: secMetricName,
-        key: `sec_${secMetricName}`,
-        color: chosenColor,
-        data: secData,
-        items: secItems,
-        yAxisIndex: 1,
-        seriesType: secondary_series_type || 'line',
+      repSeries.push({
+        name: primaryMetric,
+        key: primaryMetric,
+        color: palette[0],
+        data: seriesData,
+        items: seriesItems,
+        yAxisIndex: 0,
+        seriesType: 'bar',
       });
-    });
-  }
+    }
+
+    // Secondary Metrics for Right Y-Axis (Dual Axis)
+    if (secondaryMetricList.length > 0) {
+      secondaryMetricList.forEach((secMetricName, secIdx) => {
+        const actualSecKey = Object.keys(sampleRow).find(
+          k => k.toLowerCase() === secMetricName.toLowerCase()
+        ) || secMetricName;
+
+        const secData: (number | null)[] = [];
+        const secItems: StratumBarSeriesItem[] = [];
+
+        repCategories.forEach(cat => {
+          const matchingRows = data.filter(r => {
+            if (combineFlag && actualBreakdownKey && r[actualBreakdownKey]) {
+              return `${r[actualXKey]} [${r[actualBreakdownKey]}]` === cat;
+            }
+            return String(r[actualXKey]) === cat;
+          });
+
+          let numVal: number | null = null;
+          if (matchingRows.length > 0) {
+            const vals = matchingRows
+              .map(r => r[actualSecKey])
+              .filter(v => typeof v === 'number' && !isNaN(v)) as number[];
+            if (vals.length > 0) {
+              numVal = vals.reduce((a, b) => a + b, 0) / vals.length;
+            }
+          }
+
+          secData.push(numVal);
+          secItems.push({
+            category: cat,
+            value: numVal,
+            formattedValue: numVal !== null ? secFormatter(numVal) : undefined,
+            rawData: matchingRows[0],
+          });
+        });
+
+        const chosenColor = secIdx === 0 && secondary_line_color ? secondary_line_color : secPalette[secIdx % secPalette.length];
+        repSeries.push({
+          name: secMetricName,
+          key: `sec_${secMetricName}`,
+          color: chosenColor,
+          data: secData,
+          items: secItems,
+          yAxisIndex: 1,
+          seriesType: secondary_series_type || 'line',
+        });
+      });
+    }
+
+    return { categories: repCategories, series: repSeries };
+  };
+
+  const standardRep = buildRepresentation(false);
+  const combinedRep = actualBreakdownKey && actualBreakdownKey in sampleRow ? buildRepresentation(true) : standardRep;
+
+  const currentRep = combine_category_breakdown ? combinedRep : standardRep;
+  const categories = currentRep.categories;
+  const series = currentRep.series;
+
 
   // 3. Compute Benchmark if enabled
   let benchmark: BenchmarkConfig | undefined;
@@ -486,6 +532,22 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     secondaryLineColor: secondary_line_color || '#ea580c',
     themeMode: theme_mode,
     enableA11yDecal: enable_a11y_decal,
+    breakdownDimName: actualBreakdownKey,
+    canCombineBreakdown: Boolean(actualBreakdownKey && actualBreakdownKey in sampleRow),
+    combineCategoryBreakdown: combine_category_breakdown,
+    standardCategories: standardRep.categories,
+    standardSeries: standardRep.series,
+    combinedCategories: combinedRep.categories,
+    combinedSeries: combinedRep.series,
+    toolbarConfig: {
+      showViewMode: toolbar_show_view_mode !== false,
+      showOrientation: toolbar_show_orientation !== false,
+      showStacking: toolbar_show_stacking !== false,
+      showDualAxis: toolbar_show_dual_axis !== false,
+      showBreakdownToggle: toolbar_show_breakdown_toggle !== false,
+      showBenchmark: toolbar_show_benchmark !== false,
+      showExport: toolbar_show_export !== false,
+    },
     formData: fd,
     onCrossFilter,
   };

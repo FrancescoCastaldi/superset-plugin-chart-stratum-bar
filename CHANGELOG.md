@@ -4,6 +4,19 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.2] - 2026-09-20
+
+### Aggiunto
+- **Universal Agnostic Architecture & Toolbar Configurable dal Backend**:
+  - **Nessuna Assunzione o Hardcoding di Dominio**: la dimensione di scomposizione non e' piu' fissa, ma rilevata e iniettata dinamicamente (`breakdownDimName`), adattando automaticamente testi, bottoni e logica di raggruppamento a qualsiasi dataset (es. Reparto, Canale, Fornitore, Regione).
+  - **Pannello di Controllo Esplora / Backend ("k-end") Granulare**:
+    - Nuova sezione *Barra degli Strumenti Runtime (Interactive Toolbar)* con toggle master `enableToolbar` e controlli individuali per abilitare/disabilitare ciascun pulsante a runtime (`toolbar_show_view_mode`, `toolbar_show_orientation`, `toolbar_show_stacking`, `toolbar_show_dual_axis`, `toolbar_show_breakdown_toggle`, `toolbar_show_benchmark`, `toolbar_show_export`).
+    - Possibilita' per gli autori di dashboard di disattivare la toolbar o limitare i toggle a runtime per visualizzatori finali.
+  - **Reattivita' 60fps Client-Side in StratumBarChart**:
+    - Doppio calcolo e cache di rappresentazione (`standardCategories`/`standardSeries` e `combinedCategories`/`combinedSeries`) in `transformProps.ts` per switch istantaneo client-side.
+    - Pulsanti reattivi per Doppio Asse Y (`ON/OFF`), Combina Dimensione (`ON/OFF`) e Target (`ON/OFF`), mostrati unicamente se le rispettive funzionalita' sono configurate nel grafico.
+  - **Test Suite Dedicata**: aggiunto test unitario in `test/dualAxis.test.ts` (12/12 test passing).
+
 ## [0.2.1] - 2026-09-20
 
 ### Aggiunto
