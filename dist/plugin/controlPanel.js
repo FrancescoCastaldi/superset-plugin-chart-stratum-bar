@@ -34,8 +34,19 @@ const config = {
                         name: 'metrics',
                         config: {
                             ...sharedControls.metrics,
-                            label: t('Metrics'),
-                            description: t('Metrics to measure bar height (e.g., Numero Richieste, Fatturato)'),
+                            label: t('Primary Metrics (Left Axis)'),
+                            description: t('Metrics to measure primary bar height (e.g., Numero Richieste, Fatturato)'),
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'secondary_metrics',
+                        config: {
+                            ...sharedControls.metrics,
+                            label: t('Secondary Metrics (Right Axis)'),
+                            description: t('Optional metrics plotted on the independent right secondary Y-axis (e.g., Tasso %, Degenza Media, Costo Unitario)'),
+                            multi: true,
                         },
                     },
                 ],
@@ -55,7 +66,7 @@ const config = {
             ],
         },
         {
-            label: t('3D Isometric & Volumetric Options'),
+            label: t('Chart Mode & Visual Engine'),
             expanded: true,
             controlSetRows: [
                 [
@@ -63,8 +74,8 @@ const config = {
                         name: 'viewMode',
                         config: {
                             type: 'SelectControl',
-                            label: t('Default View Mode'),
-                            description: t('Initial visualization mode (switchable at runtime via the toolbar)'),
+                            label: t('View Mode'),
+                            description: t('Visualization engine: 3D Isometric or Modern 2D Curved (can also be switched at runtime)'),
                             choices: [
                                 ['3d', t('3D Isometrico Volumetrico')],
                                 ['2d', t('2D Moderno (Curved & Track)')],
@@ -74,10 +85,49 @@ const config = {
                         },
                     },
                     {
+                        name: 'theme_mode',
+                        config: {
+                            type: 'SelectControl',
+                            label: t('Color Theme'),
+                            description: t('Visual color theme: Light Enterprise or Dark Obsidian'),
+                            choices: [
+                                ['light', t('Light Enterprise')],
+                                ['dark', t('Dark Obsidian')],
+                            ],
+                            default: 'light',
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'color_scheme',
+                        config: {
+                            type: 'ColorSchemeControl',
+                            label: t('Color Palette'),
+                            description: t('Color palette applied to primary bars and grouped series'),
+                            renderTrigger: true,
+                            default: 'supersetColors',
+                        },
+                    },
+                    {
+                        name: 'enable_a11y_decal',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('A11y Pattern Decals'),
+                            description: t('Enable accessible geometric texture decals for color-blind viewers (W3C A11y)'),
+                            default: false,
+                            renderTrigger: true,
+                        },
+                    },
+                ],
+                // 3D Specific Controls (Only visible when viewMode === '3d')
+                [
+                    {
                         name: 'barShape3D',
                         config: {
                             type: 'SelectControl',
-                            label: t('3D Bar Shape'),
+                            label: t('3D Geometry Shape'),
                             description: t('Geometric shape for 3D rendering: Rectangular Prism or Cylinder'),
                             choices: [
                                 ['prism', t('Prisma Rettangolare (Prism)')],
@@ -85,6 +135,18 @@ const config = {
                             ],
                             default: 'prism',
                             renderTrigger: true,
+                            visibility: ({ controls }) => controls?.viewMode?.value === '3d',
+                        },
+                    },
+                    {
+                        name: 'shadow3D',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('3D Ground Shadows'),
+                            description: t('Render soft ambient drop shadow beneath each 3D column'),
+                            default: true,
+                            renderTrigger: true,
+                            visibility: ({ controls }) => controls?.viewMode?.value === '3d',
                         },
                     },
                 ],
@@ -94,12 +156,13 @@ const config = {
                         config: {
                             type: 'SliderControl',
                             label: t('3D Depth (px)'),
-                            description: t('Isometric extrusion depth of the 3D bars'),
+                            description: t('Isometric extrusion depth of 3D columns in pixels'),
                             min: 5,
                             max: 50,
                             step: 1,
                             default: 20,
                             renderTrigger: true,
+                            visibility: ({ controls }) => controls?.viewMode?.value === '3d',
                         },
                     },
                     {
@@ -107,41 +170,20 @@ const config = {
                         config: {
                             type: 'SliderControl',
                             label: t('3D Tilt Angle (deg)'),
-                            description: t('Projection angle of the top and side facets'),
+                            description: t('Projection angle of top and side column facets'),
                             min: 15,
                             max: 60,
                             step: 1,
                             default: 25,
                             renderTrigger: true,
-                        },
-                    },
-                ],
-                [
-                    {
-                        name: 'shadow3D',
-                        config: {
-                            type: 'CheckboxControl',
-                            label: t('3D Ground Shadows'),
-                            description: t('Render soft ambient ground shadow beneath each 3D bar'),
-                            default: true,
-                            renderTrigger: true,
-                        },
-                    },
-                    {
-                        name: 'enableToolbar',
-                        config: {
-                            type: 'CheckboxControl',
-                            label: t('Enable Interactive Runtime Toolbar'),
-                            description: t('Show 2D/3D toggle, orientation switch, stacking switch and PNG/CSV exports above the chart'),
-                            default: true,
-                            renderTrigger: true,
+                            visibility: ({ controls }) => controls?.viewMode?.value === '3d',
                         },
                     },
                 ],
             ],
         },
         {
-            label: t('Layout, Stacking & 2D Styling'),
+            label: t('Layout, Labels & 2D Options'),
             expanded: true,
             controlSetRows: [
                 [
@@ -163,8 +205,8 @@ const config = {
                         name: 'stacking',
                         config: {
                             type: 'SelectControl',
-                            label: t('Stacking Mode'),
-                            description: t('Display series side-by-side or stacked on top of each other'),
+                            label: t('Series Stacking'),
+                            description: t('Display series side-by-side (Grouped) or stacked on top of each other'),
                             choices: [
                                 ['none', t('Raggruppate (Grouped)')],
                                 ['stack', t('Impilate (Stacked)')],
@@ -176,36 +218,11 @@ const config = {
                 ],
                 [
                     {
-                        name: 'barBorderRadius',
-                        config: {
-                            type: 'SliderControl',
-                            label: t('Bar Border Radius (2D Mode)'),
-                            description: t('Rounded corners for 2D bars'),
-                            min: 0,
-                            max: 20,
-                            step: 1,
-                            default: 6,
-                            renderTrigger: true,
-                        },
-                    },
-                    {
-                        name: 'showTrackBackground',
-                        config: {
-                            type: 'CheckboxControl',
-                            label: t('Show Track Background (2D Mode)'),
-                            description: t('Render subtle background rail behind each bar to indicate maximum scale'),
-                            default: false,
-                            renderTrigger: true,
-                        },
-                    },
-                ],
-                [
-                    {
                         name: 'showValue',
                         config: {
                             type: 'CheckboxControl',
                             label: t('Show Values on Bars'),
-                            description: t('Display formatted metric values directly on or above bars'),
+                            description: t('Display formatted metric numbers directly on or above bars'),
                             default: true,
                             renderTrigger: true,
                         },
@@ -215,7 +232,7 @@ const config = {
                         config: {
                             type: 'SelectControl',
                             label: t('Value Position'),
-                            description: t('Where to position the bar value labels'),
+                            description: t('Position of bar value labels'),
                             choices: [
                                 ['top', t('Sopra (Top)')],
                                 ['inside', t('All’interno (Inside)')],
@@ -223,6 +240,7 @@ const config = {
                             ],
                             default: 'top',
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.showValue?.value),
                         },
                     },
                 ],
@@ -232,8 +250,8 @@ const config = {
                         config: {
                             type: 'SelectControl',
                             freeForm: true,
-                            label: t('Number Format'),
-                            description: t('D3 format string for numbers (e.g. ,.0f, .2%, $, etc.)'),
+                            label: t('Primary Number Format'),
+                            description: t('D3 format string for primary metrics (e.g. ,.0f, .2%, $, etc.)'),
                             choices: [
                                 [',.0f', t('Intero con separatore (1,234)')],
                                 [',.2f', t('Decimale 2 cifre (1,234.56)')],
@@ -244,30 +262,158 @@ const config = {
                             renderTrigger: true,
                         },
                     },
+                ],
+                // 2D Specific Options
+                [
                     {
-                        name: 'color_scheme',
+                        name: 'barBorderRadius',
                         config: {
-                            type: 'ColorSchemeControl',
-                            label: t('Color Scheme'),
-                            description: t('Color palette for bars and series'),
+                            type: 'SliderControl',
+                            label: t('Bar Corner Radius (2D)'),
+                            description: t('Rounded corners for 2D bars'),
+                            min: 0,
+                            max: 20,
+                            step: 1,
+                            default: 6,
                             renderTrigger: true,
-                            default: 'supersetColors',
+                            visibility: ({ controls }) => controls?.viewMode?.value === '2d',
+                        },
+                    },
+                    {
+                        name: 'showTrackBackground',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Track Background (2D)'),
+                            description: t('Render subtle background track guide behind each bar indicating maximum scale'),
+                            default: false,
+                            renderTrigger: true,
+                            visibility: ({ controls }) => controls?.viewMode?.value === '2d',
                         },
                     },
                 ],
             ],
         },
         {
-            label: t('Benchmark Target & Delta % Badges'),
-            expanded: true,
+            label: t('Dual Y-Axis (Secondary Metrics)'),
+            expanded: false,
+            controlSetRows: [
+                [
+                    {
+                        name: 'secondary_series_type',
+                        config: {
+                            type: 'SelectControl',
+                            label: t('Secondary Visualization'),
+                            description: t('How to render secondary metrics: Smooth Line with markers or Secondary Bars'),
+                            choices: [
+                                ['line', t('Linea con Indicatori (Line + Markers)')],
+                                ['bar', t('Barra Secondaria (Bar)')],
+                            ],
+                            default: 'line',
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.secondary_metrics?.value && controls.secondary_metrics.value.length > 0),
+                        },
+                    },
+                    {
+                        name: 'combine_category_breakdown',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Combine Breakdown on Axis'),
+                            description: t('Concatenate category and breakdown dimension labels directly on the X-axis (e.g., Reparto - Privato/SSN)'),
+                            default: false,
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.groupby?.value && controls.groupby.value.length > 0),
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'y_axis_2_title',
+                        config: {
+                            type: 'TextControl',
+                            label: t('Right Axis Title'),
+                            description: t('Custom label displayed on the right secondary Y-axis'),
+                            default: '',
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.secondary_metrics?.value && controls.secondary_metrics.value.length > 0),
+                        },
+                    },
+                    {
+                        name: 'y_axis_2_format',
+                        config: {
+                            type: 'SelectControl',
+                            freeForm: true,
+                            label: t('Right Axis Number Format'),
+                            description: t('D3 format string for right Y-axis (e.g. .2% for rates/percentages, ,.2f for currency)'),
+                            choices: [
+                                ['.2%', t('Percentuale (12.34%)')],
+                                [',.2f', t('Decimale 2 cifre (1,234.56)')],
+                                [',.0f', t('Intero (1,234)')],
+                                ['$,.2f', t('Valuta ($1,234.56)')],
+                                ['~s', t('Prefisso SI (1.2k, 3.4M)')],
+                            ],
+                            default: ',.2f',
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.secondary_metrics?.value && controls.secondary_metrics.value.length > 0),
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'secondary_line_color',
+                        config: {
+                            type: 'TextControl',
+                            label: t('Secondary Color'),
+                            description: t('Hex color code for the secondary line and right axis (e.g. #ea580c, #f59e0b, #ec4899)'),
+                            default: '#ea580c',
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.secondary_metrics?.value && controls.secondary_metrics.value.length > 0),
+                        },
+                    },
+                    {
+                        name: 'secondary_line_width',
+                        config: {
+                            type: 'SelectControl',
+                            label: t('Line Thickness'),
+                            description: t('Thickness in pixels of the secondary trend line'),
+                            choices: [
+                                [2, '2px (Sottile)'],
+                                [3, '3px (Standard Moderno)'],
+                                [4, '4px (Marcato)'],
+                            ],
+                            default: 3,
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.secondary_metrics?.value && controls.secondary_metrics.value.length > 0) &&
+                                controls?.secondary_series_type?.value === 'line',
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'secondary_area_gradient',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Glowing Area Gradient'),
+                            description: t('Render a subtle, glowing color gradient beneath the secondary trend line'),
+                            default: true,
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.secondary_metrics?.value && controls.secondary_metrics.value.length > 0) &&
+                                controls?.secondary_series_type?.value === 'line',
+                        },
+                    },
+                ],
+            ],
+        },
+        {
+            label: t('Benchmark Target & Delta %'),
+            expanded: false,
             controlSetRows: [
                 [
                     {
                         name: 'showBenchmark',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Show Benchmark Reference Line'),
-                            description: t('Draw a highlighted target benchmark reference line across the chart'),
+                            label: t('Enable Benchmark Reference Line'),
+                            description: t('Draw a highlighted reference benchmark line across the chart'),
                             default: false,
                             renderTrigger: true,
                         },
@@ -277,7 +423,7 @@ const config = {
                         config: {
                             type: 'SelectControl',
                             label: t('Benchmark Calculation Type'),
-                            description: t('How the benchmark value is determined: fixed number, mean average, median, or target metric'),
+                            description: t('How the benchmark target is computed: fixed number, mean average, median, or target metric'),
                             choices: [
                                 ['fixed_value', t('Valore Fisso (Fixed Value)')],
                                 ['average', t('Media dei Valori (Average)')],
@@ -286,6 +432,7 @@ const config = {
                             ],
                             default: 'fixed_value',
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.showBenchmark?.value),
                         },
                     },
                 ],
@@ -294,10 +441,11 @@ const config = {
                         name: 'benchmarkValue',
                         config: {
                             type: 'TextControl',
-                            label: t('Fixed Benchmark Value'),
-                            description: t('Numeric target value when Benchmark Calculation is Fixed Value'),
+                            label: t('Fixed Target Value'),
+                            description: t('Numeric benchmark target when Calculation Type is Fixed Value'),
                             default: 100,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.showBenchmark?.value) && controls?.benchmarkType?.value === 'fixed_value',
                         },
                     },
                     {
@@ -305,9 +453,10 @@ const config = {
                         config: {
                             type: 'CheckboxControl',
                             label: t('Show Delta % Badges'),
-                            description: t('Calculate and display percentage deviation badges (+/- %) against benchmark in tooltips and headers'),
+                            description: t('Calculate and display real-time percentage deviation badges (+/- %) against target'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.showBenchmark?.value),
                         },
                     },
                 ],
@@ -317,20 +466,21 @@ const config = {
                         config: {
                             type: 'SelectControl',
                             label: t('Delta Polarity'),
-                            description: t('Normal: positive is green, negative is red. Inverted: positive is red (e.g. for wait times, cancellations)'),
+                            description: t('Normal: positive is green. Inverted: positive is red (essential for wait times, delays, costs)'),
                             choices: [
                                 ['normal', t('Normale (Verde = Positivo, Rosso = Negativo)')],
                                 ['inverted', t('Invertito (Rosso = Incremento, es. Tempi/Costi)')],
                             ],
                             default: 'normal',
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.showBenchmark?.value && controls?.showDeltaBadge?.value),
                         },
                     },
                 ],
             ],
         },
         {
-            label: t('Axes, Legend & Cross-Filtering'),
+            label: t('Axes & Dashboard Interactivity'),
             expanded: false,
             controlSetRows: [
                 [
@@ -339,7 +489,7 @@ const config = {
                         config: {
                             type: 'TextControl',
                             label: t('X-Axis Title'),
-                            description: t('Custom label displayed at the end of the X axis'),
+                            description: t('Custom label displayed at the bottom of the X axis'),
                             default: '',
                             renderTrigger: true,
                         },
@@ -348,8 +498,8 @@ const config = {
                         name: 'y_axis_title',
                         config: {
                             type: 'TextControl',
-                            label: t('Y-Axis Title'),
-                            description: t('Custom label displayed at the top of the Y axis'),
+                            label: t('Left Y-Axis Title'),
+                            description: t('Custom label displayed at the top of the primary Y axis'),
                             default: '',
                             renderTrigger: true,
                         },
@@ -378,6 +528,7 @@ const config = {
                             ],
                             default: 'top',
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.show_legend?.value),
                         },
                     },
                 ],
@@ -386,8 +537,8 @@ const config = {
                         name: 'emit_filter',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Enable Cross-Filtering (Dashboard)'),
-                            description: t('Clicking a bar emits a filter event across all linked dashboard charts'),
+                            label: t('Cross-Filtering (setDataMask)'),
+                            description: t('Clicking a bar emits native filter events across all companion dashboard charts'),
                             default: true,
                             renderTrigger: true,
                         },
@@ -396,145 +547,7 @@ const config = {
             ],
         },
         {
-            label: t('Doppio Asse Y & Metriche Secondarie (Dual Y-Axis)'),
-            expanded: false,
-            controlSetRows: [
-                [
-                    {
-                        name: 'secondary_metrics',
-                        config: {
-                            ...sharedControls.metrics,
-                            label: t('Secondary Metrics (Right Y-Axis)'),
-                            description: t('Metriche da tracciare sul secondo asse Y (es. Tasso %, Degenza Media, Costo Unitario)'),
-                            multi: true,
-                        },
-                    },
-                ],
-                [
-                    {
-                        name: 'secondary_series_type',
-                        config: {
-                            type: 'SelectControl',
-                            label: t('Secondary Series Visualization'),
-                            description: t('Come visualizzare la metrica secondaria: Linea sovrapposta o Barre secondarie'),
-                            choices: [
-                                ['line', t('Linea con Indicatori (Line + Markers)')],
-                                ['bar', t('Barra Secondaria (Bar)')],
-                            ],
-                            default: 'line',
-                            renderTrigger: true,
-                        },
-                    },
-                    {
-                        name: 'combine_category_breakdown',
-                        config: {
-                            type: 'CheckboxControl',
-                            label: t('Combine Category & Breakdown on Axis'),
-                            description: t('Concatena le etichette delle dimensioni sull asse (es. Reparto - Regime SSN/Privato)'),
-                            default: false,
-                            renderTrigger: true,
-                        },
-                    },
-                ],
-                [
-                    {
-                        name: 'y_axis_2_title',
-                        config: {
-                            type: 'TextControl',
-                            label: t('Right Y-Axis Title (Asse 2)'),
-                            description: t('Etichetta testuale visualizzata sul secondo asse delle ordinate a destra'),
-                            default: '',
-                            renderTrigger: true,
-                        },
-                    },
-                    {
-                        name: 'y_axis_2_format',
-                        config: {
-                            type: 'SelectControl',
-                            freeForm: true,
-                            label: t('Right Y-Axis Number Format'),
-                            description: t('Formato numerico D3 per il secondo asse Y (es. .2% per percentuali, ,.2f per decimali)'),
-                            choices: [
-                                ['.2%', t('Percentuale (12.34%)')],
-                                [',.2f', t('Decimale 2 cifre (1,234.56)')],
-                                [',.0f', t('Intero (1,234)')],
-                                ['$,.2f', t('Valuta ($1,234.56)')],
-                                ['~s', t('Prefisso SI (1.2k, 3.4M)')],
-                            ],
-                            default: ',.2f',
-                            renderTrigger: true,
-                        },
-                    },
-                ],
-                [
-                    {
-                        name: 'secondary_area_gradient',
-                        config: {
-                            type: 'CheckboxControl',
-                            label: t('Area Gradient Glow (Right Axis Line)'),
-                            description: t('Mostra un gradiente luminoso sfumato sotto la linea del secondo asse Y'),
-                            default: true,
-                            renderTrigger: true,
-                        },
-                    },
-                    {
-                        name: 'secondary_line_width',
-                        config: {
-                            type: 'SelectControl',
-                            label: t('Secondary Line Width'),
-                            description: t('Spessore della linea del secondo asse (px)'),
-                            choices: [
-                                [2, '2px (Sottile)'],
-                                [3, '3px (Standard Moderno)'],
-                                [4, '4px (Marcato)'],
-                            ],
-                            default: 3,
-                            renderTrigger: true,
-                        },
-                    },
-                ],
-                [
-                    {
-                        name: 'secondary_line_color',
-                        config: {
-                            type: 'TextControl',
-                            label: t('Secondary Line & Axis Color'),
-                            description: t('Colore esadecimale per la linea e asse secondario (es. #ea580c, #f59e0b, #ec4899)'),
-                            default: '#ea580c',
-                            renderTrigger: true,
-                        },
-                    },
-                    {
-                        name: 'theme_mode',
-                        config: {
-                            type: 'SelectControl',
-                            label: t('Color Theme Mode'),
-                            description: t('Tema cromatico: Light Enterprise o Dark Obsidian'),
-                            choices: [
-                                ['light', t('Light Enterprise')],
-                                ['dark', t('Dark Obsidian')],
-                            ],
-                            default: 'light',
-                            renderTrigger: true,
-                        },
-                    },
-                ],
-                [
-                    {
-                        name: 'enable_a11y_decal',
-                        config: {
-                            type: 'CheckboxControl',
-                            label: t('A11y Texture Decal Patterns'),
-                            description: t('Abilita texture e pattern geometrici accessibili (W3C A11y / Colorblind Friendly)'),
-                            default: false,
-                            renderTrigger: true,
-                        },
-                    },
-                ],
-            ],
-        },
-        {
-            label: t('Barra degli Strumenti Runtime (Interactive Toolbar)'),
+            label: t('Runtime Dashboard Toolbar'),
             expanded: false,
             controlSetRows: [
                 [
@@ -542,8 +555,8 @@ const config = {
                         name: 'enableToolbar',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Abilita Toolbar Interattiva nel Grafico'),
-                            description: t('Mostra o nasconde la barra degli strumenti a runtime sopra il grafico'),
+                            label: t('Enable Runtime Interactive Toolbar'),
+                            description: t('Display the sleek, non-intrusive floating toolbar above the chart in dashboard view'),
                             default: true,
                             renderTrigger: true,
                         },
@@ -554,20 +567,22 @@ const config = {
                         name: 'toolbar_show_view_mode',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Pulsante Switch 2D / 3D'),
-                            description: t('Consente all’utente finale di commutare tra vista 2D Moderna e 3D Isometrica'),
+                            label: t('2D / 3D Switcher'),
+                            description: t('Allow viewers to switch between 2D Modern and 3D Isometric at runtime'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.enableToolbar?.value),
                         },
                     },
                     {
                         name: 'toolbar_show_orientation',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Pulsante Orientamento (Verticale / Orizzontale)'),
-                            description: t('Consente di ruotare l’orientamento del grafico tra colonne verticali e barre orizzontali'),
+                            label: t('Orientation Toggle (↕ / ↔)'),
+                            description: t('Allow viewers to rotate chart between vertical columns and horizontal bars'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.enableToolbar?.value),
                         },
                     },
                 ],
@@ -576,20 +591,22 @@ const config = {
                         name: 'toolbar_show_stacking',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Pulsante Stacking (Affiancate / Impilate)'),
-                            description: t('Consente di alternare tra barre affiancate raggruppate e barre impilate'),
+                            label: t('Stacking Toggle'),
+                            description: t('Allow viewers to toggle between grouped (side-by-side) and stacked bars'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.enableToolbar?.value),
                         },
                     },
                     {
                         name: 'toolbar_show_dual_axis',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Pulsante Toggle Doppio Asse Y'),
-                            description: t('Consente di attivare/disattivare a runtime il secondo asse Y (se configurate metriche secondarie)'),
+                            label: t('Dual Y-Axis Toggle'),
+                            description: t('Allow viewers to toggle the secondary Y-axis on/off at runtime'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.enableToolbar?.value),
                         },
                     },
                 ],
@@ -598,20 +615,22 @@ const config = {
                         name: 'toolbar_show_breakdown_toggle',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Pulsante Combina Dimensione su Asse'),
-                            description: t('Consente di unificare/separare a runtime la dimensione di scomposizione sull’asse X (se presente)'),
+                            label: t('Combine Breakdown Dimension Toggle'),
+                            description: t('Allow viewers to combine or separate the breakdown dimension on the X-axis at runtime'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.enableToolbar?.value),
                         },
                     },
                     {
                         name: 'toolbar_show_benchmark',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Pulsante Toggle Target/Benchmark'),
-                            description: t('Consente di attivare/disattivare a runtime la visualizzazione della soglia benchmark'),
+                            label: t('Target / Benchmark Toggle'),
+                            description: t('Allow viewers to toggle the benchmark reference line at runtime'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.enableToolbar?.value),
                         },
                     },
                 ],
@@ -620,10 +639,11 @@ const config = {
                         name: 'toolbar_show_export',
                         config: {
                             type: 'CheckboxControl',
-                            label: t('Pulsanti Esportazione (PNG / CSV)'),
-                            description: t('Mostra i pulsanti di download per esportare lo screenshot PNG e i dati aggregati in CSV'),
+                            label: t('Export Buttons (PNG / CSV)'),
+                            description: t('Show high-resolution PNG image and CSV aggregated data export buttons'),
                             default: true,
                             renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.enableToolbar?.value),
                         },
                     },
                 ],

@@ -4,6 +4,24 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.4] - 2026-09-21
+
+### Ottimizzato & Risolto
+- **Frontend BI Dashboard: Toolbar Compatta, Responsive & Zero Accozzaglia**:
+  - **Single-Line Executive Pill Bar (36px)**: altezza ridotta da 70-100px a 36px fissi con sfumatura glassmorphism (`backdrop-filter: blur(10px)`) e tema scuro/chiaro integrato, liberando fino all'80% di spazio verticale per il canvas ECharts.
+  - **Micro-Pills con Glowing Status Dots**: sostituzione di bottoni lunghi e testuali con micro-pillole eleganti a punto luminoso (`● Asse 2`, `● Combina [Dim]`, `● Target`), commutatore segmentato `2D / 3D` e switch compatti `↕ Colonne / ↔ Barre` e `☷ Impila`.
+  - **Popover 3D a Scomparsa**: rimossi gli slider statici ingombranti dalla toolbar principale, integrati in un popover a scomparsa fluida `⚙️ 3D` attivabile solo al bisogno.
+  - **Esportazione Minimale**: micro-pulsanti iconici `📷` e `📊` ultra-compatti.
+- **Backend Superset ("k-end"): Progressive Disclosure Completa**:
+  - **Zero Duplicati**: rimosso il controllo duplicato `enableToolbar`.
+  - **Visibilità Dinamica (`visibility`)**:
+    - Controlli 3D visibili solo in modalità `3d`.
+    - Controlli 2D (raggio angoli, track) visibili solo in modalità `2d`.
+    - Controlli del secondo asse visibili solo in presenza di `secondary_metrics`.
+    - Controlli del benchmark visibili solo con `showBenchmark` abilitato.
+    - Checkbox della toolbar visibili solo con `enableToolbar` abilitato.
+  - **Metriche Riorganizzate**: posizionamento di `secondary_metrics` nella sezione *Query Configuration* per una configurazione dati intuitiva e unificata.
+
 ## [0.2.3] - 2026-09-21
 
 ### Ottimizzato & Risolto

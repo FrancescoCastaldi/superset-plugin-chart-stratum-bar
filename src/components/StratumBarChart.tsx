@@ -1,90 +1,98 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import * as echarts from 'echarts';
-import {
-  StratumBarTransformedProps,
-  ViewMode,
-  OrientationType,
-  StackingMode,
-} from '../types';
+import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries } from '../types';
 import { get2DBarOption } from './renderers2D';
 import { get3DBarOption } from './renderers3D';
 import './StratumBarChart.css';
 
-export const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
+const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const {
     width,
     height,
     categories: initialCategories,
     series: initialSeries,
+    combinedCategories,
+    combinedSeries,
+    breakdownDimName,
+    canCombineBreakdown,
     viewMode: initialViewMode = '3d',
     orientation: initialOrientation = 'vertical',
     stacking: initialStacking = 'none',
-    tilt3D: initialTilt = 25,
-    depth3D: initialDepth = 20,
     enableToolbar = true,
+    toolbarConfig,
     hasDualYAxis: initialHasDualYAxis = false,
     combineCategoryBreakdown: initialCombineBreakdown = false,
-    showBenchmark: initialShowBenchmark = false,
-    canCombineBreakdown = false,
-    breakdownDimName,
-    combinedCategories,
-    combinedSeries,
-    standardCategories,
-    standardSeries,
-    toolbarConfig,
     onCrossFilter,
   } = props;
 
-  // Local state for runtime interactivity
-  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
-  const [orientation, setOrientation] = useState<OrientationType>(initialOrientation);
-  const [stacking, setStacking] = useState<StackingMode>(initialStacking);
-  const [tilt3D, setTilt3D] = useState<number>(initialTilt);
-  const [depth3D, setDepth3D] = useState<number>(initialDepth);
-  const [hasDualYAxis, setHasDualYAxis] = useState<boolean>(initialHasDualYAxis);
-  const [combineBreakdown, setCombineBreakdown] = useState<boolean>(initialCombineBreakdown);
-  const [showBenchmark, setShowBenchmark] = useState<boolean>(initialShowBenchmark);
-
-  // Synchronize when incoming props change from Superset Explore
-  useEffect(() => { setViewMode(initialViewMode); }, [initialViewMode]);
-  useEffect(() => { setOrientation(initialOrientation); }, [initialOrientation]);
-  useEffect(() => { setStacking(initialStacking); }, [initialStacking]);
-  useEffect(() => { setTilt3D(initialTilt); }, [initialTilt]);
-  useEffect(() => { setDepth3D(initialDepth); }, [initialDepth]);
-  useEffect(() => { setHasDualYAxis(initialHasDualYAxis); }, [initialHasDualYAxis]);
-  useEffect(() => { setCombineBreakdown(initialCombineBreakdown); }, [initialCombineBreakdown]);
-  useEffect(() => { setShowBenchmark(initialShowBenchmark); }, [initialShowBenchmark]);
-
-  const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
 
-  // Dynamically switch categories and series when combineBreakdown or hasDualYAxis is toggled
+  // Runtime interactive state (client-side 60fps toggling)
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
+  const [orientation, setOrientation] = useState<'vertical' | 'horizontal'>(initialOrientation);
+  const [stacking, setStacking] = useState<StackingMode>(initialStacking);
+  const [hasDualYAxis, setHasDualYAxis] = useState<boolean>(initialHasDualYAxis);
+  const [combineBreakdown, setCombineBreakdown] = useState<boolean>(initialCombineBreakdown);
+  const [tilt3D, setTilt3D] = useState<number>(props.tilt3D ?? 25);
+  const [depth3D, setDepth3D] = useState<number>(props.depth3D ?? 20);
+  const [showBenchmark, setShowBenchmark] = useState<boolean>(props.showBenchmark ?? false);
+  const [showSettings3D, setShowSettings3D] = useState<boolean>(false);
+
+  // Sync with prop changes if chart controls update in Explore
+  useEffect(() => {
+    setViewMode(initialViewMode);
+  }, [initialViewMode]);
+
+  useEffect(() => {
+    setOrientation(initialOrientation);
+  }, [initialOrientation]);
+
+  useEffect(() => {
+    setStacking(initialStacking);
+  }, [initialStacking]);
+
+  useEffect(() => {
+    setHasDualYAxis(initialHasDualYAxis);
+  }, [initialHasDualYAxis]);
+
+  useEffect(() => {
+    setCombineBreakdown(initialCombineBreakdown);
+  }, [initialCombineBreakdown]);
+
+  useEffect(() => {
+    if (props.tilt3D !== undefined) setTilt3D(props.tilt3D);
+  }, [props.tilt3D]);
+
+  useEffect(() => {
+    if (props.depth3D !== undefined) setDepth3D(props.depth3D);
+  }, [props.depth3D]);
+
+  useEffect(() => {
+    if (props.showBenchmark !== undefined) setShowBenchmark(props.showBenchmark);
+  }, [props.showBenchmark]);
+
+  // Select active representations based on runtime toggle
   const activeCategories = useMemo(() => {
-    if (canCombineBreakdown && combineBreakdown && combinedCategories && combinedCategories.length > 0) {
+    if (combineBreakdown && combinedCategories && combinedCategories.length > 0) {
       return combinedCategories;
     }
-    if (canCombineBreakdown && !combineBreakdown && standardCategories && standardCategories.length > 0) {
-      return standardCategories;
-    }
     return initialCategories;
-  }, [canCombineBreakdown, combineBreakdown, combinedCategories, standardCategories, initialCategories]);
+  }, [combineBreakdown, combinedCategories, initialCategories]);
 
   const activeSeries = useMemo(() => {
-    let sList = initialSeries;
-    if (canCombineBreakdown && combineBreakdown && combinedSeries && combinedSeries.length > 0) {
-      sList = combinedSeries;
-    } else if (canCombineBreakdown && !combineBreakdown && standardSeries && standardSeries.length > 0) {
-      sList = standardSeries;
-    }
+    let base: StratumBarSeries[] = (combineBreakdown && combinedSeries && combinedSeries.length > 0)
+      ? combinedSeries
+      : initialSeries;
 
     if (!hasDualYAxis) {
-      return sList.filter(s => s.yAxisIndex !== 1);
+      base = base.filter((s: StratumBarSeries) => s.yAxisIndex !== 1);
     }
-    return sList;
-  }, [canCombineBreakdown, combineBreakdown, combinedSeries, standardSeries, initialSeries, hasDualYAxis]);
+    return base;
+  }, [combineBreakdown, combinedSeries, initialSeries, hasDualYAxis]);
 
-  // Merge runtime state with transformed props
-  const effectiveProps = useMemo<StratumBarTransformedProps>(() => {
+  // Merge runtime state into effective props passed to renderers
+  const effectiveProps = useMemo(() => {
     return {
       ...props,
       categories: activeCategories,
@@ -129,9 +137,9 @@ export const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
 
   const handleExportCSV = useCallback(() => {
     if (!activeCategories || !activeSeries) return;
-    const headers = ['Category', ...activeSeries.map(s => s.name)];
-    const rows = activeCategories.map((cat, idx) => {
-      const vals = activeSeries.map(s => (s.data[idx] !== null && s.data[idx] !== undefined ? s.data[idx] : ''));
+    const headers = ['Category', ...activeSeries.map((s: StratumBarSeries) => s.name)];
+    const rows = activeCategories.map((cat: string, idx: number) => {
+      const vals = activeSeries.map((s: StratumBarSeries) => (s.data[idx] !== null && s.data[idx] !== undefined ? s.data[idx] : ''));
       return [cat, ...vals].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
@@ -178,24 +186,16 @@ export const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       chartInstanceRef.current.setOption(chartOption as any, true);
       chartInstanceRef.current.resize();
     }
-  }, [chartOption, onCrossFilter, activeCategories]);
+  }, [chartOption, activeCategories, onCrossFilter]);
 
-  // Handle container resize
+  // Handle auto-resize
   useEffect(() => {
-    if (!chartContainerRef.current || !chartInstanceRef.current) return;
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.resize({ width, height: enableToolbar ? height - 36 : height });
+    }
+  }, [width, height, enableToolbar]);
 
-    const resizeObserver = new ResizeObserver(() => {
-      chartInstanceRef.current?.resize();
-    });
-
-    resizeObserver.observe(chartContainerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  // Cleanup chart on full unmount
+  // Cleanup
   useEffect(() => {
     return () => {
       chartInstanceRef.current?.dispose();
@@ -205,7 +205,7 @@ export const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
 
   if (!activeCategories || activeCategories.length === 0 || !activeSeries || activeSeries.length === 0) {
     return (
-      <div className="stratum-bar-container" style={{ width, height }}>
+      <div className={`stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''}`} style={{ width, height }}>
         <div className="stratum-bar-empty">
           <span>Nessun dato disponibile da visualizzare nel grafico StratumBar.</span>
         </div>
@@ -213,21 +213,21 @@ export const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     );
   }
 
-  const hasSecondarySeries = initialHasDualYAxis || initialSeries.some(s => s.yAxisIndex === 1);
+  const hasSecondarySeries = initialHasDualYAxis || initialSeries.some((s: StratumBarSeries) => s.yAxisIndex === 1);
 
   return (
-    <div className="stratum-bar-container" style={{ width, height }}>
+    <div className={`stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''}`} style={{ width, height }}>
       {enableToolbar && (
         <div className="stratum-bar-toolbar">
-          <div className="stratum-bar-toolbar-group">
-            {/* View Mode Toggle */}
+          <div className="stratum-bar-toolbar-left">
+            {/* View Mode Switcher: 2D / 3D */}
             {toolbarConfig?.showViewMode !== false && (
-              <div className="stratum-bar-btn-group">
+              <div className="stratum-bar-segmented">
                 <button
                   type="button"
                   className={`stratum-bar-btn ${viewMode === '2d' ? 'active' : ''}`}
                   onClick={() => setViewMode('2d')}
-                  title="Visualizzazione 2D Moderna"
+                  title="2D Moderno (Curved)"
                 >
                   2D
                 </button>
@@ -235,151 +235,137 @@ export const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                   type="button"
                   className={`stratum-bar-btn ${viewMode === '3d' ? 'active' : ''}`}
                   onClick={() => setViewMode('3d')}
-                  title="Visualizzazione 3D Isometrica"
+                  title="3D Isometrico Volumetrico"
                 >
                   3D
                 </button>
               </div>
             )}
 
-            {/* Orientation Toggle */}
+            {/* Orientation Switch: Vertical / Horizontal */}
             {toolbarConfig?.showOrientation !== false && (
-              <div className="stratum-bar-btn-group">
-                <button
-                  type="button"
-                  className={`stratum-bar-btn ${orientation === 'vertical' ? 'active' : ''}`}
-                  onClick={() => setOrientation('vertical')}
-                  title="Orientamento Verticale (Colonne)"
-                >
-                  Verticale
-                </button>
-                <button
-                  type="button"
-                  className={`stratum-bar-btn ${orientation === 'horizontal' ? 'active' : ''}`}
-                  onClick={() => setOrientation('horizontal')}
-                  title="Orientamento Orizzontale (Barre)"
-                >
-                  Orizzontale
-                </button>
-              </div>
+              <button
+                type="button"
+                className={`stratum-bar-btn ${orientation === 'horizontal' ? 'active' : ''}`}
+                onClick={() => setOrientation(prev => (prev === 'vertical' ? 'horizontal' : 'vertical'))}
+                title={orientation === 'vertical' ? 'Orientamento: Verticale (clicca per Orizzontale)' : 'Orientamento: Orizzontale (clicca per Verticale)'}
+              >
+                {orientation === 'vertical' ? '↕ Colonne' : '↔ Barre'}
+              </button>
             )}
 
-            {/* Stacking Toggle */}
+            {/* Stacking Switch: Grouped / Stacked */}
             {toolbarConfig?.showStacking !== false && (
-              <div className="stratum-bar-btn-group">
-                <button
-                  type="button"
-                  className={`stratum-bar-btn ${stacking === 'none' ? 'active' : ''}`}
-                  onClick={() => setStacking('none')}
-                  title="Barre Raggruppate Affiancate"
-                >
-                  Raggruppate
-                </button>
-                <button
-                  type="button"
-                  className={`stratum-bar-btn ${stacking === 'stack' ? 'active' : ''}`}
-                  onClick={() => setStacking('stack')}
-                  title="Barre Impilate"
-                >
-                  Impilate
-                </button>
-              </div>
+              <button
+                type="button"
+                className={`stratum-bar-btn ${stacking === 'stack' ? 'active' : ''}`}
+                onClick={() => setStacking(prev => (prev === 'none' ? 'stack' : 'none'))}
+                title={stacking === 'none' ? 'Disposizione: Raggruppate (clicca per Impilare)' : 'Disposizione: Impilate (clicca per Raggruppare)'}
+              >
+                {stacking === 'stack' ? '☷ Impilate' : '☷ Affiancate'}
+              </button>
             )}
 
-            {/* Dual Y-Axis Toggle (Only rendered if secondary metrics are configured) */}
+            {/* Dual Y-Axis Micro-Pill */}
             {toolbarConfig?.showDualAxis !== false && hasSecondarySeries && (
-              <div className="stratum-bar-btn-group">
-                <button
-                  type="button"
-                  className={`stratum-bar-btn ${hasDualYAxis ? 'active-secondary' : ''}`}
-                  onClick={() => setHasDualYAxis(prev => !prev)}
-                  title="Attiva/Disattiva Secondo Asse Y a Runtime"
-                >
-                  Doppio Asse Y: {hasDualYAxis ? 'ON' : 'OFF'}
-                </button>
-              </div>
+              <button
+                type="button"
+                className={`stratum-bar-btn ${hasDualYAxis ? 'active-secondary' : ''}`}
+                onClick={() => setHasDualYAxis(prev => !prev)}
+                title="Attiva/Disattiva Secondo Asse Y a runtime"
+              >
+                <span className={`stratum-bar-dot ${hasDualYAxis ? 'dot-orange' : 'dot-off'}`} /> Asse 2
+              </button>
             )}
 
-            {/* Dynamic Universal Breakdown Toggle (Only rendered if a breakdown dimension is present) */}
+            {/* Dynamic Breakdown Micro-Pill */}
             {toolbarConfig?.showBreakdownToggle !== false && canCombineBreakdown && (
-              <div className="stratum-bar-btn-group">
-                <button
-                  type="button"
-                  className={`stratum-bar-btn ${combineBreakdown ? 'active-accent' : ''}`}
-                  onClick={() => setCombineBreakdown(prev => !prev)}
-                  title={`Unifica o separa la dimensione "${breakdownDimName || 'Breakdown'}" sull'asse`}
-                >
-                  {breakdownDimName ? `Combina ${breakdownDimName}` : 'Combina Dimensione'}: {combineBreakdown ? 'ON' : 'OFF'}
-                </button>
-              </div>
+              <button
+                type="button"
+                className={`stratum-bar-btn ${combineBreakdown ? 'active-accent' : ''}`}
+                onClick={() => setCombineBreakdown(prev => !prev)}
+                title={`Unifica o separa la dimensione "${breakdownDimName || 'Breakdown'}" sull'asse X`}
+              >
+                <span className={`stratum-bar-dot ${combineBreakdown ? 'dot-green' : 'dot-off'}`} /> {breakdownDimName ? `Combina ${breakdownDimName}` : 'Combina'}
+              </button>
+            )}
+
+            {/* Benchmark Target Micro-Pill */}
+            {toolbarConfig?.showBenchmark !== false && props.benchmark && (
+              <button
+                type="button"
+                className={`stratum-bar-btn ${showBenchmark ? 'active' : ''}`}
+                onClick={() => setShowBenchmark(prev => !prev)}
+                title="Mostra/Nascondi soglia benchmark target a runtime"
+              >
+                <span className={`stratum-bar-dot ${showBenchmark ? 'dot-blue' : 'dot-off'}`} /> Target
+              </button>
             )}
           </div>
 
-          <div className="stratum-bar-toolbar-group">
-            {/* 3D Depth & Tilt Sliders */}
+          <div className="stratum-bar-toolbar-right">
+            {/* 3D Depth & Tilt Mini Settings Popover */}
             {viewMode === '3d' && (
-              <>
-                <label className="stratum-bar-slider-label" title="Inclinazione Angolare 3D">
-                  Tilt:
-                  <input
-                    type="range"
-                    min="10"
-                    max="60"
-                    value={tilt3D}
-                    className="stratum-bar-slider"
-                    onChange={e => setTilt3D(Number(e.target.value))}
-                  />
-                  <span>{tilt3D}°</span>
-                </label>
-                <label className="stratum-bar-slider-label" title="Profondità Volumetrica 3D">
-                  Depth:
-                  <input
-                    type="range"
-                    min="8"
-                    max="45"
-                    value={depth3D}
-                    className="stratum-bar-slider"
-                    onChange={e => setDepth3D(Number(e.target.value))}
-                  />
-                  <span>{depth3D}px</span>
-                </label>
-              </>
-            )}
-
-            {/* Benchmark Toggle (Only rendered if benchmark is configured) */}
-            {toolbarConfig?.showBenchmark !== false && props.benchmark && (
-              <div className="stratum-bar-btn-group">
+              <div className="stratum-bar-popover-wrapper">
                 <button
                   type="button"
-                  className={`stratum-bar-btn ${showBenchmark ? 'active' : ''}`}
-                  onClick={() => setShowBenchmark(prev => !prev)}
-                  title="Mostra/Nascondi soglia benchmark a runtime"
+                  className={`stratum-bar-btn ${showSettings3D ? 'active' : ''}`}
+                  onClick={() => setShowSettings3D(prev => !prev)}
+                  title="Parametri 3D (Inclinazione & Profondità)"
                 >
-                  Target: {showBenchmark ? 'ON' : 'OFF'}
+                  ⚙️ 3D
                 </button>
+                {showSettings3D && (
+                  <div className="stratum-bar-popover">
+                    <div className="stratum-bar-popover-row">
+                      <span>Inclinazione</span>
+                      <input
+                        type="range"
+                        min="10"
+                        max="60"
+                        value={tilt3D}
+                        className="stratum-bar-slider"
+                        onChange={e => setTilt3D(Number(e.target.value))}
+                      />
+                      <span className="stratum-bar-val">{tilt3D}°</span>
+                    </div>
+                    <div className="stratum-bar-popover-row">
+                      <span>Profondità</span>
+                      <input
+                        type="range"
+                        min="8"
+                        max="45"
+                        value={depth3D}
+                        className="stratum-bar-slider"
+                        onChange={e => setDepth3D(Number(e.target.value))}
+                      />
+                      <span className="stratum-bar-val">{depth3D}px</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Export Buttons */}
+            {/* Export Micro-Buttons */}
             {toolbarConfig?.showExport !== false && (
-              <>
+              <div className="stratum-bar-segmented">
                 <button
                   type="button"
-                  className="stratum-bar-export-btn"
+                  className="stratum-bar-btn stratum-bar-icon-btn"
                   onClick={handleExportPNG}
                   title="Esporta immagine PNG ad alta risoluzione"
                 >
-                  📷 PNG
+                  📷
                 </button>
                 <button
                   type="button"
-                  className="stratum-bar-export-btn"
+                  className="stratum-bar-btn stratum-bar-icon-btn"
                   onClick={handleExportCSV}
                   title="Esporta dati in formato CSV"
                 >
-                  📊 CSV
+                  📊
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>
