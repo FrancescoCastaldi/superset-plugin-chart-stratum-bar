@@ -1,5 +1,5 @@
 export function get3DBarOption(props) {
-    const { categories, series, benchmark, orientation, barShape3D, depth3D = 20, tilt3D = 25, shadow3D = true, showBenchmark, showValue, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, } = props;
+    const { categories, series, benchmark, orientation, barShape3D, depth3D = 20, tilt3D = 25, shadow3D = true, showBenchmark, showValue, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, } = props;
     const isVertical = orientation === 'vertical';
     const tiltRad = (tilt3D * Math.PI) / 180;
     const offsetX = Math.round(depth3D * Math.cos(tiltRad));
@@ -19,7 +19,7 @@ export function get3DBarOption(props) {
         name: isVertical ? xAxisTitle : yAxisTitle,
         nameTextStyle: { color: '#6b7280', fontSize: 12, padding: [0, 0, 0, 8] },
     };
-    // Value Axis
+    // Value Axis (Primary)
     const valueAxis = {
         type: 'value',
         axisLabel: {
@@ -36,6 +36,28 @@ export function get3DBarOption(props) {
         splitLine: { lineStyle: { color: '#e5e7eb', type: 'dashed' } },
         name: isVertical ? yAxisTitle : xAxisTitle,
         nameTextStyle: { color: '#6b7280', fontSize: 12, padding: [0, 8, 0, 0] },
+    };
+    // Secondary Value Axis (Right Y-Axis)
+    const secondaryValueAxis = {
+        type: 'value',
+        position: isVertical ? 'right' : 'top',
+        axisLabel: {
+            color: '#9a3412',
+            fontSize: 11,
+            formatter: (val) => {
+                if (yAxis2Format === '.2%') {
+                    return `${(val * 100).toFixed(1)}%`;
+                }
+                if (Math.abs(val) >= 1_000_000)
+                    return (val / 1_000_000).toFixed(1) + 'M';
+                if (Math.abs(val) >= 1_000)
+                    return (val / 1_000).toFixed(1) + 'k';
+                return Number(val.toFixed(2)).toLocaleString('it-IT');
+            },
+        },
+        splitLine: { show: false },
+        name: yAxis2Title || '',
+        nameTextStyle: { color: '#9a3412', fontSize: 12, padding: [0, 0, 0, 8] },
     };
     const echartsSeries = [];
     const numSeries = series.length || 1;
@@ -362,6 +384,49 @@ export function get3DBarOption(props) {
                 ],
             };
         }
+        // Handle Secondary / Line Series overlaid on 3D view
+        if (s.seriesType === 'line') {
+            const lineSeriesItem = {
+                name: s.name,
+                type: 'line',
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 8,
+                yAxisIndex: isVertical ? (s.yAxisIndex ?? 0) : 0,
+                xAxisIndex: !isVertical ? (s.yAxisIndex ?? 0) : 0,
+                data: s.data,
+                lineStyle: {
+                    width: 3,
+                    color: baseColor,
+                    shadowColor: 'rgba(0, 0, 0, 0.25)',
+                    shadowBlur: 5,
+                },
+                itemStyle: {
+                    color: baseColor,
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                },
+                label: {
+                    show: showValue,
+                    position: 'top',
+                    color: baseColor,
+                    fontWeight: 600,
+                    fontSize: 11,
+                    formatter: (params) => {
+                        const val = params.value;
+                        if (val === null || val === undefined)
+                            return '';
+                        if (yAxis2Format === '.2%') {
+                            return `${(Number(val) * 100).toFixed(1)}%`;
+                        }
+                        return typeof val === 'number' ? val.toLocaleString('it-IT') : String(val);
+                    },
+                },
+                z: 20 + seriesIdx,
+            };
+            echartsSeries.push(lineSeriesItem);
+            return;
+        }
         echartsSeries.push(customSeries);
     });
     // Tooltip
@@ -408,6 +473,7 @@ export function get3DBarOption(props) {
             return html;
         },
     };
+    const rightPadding = hasDualYAxis ? 65 : 48;
     return {
         animationDuration: 750,
         animationEasing: 'cubicOut',
@@ -415,7 +481,7 @@ export function get3DBarOption(props) {
             top: legendOrientation === 'top' ? 48 : 36,
             bottom: legendOrientation === 'bottom' ? 48 : 40,
             left: isVertical ? 65 : 110,
-            right: 48,
+            right: rightPadding,
             containLabel: true,
         },
         tooltip,
@@ -426,8 +492,8 @@ export function get3DBarOption(props) {
             left: legendOrientation === 'left' ? 8 : legendOrientation === 'right' ? 'right' : 'center',
             textStyle: { color: '#374151', fontSize: 12 },
         },
-        xAxis: isVertical ? categoryAxis : valueAxis,
-        yAxis: isVertical ? valueAxis : categoryAxis,
+        xAxis: isVertical ? categoryAxis : hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis,
+        yAxis: isVertical ? (hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis) : categoryAxis,
         series: echartsSeries,
     };
 }

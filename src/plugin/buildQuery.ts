@@ -8,6 +8,7 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     groupby = [],
     metrics = [],
     target_metric,
+    secondary_metrics,
   } = fd;
 
   return buildQueryContext(formData as any, (baseQueryObject: any) => {
@@ -17,11 +18,16 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
 
     const columns = [resolvedXAxis, ...breakdownCols].filter(Boolean);
 
-    // Collect all required metrics including optional target_metric
+    // Collect all required metrics including optional target_metric and secondary_metrics
     const resolvedMetrics = [...ensureIsArray(metrics)];
     if (target_metric && !resolvedMetrics.includes(target_metric)) {
       resolvedMetrics.push(target_metric);
     }
+    ensureIsArray(secondary_metrics).forEach(sm => {
+      if (sm && !resolvedMetrics.includes(sm)) {
+        resolvedMetrics.push(sm);
+      }
+    });
 
     return [
       {

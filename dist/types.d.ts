@@ -19,6 +19,8 @@ export interface StratumBarSeries {
     color?: string;
     data: (number | null)[];
     items: StratumBarSeriesItem[];
+    yAxisIndex?: number;
+    seriesType?: 'bar' | 'line';
 }
 export interface BenchmarkConfig {
     value: number;
@@ -29,6 +31,11 @@ export interface StratumBarFormData extends QueryFormData {
     groupby?: string[];
     metrics: any;
     target_metric?: any;
+    secondary_metrics?: any;
+    secondary_series_type?: 'line' | 'bar';
+    y_axis_2_title?: string;
+    y_axis_2_format?: string;
+    combine_category_breakdown?: boolean;
     viewMode?: ViewMode;
     orientation?: OrientationType;
     stacking?: StackingMode;
@@ -82,6 +89,9 @@ export interface StratumBarTransformedProps {
     enableToolbar: boolean;
     xAxisTitle?: string;
     yAxisTitle?: string;
+    hasDualYAxis?: boolean;
+    yAxis2Title?: string;
+    yAxis2Format?: string;
     formData: StratumBarFormData;
     onCrossFilter?: (category: string, seriesName?: string) => void;
 }

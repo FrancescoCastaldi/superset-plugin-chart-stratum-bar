@@ -4,6 +4,20 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.0] - 2026-09-20
+
+### Aggiunto
+- **Supporto Completo Doppio Asse delle Ordinate (Dual Y-Axis)**:
+  - Abilitazione del secondo asse Y indipendente a destra (o in alto se orientamento orizzontale) sia per il motore 2D che 3D Isometrico.
+  - Assegnazione dinamica `yAxisIndex: 1` per le metriche secondarie tracciate.
+  - Supporto per visualizzazione secondaria ibrida: **Linea smussata con indicatori (Line + Markers)** sovrapposta alle colonne/barre, oppure barre secondarie.
+  - Formato numerico dedicato indipendente per il secondo asse (`y_axis_2_format`, es. percentuali `.2%` o valute) e titolo dedicato (`y_axis_2_title`).
+- **Raggruppamento Multi-Dimensione e Breakdown Combinato**:
+  - Estrazione e aggregazione contemporanea di metriche primarie e secondarie in `buildQuery.ts`.
+  - Supporto al parametro `combine_category_breakdown`: visualizzazione unificata delle etichette sull'asse (`Categoria [Regime]`, es. *Cardiologia [SSN]* e *Cardiologia [Privato]*).
+- **Test Suite Dedicata**:
+  - Aggiunta suite di test unitari Jest [`test/dualAxis.test.ts`](file:///D:/Sviluppo/superset-plugins/superset-plugin-chart-stratum-bar/test/dualAxis.test.ts) (10/10 test passing).
+
 ---
 
 ## [0.1.0] - 2026-09-17

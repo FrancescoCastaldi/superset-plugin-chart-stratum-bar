@@ -400,6 +400,79 @@ const config: ControlPanelConfig = {
         ],
       ],
     },
+    {
+      label: t('Doppio Asse Y & Metriche Secondarie (Dual Y-Axis)'),
+      expanded: false,
+      controlSetRows: [
+        [
+          {
+            name: 'secondary_metrics',
+            config: {
+              ...sharedControls.metrics,
+              label: t('Secondary Metrics (Right Y-Axis)'),
+              description: t('Metriche da tracciare sul secondo asse Y (es. Tasso %, Degenza Media, Costo Unitario)'),
+              multi: true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'secondary_series_type',
+            config: {
+              type: 'SelectControl',
+              label: t('Secondary Series Visualization'),
+              description: t('Come visualizzare la metrica secondaria: Linea sovrapposta o Barre secondarie'),
+              choices: [
+                ['line', t('Linea con Indicatori (Line + Markers)')],
+                ['bar', t('Barra Secondaria (Bar)')],
+              ],
+              default: 'line',
+              renderTrigger: true,
+            },
+          },
+          {
+            name: 'combine_category_breakdown',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Combine Category & Breakdown on Axis'),
+              description: t('Concatena le etichette delle dimensioni sull asse (es. Reparto - Regime SSN/Privato)'),
+              default: false,
+              renderTrigger: true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'y_axis_2_title',
+            config: {
+              type: 'TextControl',
+              label: t('Right Y-Axis Title (Asse 2)'),
+              description: t('Etichetta testuale visualizzata sul secondo asse delle ordinate a destra'),
+              default: '',
+              renderTrigger: true,
+            },
+          },
+          {
+            name: 'y_axis_2_format',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              label: t('Right Y-Axis Number Format'),
+              description: t('Formato numerico D3 per il secondo asse Y (es. .2% per percentuali, ,.2f per decimali)'),
+              choices: [
+                ['.2%', t('Percentuale (12.34%)')],
+                [',.2f', t('Decimale 2 cifre (1,234.56)')],
+                [',.0f', t('Intero (1,234)')],
+                ['$,.2f', t('Valuta ($1,234.56)')],
+                ['~s', t('Prefisso SI (1.2k, 3.4M)')],
+              ],
+              default: ',.2f',
+              renderTrigger: true,
+            },
+          },
+        ],
+      ],
+    },
   ],
 };
 

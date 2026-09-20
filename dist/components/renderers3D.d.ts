@@ -77,7 +77,43 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
-    };
+    } | ({
+        type: "value";
+        axisLabel: {
+            color: string;
+            fontSize: number;
+            formatter: (val: number) => string;
+        };
+        splitLine: {
+            lineStyle: {
+                color: string;
+                type: "dashed";
+            };
+        };
+        name: string | undefined;
+        nameTextStyle: {
+            color: string;
+            fontSize: number;
+            padding: number[];
+        };
+    } | {
+        type: "value";
+        position: "top" | "right";
+        axisLabel: {
+            color: string;
+            fontSize: number;
+            formatter: (val: number) => string;
+        };
+        splitLine: {
+            show: boolean;
+        };
+        name: string;
+        nameTextStyle: {
+            color: string;
+            fontSize: number;
+            padding: number[];
+        };
+    })[];
     yAxis: {
         type: "category";
         data: string[];
@@ -121,7 +157,43 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
-    };
+    } | ({
+        type: "value";
+        axisLabel: {
+            color: string;
+            fontSize: number;
+            formatter: (val: number) => string;
+        };
+        splitLine: {
+            lineStyle: {
+                color: string;
+                type: "dashed";
+            };
+        };
+        name: string | undefined;
+        nameTextStyle: {
+            color: string;
+            fontSize: number;
+            padding: number[];
+        };
+    } | {
+        type: "value";
+        position: "top" | "right";
+        axisLabel: {
+            color: string;
+            fontSize: number;
+            formatter: (val: number) => string;
+        };
+        splitLine: {
+            show: boolean;
+        };
+        name: string;
+        nameTextStyle: {
+            color: string;
+            fontSize: number;
+            padding: number[];
+        };
+    })[];
     series: any[];
 };
 //# sourceMappingURL=renderers3D.d.ts.map

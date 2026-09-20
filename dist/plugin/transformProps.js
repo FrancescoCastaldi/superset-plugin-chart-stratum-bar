@@ -13,7 +13,7 @@ export default function transformProps(chartProps) {
     const { width, height, formData, queriesData, hooks } = chartProps;
     const fd = (formData || {});
     const data = (queriesData?.[0]?.data || []);
-    const { x_axis, groupby = [], metrics = [], target_metric, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, x_axis_title, y_axis_title, } = fd;
+    const { x_axis, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, x_axis_title, y_axis_title, } = fd;
     // Helper to extract string column name from string, Column object, or adhoc column
     const getColName = (col) => {
         if (!col)
@@ -66,7 +66,12 @@ export default function transformProps(chartProps) {
     data.forEach(row => {
         const val = row[actualXKey];
         if (val !== null && val !== undefined) {
-            categoriesSet.add(String(val));
+            if (combine_category_breakdown && actualBreakdownKey && row[actualBreakdownKey]) {
+                categoriesSet.add(`${val} [${row[actualBreakdownKey]}]`);
+            }
+            else {
+                categoriesSet.add(String(val));
+            }
         }
     });
     const categories = Array.from(categoriesSet);
@@ -106,6 +111,8 @@ export default function transformProps(chartProps) {
                 color: getColor(sName, sIdx),
                 data: seriesData,
                 items: seriesItems,
+                yAxisIndex: 0,
+                seriesType: 'bar',
             });
         });
     }
@@ -122,7 +129,10 @@ export default function transformProps(chartProps) {
         // Map: groupVal -> (cat -> record)
         const lookup = new Map();
         data.forEach(row => {
-            const cat = row[actualXKey] !== null && row[actualXKey] !== undefined ? String(row[actualXKey]) : 'N/D';
+            const rawCat = row[actualXKey] !== null && row[actualXKey] !== undefined ? String(row[actualXKey]) : 'N/D';
+            const cat = combine_category_breakdown && actualBreakdownKey && row[actualBreakdownKey]
+                ? `${rawCat} [${row[actualBreakdownKey]}]`
+                : rawCat;
             const gVal = row[actualBreakdownKey] !== null && row[actualBreakdownKey] !== undefined ? String(row[actualBreakdownKey]) : 'N/D';
             if (!lookup.has(gVal)) {
                 lookup.set(gVal, new Map());
@@ -155,6 +165,8 @@ export default function transformProps(chartProps) {
                 color: getColor(gVal, sIdx),
                 data: seriesData,
                 items: seriesItems,
+                yAxisIndex: 0,
+                seriesType: 'bar',
             });
         });
     }
@@ -181,6 +193,8 @@ export default function transformProps(chartProps) {
                 color: palette[mIdx % palette.length],
                 data: seriesData,
                 items: seriesItems,
+                yAxisIndex: 0,
+                seriesType: 'bar',
             });
         });
     }
@@ -208,6 +222,55 @@ export default function transformProps(chartProps) {
             color: palette[0],
             data: seriesData,
             items: seriesItems,
+            yAxisIndex: 0,
+            seriesType: 'bar',
+        });
+    }
+    // 2.bis Secondary Metrics for Right Y-Axis (Dual Axis)
+    const secondaryMetricList = ensureIsArray(secondary_metrics)
+        .map(m => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)))
+        .filter(Boolean);
+    if (secondaryMetricList.length > 0) {
+        const secFormatter = getNumberFormatter(y_axis_2_format);
+        const secPalette = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4'];
+        secondaryMetricList.forEach((secMetricName, secIdx) => {
+            const actualSecKey = Object.keys(sampleRow).find(k => k.toLowerCase() === secMetricName.toLowerCase()) || secMetricName;
+            const secData = [];
+            const secItems = [];
+            categories.forEach(cat => {
+                // Trova tutte le righe corrispondenti a questa categoria
+                const matchingRows = data.filter(r => {
+                    if (combine_category_breakdown && actualBreakdownKey && r[actualBreakdownKey]) {
+                        return `${r[actualXKey]} [${r[actualBreakdownKey]}]` === cat;
+                    }
+                    return String(r[actualXKey]) === cat;
+                });
+                let numVal = null;
+                if (matchingRows.length > 0) {
+                    const vals = matchingRows
+                        .map(r => r[actualSecKey])
+                        .filter(v => typeof v === 'number' && !isNaN(v));
+                    if (vals.length > 0) {
+                        numVal = vals.reduce((a, b) => a + b, 0) / vals.length;
+                    }
+                }
+                secData.push(numVal);
+                secItems.push({
+                    category: cat,
+                    value: numVal,
+                    formattedValue: numVal !== null ? secFormatter(numVal) : undefined,
+                    rawData: matchingRows[0],
+                });
+            });
+            series.push({
+                name: secMetricName,
+                key: `sec_${secMetricName}`,
+                color: secPalette[secIdx % secPalette.length],
+                data: secData,
+                items: secItems,
+                yAxisIndex: 1,
+                seriesType: secondary_series_type || 'line',
+            });
         });
     }
     // 3. Compute Benchmark if enabled
@@ -316,6 +379,9 @@ export default function transformProps(chartProps) {
         enableToolbar,
         xAxisTitle: x_axis_title,
         yAxisTitle: y_axis_title,
+        hasDualYAxis: series.some(s => s.yAxisIndex === 1),
+        yAxis2Title: y_axis_2_title,
+        yAxis2Format: y_axis_2_format,
         formData: fd,
         onCrossFilter,
     };
