@@ -222,15 +222,23 @@ export function get2DBarOption(props) {
             },
             label: {
                 show: showValue,
-                position: valuePosition === 'inside' ? 'inside' : isVertical ? 'top' : 'right',
-                color: valuePosition === 'inside' ? '#ffffff' : '#374151',
+                // In stacked mode labels must go inside the segment; top-only label works for the last series
+                position: stacking !== 'none'
+                    ? 'inside'
+                    : (valuePosition === 'inside' ? 'inside' : isVertical ? 'top' : 'right'),
+                color: (stacking !== 'none' || valuePosition === 'inside') ? '#ffffff' : '#374151',
                 fontWeight: 600,
                 fontSize: 11,
+                // Hide label for very small segments to avoid overlap
+                minMargin: 4,
                 formatter: (params) => {
                     const val = params.value;
                     if (val === null || val === undefined)
                         return '';
                     if (typeof val === 'number') {
+                        // In stacked mode suppress near-zero labels (< 1% of max) to avoid clutter
+                        if (stacking !== 'none' && maxVal > 0 && Math.abs(val) / maxVal < 0.015)
+                            return '';
                         return val.toLocaleString('it-IT');
                     }
                     return String(val);
@@ -320,15 +328,26 @@ export function get2DBarOption(props) {
             return html;
         },
     };
-    // Legend
+    // Legend — with explicit per-series colors so the legend swatches match the bars
+    const legendData = series
+        .filter(s => s.seriesType !== 'line' || series.length === 1)
+        .map(s => ({
+        name: s.name,
+        // Use the actual series color (not the gradient object — use the base hex string)
+        itemStyle: { color: s.color || colorScheme[series.indexOf(s) % colorScheme.length] || '#3b82f6' },
+    }));
     const legend = {
         show: showLegend && series.length > 1,
         orient: legendOrientation === 'left' || legendOrientation === 'right' ? 'vertical' : 'horizontal',
         top: legendOrientation === 'top' ? 8 : legendOrientation === 'bottom' ? 'bottom' : 'middle',
         left: legendOrientation === 'left' ? 8 : legendOrientation === 'right' ? 'right' : 'center',
         textStyle: { color: isDark ? '#cbd5e1' : '#374151', fontSize: 12, fontWeight: 500 },
+        data: legendData,
     };
-    const rightPadding = hasDualYAxis ? 70 : 36;
+    // Adaptive right padding: horizontal needs more room for value labels outside bars
+    const rightPadding = !isVertical
+        ? (hasDualYAxis ? 90 : 60)
+        : (hasDualYAxis ? 70 : 36);
     return {
         backgroundColor: 'transparent',
         animationDuration: 600,
@@ -336,7 +355,7 @@ export function get2DBarOption(props) {
         grid: {
             top: legendOrientation === 'top' ? 44 : 32,
             bottom: legendOrientation === 'bottom' ? 44 : 36,
-            left: isVertical ? 60 : 100,
+            left: isVertical ? 60 : 110,
             right: rightPadding,
             containLabel: true,
         },

@@ -47,6 +47,12 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             fontWeight: number;
         };
+        data: {
+            name: string;
+            itemStyle: {
+                color: string;
+            };
+        }[];
     };
     xAxis: {
         type: "category";

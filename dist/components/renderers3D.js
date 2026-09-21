@@ -534,7 +534,16 @@ export function get3DBarOption(props) {
             return html;
         },
     };
-    const rightPadding = hasDualYAxis ? 70 : 48;
+    const rightPadding = !isVertical
+        ? (hasDualYAxis ? 90 : 60)
+        : (hasDualYAxis ? 70 : 48);
+    // Legend with explicit per-series colors so swatches match bars
+    const legendData = series
+        .filter(s => s.seriesType !== 'line' || series.length === 1)
+        .map(s => ({
+        name: s.name,
+        itemStyle: { color: s.color || colorScheme[series.indexOf(s) % colorScheme.length] || '#3b82f6' },
+    }));
     return {
         backgroundColor: 'transparent',
         animationDuration: 750,
@@ -554,6 +563,7 @@ export function get3DBarOption(props) {
             top: legendOrientation === 'top' ? 8 : legendOrientation === 'bottom' ? 'bottom' : 'middle',
             left: legendOrientation === 'left' ? 8 : legendOrientation === 'right' ? 'right' : 'center',
             textStyle: { color: isDark ? '#cbd5e1' : '#374151', fontSize: 12, fontWeight: 500 },
+            data: legendData,
         },
         xAxis: isVertical ? categoryAxis : hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis,
         yAxis: isVertical ? (hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis) : categoryAxis,
