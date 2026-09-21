@@ -1,5 +1,13 @@
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 import { adjustColorBrightness, hexToRgba } from '../utils/colors';
+function getEllipsePoints(cx, cy, rx, ry, count = 24) {
+    const pts = [];
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * 2 * Math.PI;
+        pts.push([cx + rx * Math.cos(angle), cy + ry * Math.sin(angle)]);
+    }
+    return pts;
+}
 export function get3DBarOption(props) {
     const { categories, series, benchmark, orientation, barShape3D, depth3D = 20, tilt3D = 25, shadow3D = true, showBenchmark, showValue, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, } = props;
     const isDark = themeMode === 'dark';
@@ -123,97 +131,245 @@ export function get3DBarOption(props) {
                     }
                 }
                 const children = [];
-                // 1. Base Shadow on ground
-                if (shadow3D) {
+                const isCylinder = barShape3D === 'cylinder';
+                if (isCylinder) {
+                    if (isVertical) {
+                        const barWidth = Math.abs(x1 - x0);
+                        const cx = (x0 + x1) / 2;
+                        const rx = barWidth / 2;
+                        const ry = Math.max(offsetY * 0.7, 5);
+                        // 1. Base Shadow on ground
+                        if (shadow3D) {
+                            children.push({
+                                type: 'polygon',
+                                shape: {
+                                    points: getEllipsePoints(cx + offsetX * 0.35, yBase, rx * 1.05, ry * 0.8),
+                                },
+                                style: { fill: 'rgba(0, 0, 0, 0.14)' },
+                                silent: true,
+                                z2: 0,
+                            });
+                        }
+                        // 2. Cylindrical Curved Body with bottom rim curve
+                        const bodyPoints = [
+                            [x0, yTop],
+                            [x1, yTop],
+                            [x1, yBase],
+                        ];
+                        for (let step = 0; step <= 12; step++) {
+                            const a = (step / 12) * Math.PI;
+                            bodyPoints.push([cx + rx * Math.cos(a), yBase + ry * Math.sin(a)]);
+                        }
+                        bodyPoints.push([x0, yTop]);
+                        children.push({
+                            type: 'polygon',
+                            shape: { points: bodyPoints },
+                            style: {
+                                fill: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 1, y2: 0,
+                                    colorStops: [
+                                        { offset: 0, color: adjustColorBrightness(baseColor, -25) },
+                                        { offset: 0.28, color: adjustColorBrightness(baseColor, 35) },
+                                        { offset: 0.65, color: baseColor },
+                                        { offset: 1, color: adjustColorBrightness(baseColor, -35) },
+                                    ],
+                                },
+                                stroke: adjustColorBrightness(baseColor, -30),
+                                lineWidth: 0.5,
+                            },
+                            z2: 2,
+                        });
+                        // 3. Top Elliptical Cap
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: getEllipsePoints(cx, yTop, rx, ry),
+                            },
+                            style: {
+                                fill: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 1, y2: 1,
+                                    colorStops: [
+                                        { offset: 0, color: adjustColorBrightness(topColor, 25) },
+                                        { offset: 1, color: adjustColorBrightness(topColor, -5) },
+                                    ],
+                                },
+                                stroke: adjustColorBrightness(topColor, -20),
+                                lineWidth: 0.75,
+                            },
+                            z2: 4,
+                        });
+                    }
+                    else {
+                        // Horizontal Cylinder
+                        const barHeight = Math.abs(yBase - yTop);
+                        const cy = (yTop + yBase) / 2;
+                        const ry = barHeight / 2;
+                        const rx = Math.max(offsetX * 0.7, 5);
+                        // 1. Base Shadow
+                        if (shadow3D) {
+                            children.push({
+                                type: 'polygon',
+                                shape: {
+                                    points: [
+                                        [x0, yBase],
+                                        [x1, yBase],
+                                        [x1 + 6, yBase + 4],
+                                        [x0 + 6, yBase + 4],
+                                    ],
+                                },
+                                style: { fill: 'rgba(0, 0, 0, 0.12)' },
+                                silent: true,
+                                z2: 0,
+                            });
+                        }
+                        // 2. Cylindrical Horizontal Body with right rim curve
+                        const bodyPoints = [
+                            [x0, yTop],
+                            [x1, yTop],
+                        ];
+                        for (let step = 0; step <= 12; step++) {
+                            const a = -Math.PI / 2 + (step / 12) * Math.PI;
+                            bodyPoints.push([x1 + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+                        }
+                        bodyPoints.push([x0, yBase]);
+                        bodyPoints.push([x0, yTop]);
+                        children.push({
+                            type: 'polygon',
+                            shape: { points: bodyPoints },
+                            style: {
+                                fill: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [
+                                        { offset: 0, color: adjustColorBrightness(baseColor, -20) },
+                                        { offset: 0.28, color: adjustColorBrightness(baseColor, 35) },
+                                        { offset: 0.65, color: baseColor },
+                                        { offset: 1, color: adjustColorBrightness(baseColor, -35) },
+                                    ],
+                                },
+                                stroke: adjustColorBrightness(baseColor, -30),
+                                lineWidth: 0.5,
+                            },
+                            z2: 2,
+                        });
+                        // 3. Right Elliptical Cap
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: getEllipsePoints(x1, cy, rx, ry),
+                            },
+                            style: {
+                                fill: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 1, y2: 1,
+                                    colorStops: [
+                                        { offset: 0, color: adjustColorBrightness(rightColor, 15) },
+                                        { offset: 1, color: adjustColorBrightness(rightColor, -15) },
+                                    ],
+                                },
+                                stroke: adjustColorBrightness(rightColor, -35),
+                                lineWidth: 0.75,
+                            },
+                            z2: 4,
+                        });
+                    }
+                }
+                else {
+                    // Rectangular Prism
+                    // 1. Base Shadow on ground
+                    if (shadow3D) {
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: [
+                                    [x0, yBase],
+                                    [x1, yBase],
+                                    [x1 + offsetX * 0.7, yBase - offsetY * 0.4],
+                                    [x0 + offsetX * 0.7, yBase - offsetY * 0.4],
+                                ],
+                            },
+                            style: {
+                                fill: 'rgba(0, 0, 0, 0.12)',
+                            },
+                            silent: true,
+                            z2: 0,
+                        });
+                    }
+                    // 2. Front Face
                     children.push({
                         type: 'polygon',
                         shape: {
                             points: [
-                                [x0, yBase],
+                                [x0, yTop],
+                                [x1, yTop],
                                 [x1, yBase],
-                                [x1 + offsetX * 0.7, yBase - offsetY * 0.4],
-                                [x0 + offsetX * 0.7, yBase - offsetY * 0.4],
+                                [x0, yBase],
                             ],
                         },
                         style: {
-                            fill: 'rgba(0, 0, 0, 0.12)',
+                            fill: isVertical ? {
+                                type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
+                                colorStops: [
+                                    { offset: 0, color: baseColor },
+                                    { offset: 1, color: adjustColorBrightness(baseColor, -10) },
+                                ],
+                            } : baseColor,
+                            stroke: adjustColorBrightness(baseColor, -35),
+                            lineWidth: 0.5,
                         },
-                        silent: true,
-                        z2: 0,
+                        z2: 2,
+                    });
+                    // 3. Right / Side Face (Depth extrusion)
+                    children.push({
+                        type: 'polygon',
+                        shape: {
+                            points: [
+                                [x1, yTop],
+                                [x1 + offsetX, yTop - offsetY],
+                                [x1 + offsetX, yBase - offsetY],
+                                [x1, yBase],
+                            ],
+                        },
+                        style: {
+                            fill: isVertical ? {
+                                type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: rightColor },
+                                    { offset: 1, color: adjustColorBrightness(rightColor, -20) },
+                                ],
+                            } : rightColor,
+                            stroke: adjustColorBrightness(rightColor, -40),
+                            lineWidth: 0.5,
+                        },
+                        z2: 1,
+                    });
+                    // 4. Top Face (Cap)
+                    children.push({
+                        type: 'polygon',
+                        shape: {
+                            points: [
+                                [x0, yTop],
+                                [x1, yTop],
+                                [x1 + offsetX, yTop - offsetY],
+                                [x0 + offsetX, yTop - offsetY],
+                            ],
+                        },
+                        style: {
+                            fill: isVertical ? {
+                                type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: adjustColorBrightness(topColor, 20) },
+                                    { offset: 1, color: topColor },
+                                ],
+                            } : topColor,
+                            stroke: adjustColorBrightness(topColor, -20),
+                            lineWidth: 0.5,
+                        },
+                        z2: 3,
                     });
                 }
-                // 2. Front Face
-                children.push({
-                    type: 'polygon',
-                    shape: {
-                        points: [
-                            [x0, yTop],
-                            [x1, yTop],
-                            [x1, yBase],
-                            [x0, yBase],
-                        ],
-                    },
-                    style: {
-                        fill: isVertical ? {
-                            type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
-                            colorStops: [
-                                { offset: 0, color: baseColor },
-                                { offset: 1, color: adjustColorBrightness(baseColor, -10) },
-                            ],
-                        } : baseColor,
-                        stroke: adjustColorBrightness(baseColor, -35),
-                        lineWidth: 0.5,
-                    },
-                    z2: 2,
-                });
-                // 3. Right / Side Face (Depth extrusion)
-                children.push({
-                    type: 'polygon',
-                    shape: {
-                        points: [
-                            [x1, yTop],
-                            [x1 + offsetX, yTop - offsetY],
-                            [x1 + offsetX, yBase - offsetY],
-                            [x1, yBase],
-                        ],
-                    },
-                    style: {
-                        fill: isVertical ? {
-                            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-                            colorStops: [
-                                { offset: 0, color: rightColor },
-                                { offset: 1, color: adjustColorBrightness(rightColor, -20) },
-                            ],
-                        } : rightColor,
-                        stroke: adjustColorBrightness(rightColor, -40),
-                        lineWidth: 0.5,
-                    },
-                    z2: 1,
-                });
-                // 4. Top Face (Cap)
-                children.push({
-                    type: 'polygon',
-                    shape: {
-                        points: [
-                            [x0, yTop],
-                            [x1, yTop],
-                            [x1 + offsetX, yTop - offsetY],
-                            [x0 + offsetX, yTop - offsetY],
-                        ],
-                    },
-                    style: {
-                        fill: isVertical ? {
-                            type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
-                            colorStops: [
-                                { offset: 0, color: adjustColorBrightness(topColor, 20) },
-                                { offset: 1, color: topColor },
-                            ],
-                        } : topColor,
-                        stroke: adjustColorBrightness(topColor, -20),
-                        lineWidth: 0.5,
-                    },
-                    z2: 3,
-                });
                 // 5. Value Label
                 if (showValue) {
                     const segmentHeight = Math.abs(yBase - yTop);

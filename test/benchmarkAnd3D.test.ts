@@ -99,4 +99,27 @@ describe('StratumBar 2D & 3D Renderers', () => {
     expect(customSeries.data[0].value).toEqual([150, 0]); // [val, categoryIndex]
     expect(customSeries.encode).toEqual({ x: 0, y: 1 });
   });
+
+  it('get3DBarOption should produce cylinder geometry when barShape3D is cylinder', () => {
+    const cylinderProps: StratumBarTransformedProps = {
+      ...baseProps,
+      viewMode: '3d',
+      barShape3D: 'cylinder',
+    };
+
+    const option = get3DBarOption(cylinderProps);
+    const customSeries = option.series[0];
+    expect(customSeries.type).toBe('custom');
+
+    const mockApi = {
+      value: (dim: number) => (dim === 0 ? 0 : 150),
+      coord: ([x, y]: [number, number]) => [100 + x, 200 - y],
+      size: ([dx, dy]: [number, number]) => [50 * dx, 50 * dy],
+    };
+
+    const rendered = customSeries.renderItem({}, mockApi);
+    expect(rendered).toBeDefined();
+    expect(rendered.type).toBe('group');
+    expect(rendered.children.length).toBeGreaterThanOrEqual(3);
+  });
 });

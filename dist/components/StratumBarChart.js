@@ -6,11 +6,12 @@ import { get2DBarOption } from './renderers2D';
 import { get3DBarOption } from './renderers3D';
 import './StratumBarChart.css';
 const StratumBarChart = props => {
-    const { width, height, categories: initialCategories, series: initialSeries, combinedCategories, combinedSeries, breakdownDimName, canCombineBreakdown, viewMode: initialViewMode = '3d', orientation: initialOrientation = 'vertical', stacking: initialStacking = 'none', enableToolbar = true, toolbarConfig, hasDualYAxis: initialHasDualYAxis = false, combineCategoryBreakdown: initialCombineBreakdown = false, onCrossFilter, } = props;
+    const { width, height, categories: initialCategories, series: initialSeries, combinedCategories, combinedSeries, breakdownDimName, canCombineBreakdown, viewMode: initialViewMode = '3d', orientation: initialOrientation = 'vertical', stacking: initialStacking = 'none', barShape3D: initialBarShape3D = 'prism', enableToolbar = true, toolbarConfig, hasDualYAxis: initialHasDualYAxis = false, combineCategoryBreakdown: initialCombineBreakdown = false, onCrossFilter, } = props;
     const chartContainerRef = useRef(null);
     const chartInstanceRef = useRef(null);
     const popoverRef = useRef(null);
     const btn3DRef = useRef(null);
+    const currentRendererRef = useRef(props.renderer === 'svg' ? 'svg' : 'canvas');
     const [popoverPos, setPopoverPos] = useState(null);
     // Runtime interactive state (client-side 60fps toggling)
     const [viewMode, setViewMode] = useState(initialViewMode);
@@ -20,6 +21,7 @@ const StratumBarChart = props => {
     const [combineBreakdown, setCombineBreakdown] = useState(initialCombineBreakdown);
     const [tilt3D, setTilt3D] = useState(props.tilt3D ?? 25);
     const [depth3D, setDepth3D] = useState(props.depth3D ?? 20);
+    const [barShape3D, setBarShape3D] = useState(initialBarShape3D);
     const [showBenchmark, setShowBenchmark] = useState(props.showBenchmark ?? false);
     const [showSettings3D, setShowSettings3D] = useState(false);
     // Toggle 3D settings popover — compute absolute screen position via Portal
@@ -84,6 +86,9 @@ const StratumBarChart = props => {
         if (props.showBenchmark !== undefined)
             setShowBenchmark(props.showBenchmark);
     }, [props.showBenchmark]);
+    useEffect(() => {
+        setBarShape3D(initialBarShape3D);
+    }, [initialBarShape3D]);
     // Select active representations based on runtime toggle
     const activeCategories = useMemo(() => {
         if (combineBreakdown && combinedCategories && combinedCategories.length > 0) {
@@ -139,12 +144,13 @@ const StratumBarChart = props => {
             stacking,
             tilt3D,
             depth3D,
+            barShape3D,
             hasDualYAxis,
             showBenchmark,
             benchmark: showBenchmark ? props.benchmark : undefined,
             selectedValues: props.selectedValues,
         };
-    }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, hasDualYAxis, showBenchmark]);
+    }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, barShape3D, hasDualYAxis, showBenchmark]);
     // Compute option using either 2D or 3D renderer
     const chartOption = useMemo(() => {
         if (!activeCategories || activeCategories.length === 0 || !activeSeries || activeSeries.length === 0) {
@@ -192,8 +198,14 @@ const StratumBarChart = props => {
     useEffect(() => {
         if (!chartContainerRef.current)
             return;
+        const chosenRenderer = props.renderer === 'svg' ? 'svg' : 'canvas';
+        // If renderer changed, dispose of old instance so ECharts creates the new canvas or svg engine
+        if (chartInstanceRef.current && currentRendererRef.current !== chosenRenderer) {
+            chartInstanceRef.current.dispose();
+            chartInstanceRef.current = null;
+        }
         if (!chartInstanceRef.current) {
-            const chosenRenderer = props.renderer === 'svg' ? 'svg' : 'canvas';
+            currentRendererRef.current = chosenRenderer;
             chartInstanceRef.current = echarts.init(chartContainerRef.current, undefined, {
                 renderer: chosenRenderer,
             });
@@ -247,7 +259,7 @@ const StratumBarChart = props => {
                                             top: popoverPos.top - window.scrollY,
                                             left: popoverPos.left,
                                             transform: 'translateX(-100%)',
-                                        }, children: [_jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Inclinazione" }), _jsx("input", { type: "range", min: "10", max: "60", value: tilt3D, className: "stratum-bar-slider", onChange: e => setTilt3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [tilt3D, "\u00B0"] })] }), _jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Profondit\u00E0" }), _jsx("input", { type: "range", min: "8", max: "45", value: depth3D, className: "stratum-bar-slider", onChange: e => setDepth3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [depth3D, "px"] })] })] }), document.body)] })), toolbarConfig?.showExport !== false && (_jsxs("div", { className: "stratum-bar-segmented", children: [_jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportPNG, title: "Esporta immagine PNG ad alta risoluzione", children: "\uD83D\uDCF7" }), _jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportCSV, title: "Esporta dati in formato CSV", children: "\uD83D\uDCCA" })] }))] })] })), _jsx("div", { className: "stratum-bar-canvas-container", ref: chartContainerRef })] }));
+                                        }, children: [_jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Inclinazione" }), _jsx("input", { type: "range", min: "10", max: "60", value: tilt3D, className: "stratum-bar-slider", onChange: e => setTilt3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [tilt3D, "\u00B0"] })] }), _jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Profondit\u00E0" }), _jsx("input", { type: "range", min: "8", max: "45", value: depth3D, className: "stratum-bar-slider", onChange: e => setDepth3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [depth3D, "px"] })] }), _jsxs("div", { className: "stratum-bar-popover-row", style: { marginTop: 4 }, children: [_jsx("span", { children: "Geometria" }), _jsxs("div", { className: "stratum-bar-segmented", children: [_jsx("button", { type: "button", className: `stratum-bar-btn ${barShape3D === 'prism' ? 'active' : ''}`, onClick: () => setBarShape3D('prism'), style: { padding: '2px 8px', fontSize: 11 }, children: "Prisma" }), _jsx("button", { type: "button", className: `stratum-bar-btn ${barShape3D === 'cylinder' ? 'active' : ''}`, onClick: () => setBarShape3D('cylinder'), style: { padding: '2px 8px', fontSize: 11 }, children: "Cilindro" })] })] })] }), document.body)] })), toolbarConfig?.showExport !== false && (_jsxs("div", { className: "stratum-bar-segmented", children: [_jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportPNG, title: "Esporta immagine PNG ad alta risoluzione", children: "\uD83D\uDCF7" }), _jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportCSV, title: "Esporta dati in formato CSV", children: "\uD83D\uDCCA" })] }))] })] })), _jsx("div", { className: "stratum-bar-canvas-container", ref: chartContainerRef })] }));
 };
 export default StratumBarChart;
 //# sourceMappingURL=StratumBarChart.js.map

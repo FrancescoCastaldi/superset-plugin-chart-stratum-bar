@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import * as echarts from 'echarts';
-import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries } from '../types';
+import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries, BarShape3D } from '../types';
 import { get2DBarOption } from './renderers2D';
 import { get3DBarOption } from './renderers3D';
 import './StratumBarChart.css';
@@ -19,6 +19,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     viewMode: initialViewMode = '3d',
     orientation: initialOrientation = 'vertical',
     stacking: initialStacking = 'none',
+    barShape3D: initialBarShape3D = 'prism',
     enableToolbar = true,
     toolbarConfig,
     hasDualYAxis: initialHasDualYAxis = false,
@@ -30,6 +31,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const btn3DRef = useRef<HTMLButtonElement>(null);
+  const currentRendererRef = useRef<string>(props.renderer === 'svg' ? 'svg' : 'canvas');
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
   // Runtime interactive state (client-side 60fps toggling)
@@ -40,6 +42,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const [combineBreakdown, setCombineBreakdown] = useState<boolean>(initialCombineBreakdown);
   const [tilt3D, setTilt3D] = useState<number>(props.tilt3D ?? 25);
   const [depth3D, setDepth3D] = useState<number>(props.depth3D ?? 20);
+  const [barShape3D, setBarShape3D] = useState<BarShape3D>(initialBarShape3D);
   const [showBenchmark, setShowBenchmark] = useState<boolean>(props.showBenchmark ?? false);
   const [showSettings3D, setShowSettings3D] = useState<boolean>(false);
 
@@ -111,6 +114,10 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     if (props.showBenchmark !== undefined) setShowBenchmark(props.showBenchmark);
   }, [props.showBenchmark]);
 
+  useEffect(() => {
+    setBarShape3D(initialBarShape3D);
+  }, [initialBarShape3D]);
+
   // Select active representations based on runtime toggle
   const activeCategories = useMemo(() => {
     if (combineBreakdown && combinedCategories && combinedCategories.length > 0) {
@@ -168,12 +175,13 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       stacking,
       tilt3D,
       depth3D,
+      barShape3D,
       hasDualYAxis,
       showBenchmark,
       benchmark: showBenchmark ? props.benchmark : undefined,
       selectedValues: props.selectedValues,
     };
-  }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, hasDualYAxis, showBenchmark]);
+  }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, barShape3D, hasDualYAxis, showBenchmark]);
 
   // Compute option using either 2D or 3D renderer
   const chartOption = useMemo(() => {
@@ -223,8 +231,16 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    const chosenRenderer = props.renderer === 'svg' ? 'svg' : 'canvas';
+
+    // If renderer changed, dispose of old instance so ECharts creates the new canvas or svg engine
+    if (chartInstanceRef.current && currentRendererRef.current !== chosenRenderer) {
+      chartInstanceRef.current.dispose();
+      chartInstanceRef.current = null;
+    }
+
     if (!chartInstanceRef.current) {
-      const chosenRenderer = props.renderer === 'svg' ? 'svg' : 'canvas';
+      currentRendererRef.current = chosenRenderer;
       chartInstanceRef.current = echarts.init(chartContainerRef.current, undefined, {
         renderer: chosenRenderer,
       });
@@ -424,6 +440,27 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                         onChange={e => setDepth3D(Number(e.target.value))}
                       />
                       <span className="stratum-bar-val">{depth3D}px</span>
+                    </div>
+                    <div className="stratum-bar-popover-row" style={{ marginTop: 4 }}>
+                      <span>Geometria</span>
+                      <div className="stratum-bar-segmented">
+                        <button
+                          type="button"
+                          className={`stratum-bar-btn ${barShape3D === 'prism' ? 'active' : ''}`}
+                          onClick={() => setBarShape3D('prism')}
+                          style={{ padding: '2px 8px', fontSize: 11 }}
+                        >
+                          Prisma
+                        </button>
+                        <button
+                          type="button"
+                          className={`stratum-bar-btn ${barShape3D === 'cylinder' ? 'active' : ''}`}
+                          onClick={() => setBarShape3D('cylinder')}
+                          style={{ padding: '2px 8px', fontSize: 11 }}
+                        >
+                          Cilindro
+                        </button>
+                      </div>
                     </div>
                   </div>,
                   document.body

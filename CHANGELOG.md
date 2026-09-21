@@ -4,6 +4,15 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.3] - 2026-09-21
+
+### Fixed
+- **Rendering Engine Switch Reaction (`Canvas` vs `SVG`)**: in `StratumBarChart.tsx`, switching between Canvas and SVG in the control panel failed to take effect because the existing ECharts instance was never disposed upon renderer change. Added dynamic detection of renderer changes with automatic disposal and reinitialization (`echarts.init`) using the selected engine.
+- **3D Geometry Shape: Cylinder (`renderers3D.ts`)**: selecting `Cilindrico (Cylinder)` previously had no effect and rendered the same rectangular prism. Implemented full 3D cylinder geometry:
+  - **Vertical Cylinder**: elliptical top cap with specular highlights, rounded cylindrical body with metallic specular gradient, and elliptical base drop shadow.
+  - **Horizontal Cylinder**: vertical elliptical end cap on the right edge, horizontal cylindrical body with specular gradient along the crest, and bottom drop shadow.
+- **Interactive 3D Geometry Toggle**: added live `Forma 3D: Prisma / Cilindro` toggle directly inside the `⚙️ 3D` settings popover on the chart toolbar, allowing instant 60fps switching without re-opening the explore panel.
+
 ## [0.3.2] - 2026-09-21
 
 ### Fixed
