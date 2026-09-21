@@ -4,6 +4,15 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.8] - 2026-09-21
+
+### Risolto
+- **Visibilità e Stacking Context del Micro Popover Impostazioni 3D (`⚙️ 3D`)**:
+  - Risolto il problema per cui il popup delle impostazioni 3D risultava invisibile o scivolava in secondo piano dietro il canvas di ECharts.
+  - Impostato `overflow: visible` sul contenitore della toolbar `.stratum-bar-toolbar` e `.stratum-bar-toolbar-right`, confinando lo scorrimento orizzontale a `.stratum-bar-toolbar-left` per evitare che l'altezza fissa della barra tagliasse i menu a tendina o i popover aperti.
+  - Assegnato `z-index: 1000` alla toolbar, `z-index: 999999 !important` al popover `.stratum-bar-popover` con `pointer-events: auto` e `z-index: 1` al container canvas `.stratum-bar-canvas-container`.
+  - Aggiunto listener `handleClickOutside` per chiudere in modo fluido e naturale il popover al click in qualsiasi punto esterno della pagina o del grafico.
+
 ## [0.2.7] - 2026-09-21
 
 ### Aggiunto

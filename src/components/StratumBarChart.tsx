@@ -27,6 +27,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   // Runtime interactive state (client-side 60fps toggling)
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
@@ -38,6 +39,20 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const [depth3D, setDepth3D] = useState<number>(props.depth3D ?? 20);
   const [showBenchmark, setShowBenchmark] = useState<boolean>(props.showBenchmark ?? false);
   const [showSettings3D, setShowSettings3D] = useState<boolean>(false);
+
+  // Close 3D settings popover on click outside
+  useEffect(() => {
+    if (!showSettings3D) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowSettings3D(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettings3D]);
 
   // Sync with prop changes if chart controls update in Explore
   useEffect(() => {
@@ -341,7 +356,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
           <div className="stratum-bar-toolbar-right">
             {/* 3D Depth & Tilt Mini Settings Popover */}
             {viewMode === '3d' && (
-              <div className="stratum-bar-popover-wrapper">
+              <div className="stratum-bar-popover-wrapper" ref={popoverRef}>
                 <button
                   type="button"
                   className={`stratum-bar-btn ${showSettings3D ? 'active' : ''}`}
