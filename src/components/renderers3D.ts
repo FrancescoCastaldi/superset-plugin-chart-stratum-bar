@@ -39,25 +39,32 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   const numSeries = series.length || 1;
   const isStacked = props.stacking !== 'none';
 
-  // If stacked, precompute accumulated bottoms for each series and max total
+  // Precompute accumulated bottoms for stacked mode and max values for scaling
   const stackBottoms: number[][] = series.map(() => categories.map(() => 0));
   let maxStackedSum = 0;
-  if (isStacked) {
-    for (let c = 0; c < categories.length; c++) {
-      let accum = 0;
-      for (let s = 0; s < series.length; s++) {
-        stackBottoms[s][c] = accum;
-        const v = series[s].data[c];
-        if (typeof v === 'number' && !isNaN(v)) {
+  let maxSingleVal = 0;
+
+  for (let c = 0; c < categories.length; c++) {
+    let accum = 0;
+    for (let s = 0; s < series.length; s++) {
+      const v = series[s].data[c];
+      if (typeof v === 'number' && !isNaN(v)) {
+        if (v > maxSingleVal) maxSingleVal = v;
+        if (isStacked) {
+          stackBottoms[s][c] = accum;
           accum += v;
         }
       }
-      if (accum > maxStackedSum) maxStackedSum = accum;
     }
+    if (accum > maxStackedSum) maxStackedSum = accum;
   }
 
-  // Value Axis (Primary) - when stacked with custom series, ECharts doesn't know the stacked sum automatically
-  const axisMax = isStacked && maxStackedSum > 0 ? Math.ceil(maxStackedSum * 1.15) : undefined;
+  // Value Axis (Primary) - custom series in ECharts needs explicit axisMax for headroom and proper scaling
+  let ceilingVal = isStacked ? maxStackedSum : maxSingleVal;
+  if (showBenchmark && benchmark && typeof benchmark.value === 'number' && benchmark.value > ceilingVal) {
+    ceilingVal = benchmark.value;
+  }
+  const axisMax = ceilingVal > 0 ? Math.ceil(ceilingVal * 1.15) : undefined;
   const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisMax);
 
   // Category Axis
@@ -78,8 +85,8 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
       name: s.name,
       type: 'custom',
       renderItem: (params: any, api: any) => {
-        const categoryIndex = api.value(0);
-        const val = api.value(1);
+        const categoryIndex = isVertical ? api.value(0) : api.value(1);
+        const val = isVertical ? api.value(1) : api.value(0);
         if (val === null || val === undefined || isNaN(val)) return null;
 
         let yBase: number;
@@ -97,7 +104,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
 
         if (isVertical) {
           // Vertical 3D Column / Prism
-          const bandWidth = api.size([1, 0])[0];
+          const bandWidth = Math.abs(api.size([1, 0])[0]);
           if (isStacked) {
             const barWidth = Math.min(Math.max(bandWidth * 0.45, 14), 48);
             const startPoint = api.coord([categoryIndex, 0]);
@@ -126,7 +133,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
           }
         } else {
           // Horizontal 3D Bar
-          const bandHeight = api.size([0, 1])[1];
+          const bandHeight = Math.abs(api.size([0, 1])[1]);
           if (isStacked) {
             const barHeight = Math.min(Math.max(bandHeight * 0.45, 14), 48);
             const startPoint = api.coord([0, categoryIndex]);
@@ -295,8 +302,12 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
       },
       data: s.data.map((v, i) => ({
         name: categories[i],
-        value: [i, v],
+        value: isVertical ? [i, v] : [v, i],
       })),
+      encode: {
+        x: 0,
+        y: 1,
+      },
       z: 2 + seriesIdx,
     };
 
@@ -338,7 +349,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
         symbolSize: 8,
         yAxisIndex: isVertical ? (s.yAxisIndex ?? 0) : 0,
         xAxisIndex: !isVertical ? (s.yAxisIndex ?? 0) : 0,
-        data: s.data,
+        data: !isVertical ? s.data.map((v, i) => [v, i]) : s.data,
         lineStyle: {
           width: secondaryLineWidth,
           color: baseColor,
@@ -401,7 +412,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   });
 
   // Tooltip
-  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true);
+  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true, isVertical);
   const tooltip = getTooltipConfig(isDark, tooltipFormatter);
 
   

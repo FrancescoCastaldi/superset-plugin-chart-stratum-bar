@@ -73,6 +73,9 @@ describe('StratumBar 2D & 3D Renderers', () => {
     const customSeries = option.series[0];
     expect(customSeries.type).toBe('custom');
     expect(typeof customSeries.renderItem).toBe('function');
+    expect(customSeries.data[0].value).toEqual([0, 150]); // [categoryIndex, val]
+    expect(customSeries.encode).toEqual({ x: 0, y: 1 });
+    expect(option.yAxis.max).toBeGreaterThanOrEqual(280);
 
     // Option should have markLine for 3D benchmark
     const markLineSeries = option.series.find((s: any) => s.markLine !== undefined);
@@ -80,7 +83,7 @@ describe('StratumBar 2D & 3D Renderers', () => {
     expect(markLineSeries.markLine.data[0].yAxis).toBe(100);
   });
 
-  it('get3DBarOption should handle horizontal orientation', () => {
+  it('get3DBarOption should handle horizontal orientation with proper value scale and data mapping', () => {
     const horizontalProps: StratumBarTransformedProps = {
       ...baseProps,
       viewMode: '3d',
@@ -90,5 +93,10 @@ describe('StratumBar 2D & 3D Renderers', () => {
     const option = get3DBarOption(horizontalProps);
     expect(option.yAxis.type).toBe('category');
     expect(option.xAxis.type).toBe('value');
+    expect(option.xAxis.max).toBeGreaterThanOrEqual(280);
+
+    const customSeries = option.series[0];
+    expect(customSeries.data[0].value).toEqual([150, 0]); // [val, categoryIndex]
+    expect(customSeries.encode).toEqual({ x: 0, y: 1 });
   });
 });

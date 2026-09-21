@@ -4,6 +4,13 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.2] - 2026-09-21
+
+### Fixed
+- **3D Horizontal Bar Coordinate & Dimension Mapping (`renderers3D.ts`)**: in horizontal 3D mode, series data was mapped as `[i, v]` (`[categoryIndex, value]`) on custom series, causing ECharts to interpret category indices (0, 1, 2, 3) as values along the primary X-axis. As a result, the X-axis auto-scaled to ~3.2 and clamped all bars to 100% width across the canvas. Data values are now mapped dynamically as `isVertical ? [i, v] : [v, i]`, with `categoryIndex = isVertical ? api.value(0) : api.value(1)` and `val = isVertical ? api.value(1) : api.value(0)`.
+- **Value Axis Dynamic Max Scale**: computed `axisMax = Math.ceil(maxVal * 1.15)` across stacked and grouped bars (including benchmark targets), ensuring proper headroom for 3D extrusion facets and labels in both horizontal (X-axis) and vertical (Y-axis) modes.
+- **Horizontal Tooltip & Line Series Alignment**: passed `isVertical` to `getTooltipFormatter` to extract `it.value[0]` correctly in horizontal 3D custom series, preventing category indices from appearing in tooltips. Sliced and aligned horizontal line series data to `[val, categoryIndex]`.
+
 ## [0.3.1] - 2026-09-21
 
 ### Fixed

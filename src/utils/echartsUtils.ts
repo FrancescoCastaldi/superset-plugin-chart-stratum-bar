@@ -89,7 +89,18 @@ export function getLegendConfig(
   };
 }
 
-export function getTooltipFormatter(categories: string[], isDark: boolean, colorScheme: string[], showBenchmark: boolean, benchmark: any, yAxis2Title?: string, yAxis2Format?: string, secondaryLineColor?: string, is3D: boolean = false) {
+export function getTooltipFormatter(
+  categories: string[],
+  isDark: boolean,
+  colorScheme: string[],
+  showBenchmark: boolean,
+  benchmark: any,
+  yAxis2Title?: string,
+  yAxis2Format?: string,
+  secondaryLineColor?: string,
+  is3D: boolean = false,
+  isVertical: boolean = true,
+) {
   return (params: any) => {
     const items = Array.isArray(params) ? params : [params];
     if (items.length === 0) return '';
@@ -101,7 +112,10 @@ export function getTooltipFormatter(categories: string[], isDark: boolean, color
 
     items.forEach(it => {
       if (it.seriesName === '__track_bg__') return;
-      const val = it.value?.[1] ?? it.value;
+      let val = it.value;
+      if (Array.isArray(it.value)) {
+        val = is3D ? (isVertical ? it.value[1] : it.value[0]) : (it.value[1] ?? it.value[0]);
+      }
       const isSec = it.seriesName === yAxis2Title || (it.seriesIndex != null && it.seriesIndex === items.length - 1 && secondaryLineColor !== undefined) || it.seriesType === 'line';
       const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'
         ? `${(val * 100).toFixed(1)}%`

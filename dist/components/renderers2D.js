@@ -218,7 +218,7 @@ export function get2DBarOption(props) {
         echartsSeries.push(seriesItem);
     });
     // Tooltip configuration (Glassmorphism & Theme support)
-    const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false);
+    const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false, isVertical);
     const tooltip = getTooltipConfig(isDark, tooltipFormatter);
     // Legend — with explicit per-series colors so the legend swatches match the bars
     const legend = getLegendConfig(series, colorScheme, showLegend || false, legendOrientation || 'top', isDark);
