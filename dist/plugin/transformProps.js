@@ -1,14 +1,5 @@
+import { resolveColors, resolveDimensions, computeBenchmark } from './transformPropsUtils';
 import { CategoricalColorNamespace, getNumberFormatter, ensureIsArray, } from '@superset-ui/core';
-const DEFAULT_COLORS = [
-    '#3b82f6', // Sapphire Blue
-    '#10b981', // Emerald Green
-    '#f59e0b', // Amber Orange
-    '#ec4899', // Pink
-    '#8b5cf6', // Violet
-    '#06b6d4', // Cyan
-    '#f97316', // Orange
-    '#6366f1', // Indigo
-];
 export default function transformProps(chartProps) {
     const { width, height, formData, queriesData, hooks } = chartProps;
     const fd = (formData || {});
@@ -36,42 +27,7 @@ export default function transformProps(chartProps) {
         return rowKeys.find(k => k.toLowerCase() === name.toLowerCase());
     };
     // Extract dimension candidates
-    const rawXAxisList = ensureIsArray(x_axis).map(getColName).filter(Boolean);
-    const rawXGroup = getColName(x_axis_group);
-    const rawGroupbyList = ensureIsArray(groupby).map(getColName).filter(Boolean);
-    let primaryDimName = '';
-    let secondaryDimName = undefined;
-    if (rawXGroup) {
-        // Explicit X-axis grouping specified
-        primaryDimName = rawXGroup;
-        secondaryDimName =
-            rawXAxisList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase()) ||
-                rawGroupbyList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase());
-    }
-    else if (rawXAxisList.length >= 2) {
-        // Multiple dimensions specified directly in x_axis
-        primaryDimName = rawXAxisList[0];
-        secondaryDimName = rawXAxisList[1];
-    }
-    else if (rawXAxisList.length === 1 && rawGroupbyList.length > 0) {
-        // Single x_axis and groupby provided
-        primaryDimName = rawXAxisList[0];
-        secondaryDimName = rawGroupbyList.find(c => c.toLowerCase() !== primaryDimName.toLowerCase());
-    }
-    else if (rawXAxisList.length === 1) {
-        primaryDimName = rawXAxisList[0];
-    }
-    else if (rawGroupbyList.length > 0) {
-        primaryDimName = rawGroupbyList[0];
-        secondaryDimName = rawGroupbyList[1];
-    }
-    else {
-        primaryDimName = 'category';
-    }
-    // In data, find exact keys matching primary and secondary dimensions (case-insensitive)
-    const resolvedXAxis = primaryDimName;
-    const actualXKey = findRowKey(primaryDimName) || primaryDimName;
-    const actualBreakdownKey = findRowKey(secondaryDimName);
+    const { resolvedXAxis, actualXKey, actualBreakdownKey, secondaryDimName } = resolveDimensions(fd, sampleRow);
     const breakdownCol = secondaryDimName;
     // Resolve metrics
     const metricList = ensureIsArray(metrics).map(m => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)));
@@ -81,84 +37,19 @@ export default function transformProps(chartProps) {
         : target_metric ? String(target_metric) : undefined;
     const formatter = getNumberFormatter(numberFormat);
     // 1. Resolve Dashboard Label Colors & Manual JSON Colors
-    // Dashboard metadata passes label_colors in rawFormData.label_colors or formData.label_colors
-    const dashLabelColors = {
-        ...(rawFd.label_colors || {}),
-        ...(fd.label_colors || {}),
-    };
-    // Parse manual custom_colors_json if provided
-    let manualJsonColors = {};
-    if (fd.custom_colors_json) {
-        try {
-            if (typeof fd.custom_colors_json === 'string' && fd.custom_colors_json.trim()) {
-                manualJsonColors = JSON.parse(fd.custom_colors_json);
-            }
-            else if (typeof fd.custom_colors_json === 'object') {
-                manualJsonColors = fd.custom_colors_json;
-            }
-        }
-        catch (e) {
-            console.warn('[StratumBar] Errore nel parsing di custom_colors_json:', e);
-        }
-    }
-    // Combined explicit label colors (manual JSON takes top priority, then dashboard label_colors)
-    const combinedLabelColors = {
-        ...dashLabelColors,
-        ...manualJsonColors,
-    };
-    // Helper for case-insensitive lookup in label colors
-    const lookupColor = (key) => {
-        if (!key)
-            return undefined;
-        if (combinedLabelColors[key])
-            return combinedLabelColors[key];
-        const lowerKey = key.toLowerCase();
-        const found = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === lowerKey);
-        if (found)
-            return combinedLabelColors[found];
-        // If key has compound separator ' · ', check secondary part (breakdown dimension)
-        if (key.includes(' · ')) {
-            const parts = key.split(' · ');
-            for (const p of parts) {
-                const trimmed = p.trim();
-                if (combinedLabelColors[trimmed])
-                    return combinedLabelColors[trimmed];
-                const subFound = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === trimmed.toLowerCase());
-                if (subFound)
-                    return combinedLabelColors[subFound];
-            }
-        }
-        return undefined;
-    };
     // Effective color scheme: prioritize dashboard color scheme if present
     const effectiveColorScheme = fd.color_scheme || rawFd.color_scheme;
-    let palette = DEFAULT_COLORS;
     let scaleInstance = null;
     if (effectiveColorScheme) {
         try {
             scaleInstance = CategoricalColorNamespace.getScale(effectiveColorScheme);
-            if (scaleInstance && typeof scaleInstance.colors === 'object' && Array.isArray(scaleInstance.colors)) {
-                palette = scaleInstance.colors;
-            }
         }
         catch {
-            // Fallback to default
+            // Fallback
         }
     }
-    const getColor = (key, idx) => {
-        // 1. Direct or compound match in dashboard label_colors / manual JSON
-        const explicit = lookupColor(key);
-        if (explicit)
-            return explicit;
-        // 2. Superset Categorical scale (e.g. wavesOfBlue)
-        if (scaleInstance && typeof scaleInstance.getColor === 'function') {
-            const scaleColor = scaleInstance.getColor(key);
-            if (scaleColor)
-                return scaleColor;
-        }
-        // 3. Sequential palette fallback
-        return palette[idx % palette.length];
-    };
+    // Dashboard metadata passes label_colors in rawFormData.label_colors or formData.label_colors
+    const { combinedLabelColors, palette, getColor } = resolveColors(fd, rawFd, scaleInstance);
     // 2. Determine Data Structure: PIVOTED vs UNPIVOTED
     // In Superset, Timeseries pivotOperator pivots the dataframe:
     // sampleRow has columns like: { CANALE: 'App', 'Convenzioni': 7, 'Libera professione': 13, 'SSN': 120, 'Solventi': 17 }
@@ -425,53 +316,17 @@ export default function transformProps(chartProps) {
     const categories = currentRep.categories;
     const series = currentRep.series;
     // 3. Compute Benchmark if enabled
-    let benchmark;
-    if (showBenchmark) {
-        let resolvedBenchmarkVal = Number(benchmarkValue) || 0;
-        let bLabel = `Benchmark (${formatter(resolvedBenchmarkVal)})`;
-        if (benchmarkType === 'average') {
-            const allVals = [];
-            series.forEach(s => {
-                s.data.forEach(v => {
-                    if (typeof v === 'number')
-                        allVals.push(v);
-                });
-            });
-            if (allVals.length > 0) {
-                resolvedBenchmarkVal = allVals.reduce((a, b) => a + b, 0) / allVals.length;
-                bLabel = `Media (${formatter(resolvedBenchmarkVal)})`;
+    const benchmark = computeBenchmark(series, showBenchmark, benchmarkType || '', Number(benchmarkValue) || 0, formatter);
+    // Calculate delta % for each item against benchmark if not set by targetMetric
+    series.forEach(s => {
+        s.items.forEach(item => {
+            const target = item.targetValue !== undefined && item.targetValue !== null ? item.targetValue : benchmark?.value;
+            if (item.value !== null && target && target !== 0) {
+                const delta = ((item.value - target) / target) * 100;
+                item.deltaPercent = Math.round(delta * 10) / 10;
             }
-        }
-        else if (benchmarkType === 'median') {
-            const allVals = [];
-            series.forEach(s => {
-                s.data.forEach(v => {
-                    if (typeof v === 'number')
-                        allVals.push(v);
-                });
-            });
-            if (allVals.length > 0) {
-                allVals.sort((a, b) => a - b);
-                const mid = Math.floor(allVals.length / 2);
-                resolvedBenchmarkVal = allVals.length % 2 !== 0 ? allVals[mid] : (allVals[mid - 1] + allVals[mid]) / 2;
-                bLabel = `Mediana (${formatter(resolvedBenchmarkVal)})`;
-            }
-        }
-        benchmark = {
-            value: resolvedBenchmarkVal,
-            label: bLabel,
-        };
-        // Calculate delta % for each item against benchmark if not set by targetMetric
-        series.forEach(s => {
-            s.items.forEach(item => {
-                const target = item.targetValue !== undefined && item.targetValue !== null ? item.targetValue : benchmark?.value;
-                if (item.value !== null && target && target !== 0) {
-                    const delta = ((item.value - target) / target) * 100;
-                    item.deltaPercent = Math.round(delta * 10) / 10;
-                }
-            });
         });
-    }
+    });
     // 4. Cross-filtering hook with toggle support
     const { setDataMask, onAddFilter } = (hooks || {});
     const currentSelected = selectedValues;

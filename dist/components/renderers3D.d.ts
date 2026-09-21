@@ -73,6 +73,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
+        nameLocation: "end";
         nameTextStyle: {
             color: string;
             fontSize: number;
@@ -155,6 +156,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
+        nameLocation: "end";
         nameTextStyle: {
             color: string;
             fontSize: number;

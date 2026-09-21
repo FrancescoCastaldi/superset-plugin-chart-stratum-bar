@@ -1,3 +1,4 @@
+import { resolveColors, resolveDimensions, computeBenchmark } from './transformPropsUtils';
 import {
   ChartProps,
   DataRecord,
@@ -14,16 +15,7 @@ import {
   BenchmarkConfig,
 } from '../types';
 
-const DEFAULT_COLORS = [
-  '#3b82f6', // Sapphire Blue
-  '#10b981', // Emerald Green
-  '#f59e0b', // Amber Orange
-  '#ec4899', // Pink
-  '#8b5cf6', // Violet
-  '#06b6d4', // Cyan
-  '#f97316', // Orange
-  '#6366f1', // Indigo
-];
+
 
 export default function transformProps(chartProps: ChartProps): StratumBarTransformedProps {
   const { width, height, formData, queriesData, hooks } = chartProps as StratumBarChartProps;
@@ -101,40 +93,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   };
 
   // Extract dimension candidates
-  const rawXAxisList = ensureIsArray(x_axis).map(getColName).filter(Boolean);
-  const rawXGroup = getColName(x_axis_group);
-  const rawGroupbyList = ensureIsArray(groupby).map(getColName).filter(Boolean);
-
-  let primaryDimName = '';
-  let secondaryDimName: string | undefined = undefined;
-
-  if (rawXGroup) {
-    // Explicit X-axis grouping specified
-    primaryDimName = rawXGroup;
-    secondaryDimName =
-      rawXAxisList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase()) ||
-      rawGroupbyList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase());
-  } else if (rawXAxisList.length >= 2) {
-    // Multiple dimensions specified directly in x_axis
-    primaryDimName = rawXAxisList[0];
-    secondaryDimName = rawXAxisList[1];
-  } else if (rawXAxisList.length === 1 && rawGroupbyList.length > 0) {
-    // Single x_axis and groupby provided
-    primaryDimName = rawXAxisList[0];
-    secondaryDimName = rawGroupbyList.find(c => c.toLowerCase() !== primaryDimName.toLowerCase());
-  } else if (rawXAxisList.length === 1) {
-    primaryDimName = rawXAxisList[0];
-  } else if (rawGroupbyList.length > 0) {
-    primaryDimName = rawGroupbyList[0];
-    secondaryDimName = rawGroupbyList[1];
-  } else {
-    primaryDimName = 'category';
-  }
-
-  // In data, find exact keys matching primary and secondary dimensions (case-insensitive)
-  const resolvedXAxis = primaryDimName;
-  const actualXKey = findRowKey(primaryDimName) || primaryDimName;
-  const actualBreakdownKey = findRowKey(secondaryDimName);
+  const { resolvedXAxis, actualXKey, actualBreakdownKey, secondaryDimName } = resolveDimensions(fd, sampleRow);
   const breakdownCol = secondaryDimName;
 
   // Resolve metrics
@@ -147,83 +106,19 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const formatter = getNumberFormatter(numberFormat);
 
   // 1. Resolve Dashboard Label Colors & Manual JSON Colors
-  // Dashboard metadata passes label_colors in rawFormData.label_colors or formData.label_colors
-  const dashLabelColors: Record<string, string> = {
-    ...(rawFd.label_colors || {}),
-    ...(fd.label_colors || {}),
-  };
-
-  // Parse manual custom_colors_json if provided
-  let manualJsonColors: Record<string, string> = {};
-  if (fd.custom_colors_json) {
-    try {
-      if (typeof fd.custom_colors_json === 'string' && fd.custom_colors_json.trim()) {
-        manualJsonColors = JSON.parse(fd.custom_colors_json);
-      } else if (typeof fd.custom_colors_json === 'object') {
-        manualJsonColors = fd.custom_colors_json;
-      }
-    } catch (e) {
-      console.warn('[StratumBar] Errore nel parsing di custom_colors_json:', e);
-    }
-  }
-
-  // Combined explicit label colors (manual JSON takes top priority, then dashboard label_colors)
-  const combinedLabelColors: Record<string, string> = {
-    ...dashLabelColors,
-    ...manualJsonColors,
-  };
-
-  // Helper for case-insensitive lookup in label colors
-  const lookupColor = (key: string): string | undefined => {
-    if (!key) return undefined;
-    if (combinedLabelColors[key]) return combinedLabelColors[key];
-    const lowerKey = key.toLowerCase();
-    const found = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === lowerKey);
-    if (found) return combinedLabelColors[found];
-
-    // If key has compound separator ' · ', check secondary part (breakdown dimension)
-    if (key.includes(' · ')) {
-      const parts = key.split(' · ');
-      for (const p of parts) {
-        const trimmed = p.trim();
-        if (combinedLabelColors[trimmed]) return combinedLabelColors[trimmed];
-        const subFound = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === trimmed.toLowerCase());
-        if (subFound) return combinedLabelColors[subFound];
-      }
-    }
-    return undefined;
-  };
-
   // Effective color scheme: prioritize dashboard color scheme if present
   const effectiveColorScheme = fd.color_scheme || rawFd.color_scheme;
-
-  let palette = DEFAULT_COLORS;
   let scaleInstance: any = null;
   if (effectiveColorScheme) {
     try {
       scaleInstance = CategoricalColorNamespace.getScale(effectiveColorScheme);
-      if (scaleInstance && typeof scaleInstance.colors === 'object' && Array.isArray(scaleInstance.colors)) {
-        palette = scaleInstance.colors;
-      }
     } catch {
-      // Fallback to default
+      // Fallback
     }
   }
 
-  const getColor = (key: string, idx: number): string => {
-    // 1. Direct or compound match in dashboard label_colors / manual JSON
-    const explicit = lookupColor(key);
-    if (explicit) return explicit;
-
-    // 2. Superset Categorical scale (e.g. wavesOfBlue)
-    if (scaleInstance && typeof scaleInstance.getColor === 'function') {
-      const scaleColor = scaleInstance.getColor(key);
-      if (scaleColor) return scaleColor;
-    }
-
-    // 3. Sequential palette fallback
-    return palette[idx % palette.length];
-  };
+  // Dashboard metadata passes label_colors in rawFormData.label_colors or formData.label_colors
+  const { combinedLabelColors, palette, getColor } = resolveColors(fd, rawFd, scaleInstance);
 
 
   // 2. Determine Data Structure: PIVOTED vs UNPIVOTED
@@ -526,42 +421,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
 
 
   // 3. Compute Benchmark if enabled
-  let benchmark: BenchmarkConfig | undefined;
-  if (showBenchmark) {
-    let resolvedBenchmarkVal = Number(benchmarkValue) || 0;
-    let bLabel = `Benchmark (${formatter(resolvedBenchmarkVal)})`;
-
-    if (benchmarkType === 'average') {
-      const allVals: number[] = [];
-      series.forEach(s => {
-        s.data.forEach(v => {
-          if (typeof v === 'number') allVals.push(v);
-        });
-      });
-      if (allVals.length > 0) {
-        resolvedBenchmarkVal = allVals.reduce((a, b) => a + b, 0) / allVals.length;
-        bLabel = `Media (${formatter(resolvedBenchmarkVal)})`;
-      }
-    } else if (benchmarkType === 'median') {
-      const allVals: number[] = [];
-      series.forEach(s => {
-        s.data.forEach(v => {
-          if (typeof v === 'number') allVals.push(v);
-        });
-      });
-      if (allVals.length > 0) {
-        allVals.sort((a, b) => a - b);
-        const mid = Math.floor(allVals.length / 2);
-        resolvedBenchmarkVal = allVals.length % 2 !== 0 ? allVals[mid] : (allVals[mid - 1] + allVals[mid]) / 2;
-        bLabel = `Mediana (${formatter(resolvedBenchmarkVal)})`;
-      }
-    }
-
-    benchmark = {
-      value: resolvedBenchmarkVal,
-      label: bLabel,
-    };
-
+  const benchmark = computeBenchmark(series, showBenchmark, benchmarkType || '', Number(benchmarkValue) || 0, formatter);
     // Calculate delta % for each item against benchmark if not set by targetMetric
     series.forEach(s => {
       s.items.forEach(item => {
@@ -572,7 +432,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
         }
       });
     });
-  }
 
   // 4. Cross-filtering hook with toggle support
   const { setDataMask, onAddFilter } = (hooks || {}) as any;

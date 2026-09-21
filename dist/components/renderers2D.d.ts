@@ -65,6 +65,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         axisLine: {
             lineStyle: {
                 color: string;
+                width: number;
             };
         };
         axisTick: {
@@ -147,6 +148,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         axisLine: {
             lineStyle: {
                 color: string;
+                width: number;
             };
         };
         axisTick: {

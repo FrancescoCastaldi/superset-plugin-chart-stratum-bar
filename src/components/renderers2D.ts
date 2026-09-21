@@ -1,4 +1,7 @@
 import { StratumBarTransformedProps } from '../types';
+import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig } from '../utils/echartsUtils';
+
+import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 
 export function get2DBarOption(props: StratumBarTransformedProps) {
   const {
@@ -30,17 +33,6 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
   const isDark = themeMode === 'dark';
   const isVertical = orientation === 'vertical';
 
-  // Helper convert hex to rgba
-  const hexToRgba = (hex: string, alpha: number) => {
-    if (!hex || !hex.startsWith('#')) return `rgba(234, 88, 12, ${alpha})`;
-    const h = hex.replace('#', '');
-    const bigint = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
   // Calculate max value for track background
   let maxVal = 0;
   for (const s of series) {
@@ -52,60 +44,13 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
   const trackMax = Math.ceil(maxVal * 1.15) || 100;
 
   // Category Axis
-  const categoryAxis = {
-    type: 'category' as const,
-    data: categories,
-    axisLabel: {
-      color: isDark ? '#cbd5e1' : '#4b5563',
-      fontSize: 12,
-      interval: 0,
-      rotate: categories.some(c => c.length > 12) && isVertical ? 25 : 0,
-    },
-    axisLine: { lineStyle: { color: isDark ? '#334155' : '#d1d5db' } },
-    axisTick: { show: false },
-    name: isVertical ? xAxisTitle : yAxisTitle,
-    nameLocation: 'end' as const,
-    nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 0, 0, 8] },
-  };
+  const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
 
   // Value Axis (Primary)
-  const valueAxis = {
-    type: 'value' as const,
-    axisLabel: {
-      color: isDark ? '#94a3b8' : '#6b7280',
-      fontSize: 11,
-      formatter: (val: number) => {
-        if (Math.abs(val) >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
-        if (Math.abs(val) >= 1_000) return (val / 1_000).toFixed(1) + 'k';
-        return String(val);
-      },
-    },
-    splitLine: { lineStyle: { color: isDark ? '#1e293b' : '#f3f4f6', type: 'dashed' as const } },
-    name: isVertical ? yAxisTitle : xAxisTitle,
-    nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 8, 0, 0] },
-  };
+  const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle);
 
   // Secondary Value Axis (Right Y-Axis - Color-coded)
-  const secondaryValueAxis = {
-    type: 'value' as const,
-    position: isVertical ? ('right' as const) : ('top' as const),
-    axisLabel: {
-      color: secondaryLineColor,
-      fontWeight: 600,
-      fontSize: 11,
-      formatter: (val: number) => {
-        if (yAxis2Format === '.2%') {
-          return `${(val * 100).toFixed(1)}%`;
-        }
-        if (Math.abs(val) >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
-        if (Math.abs(val) >= 1_000) return (val / 1_000).toFixed(1) + 'k';
-        return Number(val.toFixed(2)).toLocaleString('it-IT');
-      },
-    },
-    splitLine: { show: false }, // Avoid grid clash with primary axis
-    name: yAxis2Title || '',
-    nameTextStyle: { color: secondaryLineColor, fontWeight: 700, fontSize: 12, padding: [0, 0, 0, 8] },
-  };
+  const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
 
   const echartsSeries: any[] = [];
 
@@ -366,56 +311,20 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
   };
 
   // Legend — with explicit per-series colors so the legend swatches match the bars
-  const legendData = series
-    .filter(s => s.seriesType !== 'line' || series.length === 1)
-    .map(s => ({
-      name: s.name,
-      // Use the actual series color (not the gradient object — use the base hex string)
-      itemStyle: { color: s.color || colorScheme[series.indexOf(s) % colorScheme.length] || '#3b82f6' },
-    }));
-
-  const legend = {
-    show: showLegend && series.length > 1,
-    orient: legendOrientation === 'left' || legendOrientation === 'right' ? ('vertical' as const) : ('horizontal' as const),
-    top: legendOrientation === 'top' ? 8 : legendOrientation === 'bottom' ? 'bottom' : 'middle',
-    left: legendOrientation === 'left' ? 8 : legendOrientation === 'right' ? 'right' : 'center',
-    textStyle: { color: isDark ? '#cbd5e1' : '#374151', fontSize: 12, fontWeight: 500 },
-    data: legendData,
-  };
+  const legend = getLegendConfig(series, colorScheme, showLegend || false, legendOrientation || 'top', isDark);
 
   // Adaptive right padding: horizontal needs more room for value labels outside bars
-  const rightPadding = !isVertical
-    ? (hasDualYAxis ? 90 : 60)
-    : (hasDualYAxis ? 70 : 36);
+  
 
   return {
     backgroundColor: 'transparent',
     animationDuration: 600,
     aria: { enabled: true, decal: { show: enableA11yDecal } },
-    grid: {
-      top: legendOrientation === 'top' ? 44 : 32,
-      bottom: legendOrientation === 'bottom' ? 44 : 36,
-      left: isVertical ? 60 : 110,
-      right: rightPadding,
-      containLabel: true,
-    },
+    grid: getGridConfig(isVertical, hasDualYAxis || false, legendOrientation || 'top'),
     tooltip,
     legend,
     xAxis: isVertical ? categoryAxis : hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis,
     yAxis: isVertical ? (hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis) : categoryAxis,
     series: echartsSeries,
   };
-}
-
-function adjustColorBrightness(hex: string, percent: number): string {
-  if (!hex || !hex.startsWith('#')) return hex;
-  let num = parseInt(hex.replace('#', ''), 16);
-  if (isNaN(num)) return hex;
-  let r = (num >> 16) + Math.round(255 * (percent / 100));
-  let g = ((num >> 8) & 0x00ff) + Math.round(255 * (percent / 100));
-  let b = (num & 0x0000ff) + Math.round(255 * (percent / 100));
-  r = Math.min(255, Math.max(0, r));
-  g = Math.min(255, Math.max(0, g));
-  b = Math.min(255, Math.max(0, b));
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }

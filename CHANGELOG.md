@@ -4,6 +4,14 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.0] - 2026-09-21
+
+### Changed
+- **Major Refactoring & Optimization**: completely reorganized the codebase to extract shared utilities (`utils/colors.ts`, `utils/echartsUtils.ts`, `plugin/transformPropsUtils.ts`).
+- **Eliminated Code Duplication**: extracted shared axis, legend, tooltip, and grid configurations into a common builder, eliminating duplication between `renderers2D.ts` and `renderers3D.ts`.
+- **Improved Maintainability**: broke down `transformProps.ts` into smaller, testable functions for dimension resolution, color resolution, and benchmark computation.
+- **Color Handling Robustness**: centralized color handling (`adjustColorBrightness`, `hexToRgba`) to prevent inconsistencies between 2D and 3D views.
+
 ## [0.2.9] - 2026-09-21
 
 ### Risolto

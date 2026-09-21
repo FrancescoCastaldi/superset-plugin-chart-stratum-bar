@@ -1,3 +1,5 @@
+import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getGridConfig } from '../utils/echartsUtils';
+import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 export function get3DBarOption(props) {
     const { categories, series, benchmark, orientation, barShape3D, depth3D = 20, tilt3D = 25, shadow3D = true, showBenchmark, showValue, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, } = props;
     const isDark = themeMode === 'dark';
@@ -5,73 +7,12 @@ export function get3DBarOption(props) {
     const tiltRad = (tilt3D * Math.PI) / 180;
     const offsetX = Math.round(depth3D * Math.cos(tiltRad));
     const offsetY = Math.round(depth3D * Math.sin(tiltRad));
-    // Helper convert hex to rgba
-    const hexToRgba = (hex, alpha) => {
-        if (!hex || !hex.startsWith('#'))
-            return `rgba(234, 88, 12, ${alpha})`;
-        const h = hex.replace('#', '');
-        const bigint = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
-        const r = (bigint >> 16) & 255;
-        const g = (bigint >> 8) & 255;
-        const b = bigint & 255;
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    };
     // Category Axis
-    const categoryAxis = {
-        type: 'category',
-        data: categories,
-        axisLabel: {
-            color: isDark ? '#cbd5e1' : '#4b5563',
-            fontSize: 12,
-            interval: 0,
-            rotate: categories.some(c => c.length > 12) && isVertical ? 25 : 0,
-        },
-        axisLine: { lineStyle: { color: isDark ? '#334155' : '#9ca3af', width: 2 } },
-        axisTick: { show: false },
-        name: isVertical ? xAxisTitle : yAxisTitle,
-        nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 0, 0, 8] },
-    };
+    const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
     // Value Axis (Primary)
-    const valueAxis = {
-        type: 'value',
-        axisLabel: {
-            color: isDark ? '#94a3b8' : '#6b7280',
-            fontSize: 11,
-            formatter: (val) => {
-                if (Math.abs(val) >= 1_000_000)
-                    return (val / 1_000_000).toFixed(1) + 'M';
-                if (Math.abs(val) >= 1_000)
-                    return (val / 1_000).toFixed(1) + 'k';
-                return String(val);
-            },
-        },
-        splitLine: { lineStyle: { color: isDark ? '#1e293b' : '#e5e7eb', type: 'dashed' } },
-        name: isVertical ? yAxisTitle : xAxisTitle,
-        nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 8, 0, 0] },
-    };
+    const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle);
     // Secondary Value Axis (Right Y-Axis - Color-coded)
-    const secondaryValueAxis = {
-        type: 'value',
-        position: isVertical ? 'right' : 'top',
-        axisLabel: {
-            color: secondaryLineColor,
-            fontWeight: 600,
-            fontSize: 11,
-            formatter: (val) => {
-                if (yAxis2Format === '.2%') {
-                    return `${(val * 100).toFixed(1)}%`;
-                }
-                if (Math.abs(val) >= 1_000_000)
-                    return (val / 1_000_000).toFixed(1) + 'M';
-                if (Math.abs(val) >= 1_000)
-                    return (val / 1_000).toFixed(1) + 'k';
-                return Number(val.toFixed(2)).toLocaleString('it-IT');
-            },
-        },
-        splitLine: { show: false },
-        name: yAxis2Title || '',
-        nameTextStyle: { color: secondaryLineColor, fontWeight: 700, fontSize: 12, padding: [0, 0, 0, 8] },
-    };
+    const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
     const echartsSeries = [];
     const numSeries = series.length || 1;
     const isStacked = props.stacking !== 'none';
@@ -534,54 +475,19 @@ export function get3DBarOption(props) {
             return html;
         },
     };
-    const rightPadding = !isVertical
-        ? (hasDualYAxis ? 90 : 60)
-        : (hasDualYAxis ? 70 : 48);
     // Legend with explicit per-series colors so swatches match bars
-    const legendData = series
-        .filter(s => s.seriesType !== 'line' || series.length === 1)
-        .map(s => ({
-        name: s.name,
-        itemStyle: { color: s.color || colorScheme[series.indexOf(s) % colorScheme.length] || '#3b82f6' },
-    }));
+    const legend = getLegendConfig(series, colorScheme, showLegend || false, legendOrientation || 'top', isDark);
     return {
         backgroundColor: 'transparent',
         animationDuration: 750,
         animationEasing: 'cubicOut',
         aria: { enabled: true, decal: { show: enableA11yDecal } },
-        grid: {
-            top: legendOrientation === 'top' ? 48 : 36,
-            bottom: legendOrientation === 'bottom' ? 48 : 40,
-            left: isVertical ? 65 : 110,
-            right: rightPadding,
-            containLabel: true,
-        },
+        grid: getGridConfig(isVertical, hasDualYAxis || false, legendOrientation || 'top'),
         tooltip,
-        legend: {
-            show: showLegend && series.length > 1,
-            orient: legendOrientation === 'left' || legendOrientation === 'right' ? 'vertical' : 'horizontal',
-            top: legendOrientation === 'top' ? 8 : legendOrientation === 'bottom' ? 'bottom' : 'middle',
-            left: legendOrientation === 'left' ? 8 : legendOrientation === 'right' ? 'right' : 'center',
-            textStyle: { color: isDark ? '#cbd5e1' : '#374151', fontSize: 12, fontWeight: 500 },
-            data: legendData,
-        },
+        legend,
         xAxis: isVertical ? categoryAxis : hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis,
         yAxis: isVertical ? (hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis) : categoryAxis,
         series: echartsSeries,
     };
-}
-function adjustColorBrightness(hex, percent) {
-    if (!hex || !hex.startsWith('#'))
-        return hex;
-    let num = parseInt(hex.replace('#', ''), 16);
-    if (isNaN(num))
-        return hex;
-    let r = (num >> 16) + Math.round(255 * (percent / 100));
-    let g = ((num >> 8) & 0x00ff) + Math.round(255 * (percent / 100));
-    let b = (num & 0x0000ff) + Math.round(255 * (percent / 100));
-    r = Math.min(255, Math.max(0, r));
-    g = Math.min(255, Math.max(0, g));
-    b = Math.min(255, Math.max(0, b));
-    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 //# sourceMappingURL=renderers3D.js.map
