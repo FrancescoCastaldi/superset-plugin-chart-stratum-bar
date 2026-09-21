@@ -272,11 +272,12 @@ const config = {
                         name: 'valuePosition',
                         config: {
                             type: 'SelectControl',
-                            label: t('Value Position'),
-                            description: t('Position of bar value labels'),
+                            label: t('Posizione Valori'),
+                            description: t('Posizione e orientamento dei valori numerici sulle barre (Sopra, Dentro, Di traverso)'),
                             choices: [
-                                ['top', t('Sopra (Top)')],
-                                ['inside', t('All’interno (Inside)')],
+                                ['top', t('Sopra la barra (Top)')],
+                                ['inside', t('Dentro la barra (Inside)')],
+                                ['slanted', t('Di traverso (Inclinato 45°)')],
                                 ['outside', t('Esterno (Outside)')],
                             ],
                             default: 'top',

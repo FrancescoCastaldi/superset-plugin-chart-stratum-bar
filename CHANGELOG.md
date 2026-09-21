@@ -4,6 +4,18 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.5] - 2026-09-21
+
+### Added
+- **Configurable Data Label Position & Rotation (`Posizione Valori: Sopra / Dentro / Di traverso`)**:
+  - **Sopra (Top)**: values are placed cleanly above the bar / 3D top cap (or outside to the right in horizontal mode).
+  - **Dentro (Inside)**: values are centered inside the front face/body of the bar with high-contrast white typography and drop stroke halo (`lineWidth: 2.5`).
+  - **Di traverso (Slanted 45°)**: values are angled at 45° (`rotate: 45` in 2D, `rotation: Math.PI / 4` with coordinate origin in 3D custom series) to prevent horizontal collision and allow long numbers on narrow bars.
+  - **Interactive Chart Toolbar Pill**: added dynamic `🏷️ Valori: Sopra | Dentro | Di traverso` cycle button on the chart toolbar for instant 1-click toggling at 60 FPS.
+  - **3D Mini Settings Popover**: added dedicated segmented selector (`Sopra`, `Dentro`, `Di traverso`) inside the `⚙️ 3D` settings modal.
+  - **Explore Control Panel Persistence**: added `Posizione Valori` dropdown control in Superset Explore view (`top`, `inside`, `slanted`, `outside`).
+  - **Dynamic Headroom Scaling**: expanded value axis headroom (`axisMax * 1.25`) when `slanted` is selected, ensuring angled labels never overflow or clip against the chart ceiling.
+
 ## [0.3.4] - 2026-09-21
 
 ### Fixed

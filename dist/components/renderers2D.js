@@ -162,11 +162,26 @@ export function get2DBarOption(props) {
             },
             label: {
                 show: showValue,
-                // In stacked mode labels must go inside the segment; top-only label works for the last series
-                position: stacking !== 'none'
+                position: valuePosition === 'inside'
                     ? 'inside'
-                    : (valuePosition === 'inside' ? 'inside' : isVertical ? 'top' : 'right'),
-                color: (stacking !== 'none' || valuePosition === 'inside') ? '#ffffff' : '#374151',
+                    : (stacking !== 'none'
+                        ? 'inside'
+                        : (isVertical ? 'top' : 'right')),
+                rotate: valuePosition === 'slanted' ? (isVertical ? 45 : -35) : 0,
+                align: valuePosition === 'slanted'
+                    ? 'left'
+                    : (valuePosition === 'inside' ? 'center' : (isVertical ? 'center' : 'left')),
+                verticalAlign: valuePosition === 'slanted'
+                    ? 'middle'
+                    : (valuePosition === 'inside' ? 'middle' : (isVertical ? 'bottom' : 'middle')),
+                distance: valuePosition === 'slanted' ? 8 : (valuePosition === 'inside' ? 0 : 5),
+                color: (stacking !== 'none' || valuePosition === 'inside')
+                    ? '#ffffff'
+                    : (isDark ? '#f8fafc' : '#1f2937'),
+                textBorderColor: (stacking !== 'none' || valuePosition === 'inside')
+                    ? 'rgba(0, 0, 0, 0.75)'
+                    : (isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'),
+                textBorderWidth: (stacking !== 'none' || valuePosition === 'inside') ? 2.5 : 1.5,
                 fontWeight: 600,
                 fontSize: 11,
                 // Hide label for very small segments to avoid overlap
@@ -176,7 +191,7 @@ export function get2DBarOption(props) {
                     if (val === null || val === undefined)
                         return '';
                     if (typeof val === 'number') {
-                        // In stacked mode suppress near-zero labels (< 1% of max) to avoid clutter
+                        // In stacked mode suppress near-zero labels (< 1.5% of max) to avoid clutter
                         if (stacking !== 'none' && maxVal > 0 && Math.abs(val) / maxVal < 0.015)
                             return '';
                         return val.toLocaleString('it-IT');

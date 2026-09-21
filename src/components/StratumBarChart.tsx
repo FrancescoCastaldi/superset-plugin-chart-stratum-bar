@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import * as echarts from 'echarts';
-import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries, BarShape3D } from '../types';
+import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries, BarShape3D, ValuePosition } from '../types';
 import { get2DBarOption } from './renderers2D';
 import { get3DBarOption } from './renderers3D';
 import './StratumBarChart.css';
@@ -44,6 +44,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const [depth3D, setDepth3D] = useState<number>(props.depth3D ?? 20);
   const [barShape3D, setBarShape3D] = useState<BarShape3D>(initialBarShape3D);
   const [showBenchmark, setShowBenchmark] = useState<boolean>(props.showBenchmark ?? false);
+  const [valuePosition, setValuePosition] = useState<ValuePosition>(props.valuePosition || 'top');
   const [showSettings3D, setShowSettings3D] = useState<boolean>(false);
 
   // Toggle 3D settings popover — compute absolute screen position via Portal
@@ -118,6 +119,12 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     setBarShape3D(initialBarShape3D);
   }, [initialBarShape3D]);
 
+  useEffect(() => {
+    if (props.valuePosition) {
+      setValuePosition(props.valuePosition);
+    }
+  }, [props.valuePosition]);
+
   // Select active representations based on runtime toggle
   const activeCategories = useMemo(() => {
     if (combineBreakdown && combinedCategories && combinedCategories.length > 0) {
@@ -180,8 +187,9 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       showBenchmark,
       benchmark: showBenchmark ? props.benchmark : undefined,
       selectedValues: props.selectedValues,
+      valuePosition,
     };
-  }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, barShape3D, hasDualYAxis, showBenchmark]);
+  }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, barShape3D, hasDualYAxis, showBenchmark, valuePosition]);
 
   // Compute option using either 2D or 3D renderer
   const chartOption = useMemo(() => {
@@ -391,6 +399,22 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 <span className={`stratum-bar-dot ${showBenchmark ? 'dot-blue' : 'dot-off'}`} /> Target
               </button>
             )}
+
+            {/* Value Position Pill: Sopra / Dentro / Di traverso */}
+            <button
+              type="button"
+              className={`stratum-bar-btn ${valuePosition !== 'top' ? 'active-secondary' : ''}`}
+              onClick={() => {
+                setValuePosition(prev => {
+                  if (prev === 'top' || prev === 'outside') return 'inside';
+                  if (prev === 'inside') return 'slanted';
+                  return 'top';
+                });
+              }}
+              title="Posizione valori sulle barre: Sopra / Dentro / Di traverso (clicca per alternare)"
+            >
+              🏷️ {valuePosition === 'inside' ? 'Valori: Dentro' : valuePosition === 'slanted' ? 'Valori: Di traverso' : 'Valori: Sopra'}
+            </button>
           </div>
 
           <div className="stratum-bar-toolbar-right">
@@ -459,6 +483,35 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                           style={{ padding: '2px 8px', fontSize: 11 }}
                         >
                           Cilindro
+                        </button>
+                      </div>
+                    </div>
+                    <div className="stratum-bar-popover-row" style={{ marginTop: 4 }}>
+                      <span>Valori</span>
+                      <div className="stratum-bar-segmented">
+                        <button
+                          type="button"
+                          className={`stratum-bar-btn ${valuePosition === 'top' || valuePosition === 'outside' ? 'active' : ''}`}
+                          onClick={() => setValuePosition('top')}
+                          style={{ padding: '2px 6px', fontSize: 10 }}
+                        >
+                          Sopra
+                        </button>
+                        <button
+                          type="button"
+                          className={`stratum-bar-btn ${valuePosition === 'inside' ? 'active' : ''}`}
+                          onClick={() => setValuePosition('inside')}
+                          style={{ padding: '2px 6px', fontSize: 10 }}
+                        >
+                          Dentro
+                        </button>
+                        <button
+                          type="button"
+                          className={`stratum-bar-btn ${valuePosition === 'slanted' ? 'active' : ''}`}
+                          onClick={() => setValuePosition('slanted')}
+                          style={{ padding: '2px 6px', fontSize: 10 }}
+                        >
+                          Di traverso
                         </button>
                       </div>
                     </div>

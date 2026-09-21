@@ -5,6 +5,7 @@ export type StackingMode = 'none' | 'stack' | 'expand';
 export type BarShape3D = 'prism' | 'cylinder';
 export type BenchmarkType = 'fixed_value' | 'average' | 'median' | 'target_metric';
 export type DeltaPolarity = 'normal' | 'inverted';
+export type ValuePosition = 'inside' | 'top' | 'outside' | 'slanted';
 export interface StratumBarSeriesItem {
     category: string;
     value: number | null;
@@ -52,7 +53,7 @@ export interface StratumBarFormData extends QueryFormData {
     showDeltaBadge?: boolean;
     deltaPolarity?: DeltaPolarity;
     showValue?: boolean;
-    valuePosition?: 'inside' | 'top' | 'outside';
+    valuePosition?: ValuePosition;
     numberFormat?: string;
     color_scheme?: string;
     show_legend?: boolean;
@@ -96,7 +97,7 @@ export interface StratumBarTransformedProps {
     showDeltaBadge: boolean;
     deltaPolarity: DeltaPolarity;
     showValue: boolean;
-    valuePosition: 'inside' | 'top' | 'outside';
+    valuePosition: ValuePosition;
     numberFormat: string;
     colorScheme: string[];
     showLegend: boolean;

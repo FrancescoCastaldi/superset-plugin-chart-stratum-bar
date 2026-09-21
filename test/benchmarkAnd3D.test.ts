@@ -122,4 +122,43 @@ describe('StratumBar 2D & 3D Renderers', () => {
     expect(rendered.type).toBe('group');
     expect(rendered.children.length).toBeGreaterThanOrEqual(3);
   });
+
+  it('should support valuePosition top, inside, and slanted in 2D and 3D', () => {
+    // 2D - inside
+    const optionInside2D = get2DBarOption({ ...baseProps, valuePosition: 'inside' });
+    const seriesInside2D = optionInside2D.series.find((s: any) => s.name === 'Convenzionato');
+    expect(seriesInside2D.label.position).toBe('inside');
+    expect(seriesInside2D.label.color).toBe('#ffffff');
+    expect(seriesInside2D.label.rotate).toBe(0);
+
+    // 2D - slanted
+    const optionSlanted2D = get2DBarOption({ ...baseProps, valuePosition: 'slanted' });
+    const seriesSlanted2D = optionSlanted2D.series.find((s: any) => s.name === 'Convenzionato');
+    expect(seriesSlanted2D.label.position).toBe('top');
+    expect(seriesSlanted2D.label.rotate).toBe(45);
+    expect(seriesSlanted2D.label.align).toBe('left');
+
+    // 3D - inside
+    const optionInside3D = get3DBarOption({ ...baseProps, viewMode: '3d', valuePosition: 'inside' });
+    const mockApi = {
+      value: (dim: number) => (dim === 0 ? 0 : 150),
+      coord: ([x, y]: [number, number]) => [100 + x, 200 - y],
+      size: ([dx, dy]: [number, number]) => [50 * dx, 50 * dy],
+    };
+    const renderedInside = optionInside3D.series[0].renderItem({}, mockApi);
+    const textInside = renderedInside.children.find((c: any) => c.type === 'text');
+    expect(textInside).toBeDefined();
+    expect(textInside.style.textAlign).toBe('center');
+    expect(textInside.style.textVerticalAlign).toBe('middle');
+    expect(textInside.style.fill).toBe('#ffffff');
+
+    // 3D - slanted
+    const optionSlanted3D = get3DBarOption({ ...baseProps, viewMode: '3d', valuePosition: 'slanted' });
+    const renderedSlanted = optionSlanted3D.series[0].renderItem({}, mockApi);
+    const textSlanted = renderedSlanted.children.find((c: any) => c.type === 'text');
+    expect(textSlanted).toBeDefined();
+    expect(textSlanted.rotation).toBeCloseTo(Math.PI / 4, 2);
+    expect(textSlanted.style.textAlign).toBe('left');
+  });
 });
+

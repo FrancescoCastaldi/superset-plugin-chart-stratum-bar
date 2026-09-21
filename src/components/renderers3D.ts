@@ -24,6 +24,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
     shadow3D = true,
     showBenchmark,
     showValue,
+    valuePosition = 'top',
     colorScheme,
     showLegend,
     legendOrientation,
@@ -73,7 +74,8 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   if (showBenchmark && benchmark && typeof benchmark.value === 'number' && benchmark.value > ceilingVal) {
     ceilingVal = benchmark.value;
   }
-  const axisMax = ceilingVal > 0 ? Math.ceil(ceilingVal * 1.15) : undefined;
+  const headroomMultiplier = valuePosition === 'slanted' ? 1.25 : 1.15;
+  const axisMax = ceilingVal > 0 ? Math.ceil(ceilingVal * headroomMultiplier) : undefined;
   const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisMax);
 
   // Category Axis
@@ -603,30 +605,86 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             const segmentWidth = Math.abs(x1 - x0);
             const isTiny = isVertical ? segmentHeight < 14 : segmentWidth < 20;
 
-            // In stacked mode, only render if segment has enough space, and place inside the face
+            // In stacked mode, only render if segment has enough space
             if (!isStacked || !isTiny) {
-              const labelX = isStacked
-                ? (isVertical ? (x0 + x1) / 2 : (x0 + x1) / 2)
-                : (isVertical ? (x0 + x1 + offsetX) / 2 : x1 + offsetX + 8);
-              const labelY = isStacked
-                ? (isVertical ? (yTop + yBase) / 2 : (yTop + yBase) / 2)
-                : (isVertical ? yTop - offsetY - 8 : (yTop + yBase - offsetY) / 2);
+              const isInside = valuePosition === 'inside' || (isStacked && valuePosition !== 'slanted');
+              const isSlanted = valuePosition === 'slanted';
 
-              children.push({
+              const topCapOffset = barShape3D === 'cylinder' ? Math.max(offsetY * 0.7, 5) : offsetY;
+              const rightCapOffset = barShape3D === 'cylinder' ? Math.max(offsetX * 0.7, 5) : offsetX;
+
+              let labelX: number;
+              let labelY: number;
+              let textAlign: 'left' | 'center' | 'right' = 'center';
+              let textVerticalAlign: 'top' | 'middle' | 'bottom' = 'middle';
+              let rotation = 0;
+
+              if (isInside) {
+                // Dentro: Al centro della facciata frontale del blocco 3D
+                labelX = (x0 + x1) / 2;
+                labelY = (yTop + yBase) / 2;
+                textAlign = 'center';
+                textVerticalAlign = 'middle';
+              } else if (isSlanted) {
+                // Di traverso: Inclinato a 45° sopra la colonna (o al termine della barra orizzontale)
+                if (isStacked) {
+                  labelX = (x0 + x1) / 2;
+                  labelY = (yTop + yBase) / 2;
+                  textAlign = 'center';
+                  textVerticalAlign = 'middle';
+                  rotation = Math.PI / 4;
+                } else if (isVertical) {
+                  labelX = (x0 + x1 + offsetX) / 2;
+                  labelY = yTop - topCapOffset - 6;
+                  textAlign = 'left';
+                  textVerticalAlign = 'middle';
+                  rotation = Math.PI / 4;
+                } else {
+                  labelX = x1 + rightCapOffset + 6;
+                  labelY = (yTop + yBase - offsetY) / 2;
+                  textAlign = 'left';
+                  textVerticalAlign = 'middle';
+                  rotation = -35 * Math.PI / 180;
+                }
+              } else {
+                // Sopra / Esterno: Sopra la calotta 3D
+                if (isVertical) {
+                  labelX = (x0 + x1 + offsetX) / 2;
+                  labelY = yTop - topCapOffset - 8;
+                  textAlign = 'center';
+                  textVerticalAlign = 'bottom';
+                } else {
+                  labelX = x1 + rightCapOffset + 8;
+                  labelY = (yTop + yBase - offsetY) / 2;
+                  textAlign = 'left';
+                  textVerticalAlign = 'middle';
+                }
+              }
+
+              const isLightText = isInside || isStacked;
+              const textElement: any = {
                 type: 'text',
                 style: {
                   text: typeof val === 'number' ? val.toLocaleString('it-IT') : String(val),
                   x: labelX,
                   y: labelY,
-                  textAlign: isStacked ? 'center' : (isVertical ? 'center' : 'left'),
-                  textVerticalAlign: isStacked ? 'middle' : (isVertical ? 'bottom' : 'middle'),
+                  textAlign,
+                  textVerticalAlign,
                   font: 'bold 11px sans-serif',
-                  fill: isStacked ? '#ffffff' : (isDark ? '#f8fafc' : '#1f2937'),
-                  stroke: isStacked ? 'rgba(0, 0, 0, 0.45)' : undefined,
-                  lineWidth: isStacked ? 2 : undefined,
+                  fill: isLightText ? '#ffffff' : (isDark ? '#f8fafc' : '#1f2937'),
+                  stroke: isLightText ? 'rgba(0, 0, 0, 0.75)' : (isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'),
+                  lineWidth: isLightText ? 2.5 : 1.5,
                 },
                 z2: 5,
-              });
+              };
+
+              if (rotation !== 0) {
+                textElement.rotation = rotation;
+                textElement.originX = labelX;
+                textElement.originY = labelY;
+              }
+
+              children.push(textElement);
             }
           }
 
