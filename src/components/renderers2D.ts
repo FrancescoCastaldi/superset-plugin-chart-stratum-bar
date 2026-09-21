@@ -47,10 +47,22 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
 
   // Calculate max value for track background and primary axis
   let maxVal = 0;
-  for (const s of series) {
-    if (s.yAxisIndex === 1) continue;
-    for (const v of s.data) {
-      if (typeof v === 'number' && v > maxVal) maxVal = v;
+  if (isStacked) {
+    for (let c = 0; c < categories.length; c++) {
+      let sum = 0;
+      for (const s of series) {
+        if (s.yAxisIndex === 1) continue;
+        const v = s.data[c];
+        if (typeof v === 'number' && !isNaN(v) && v > 0) sum += v;
+      }
+      if (sum > maxVal) maxVal = sum;
+    }
+  } else {
+    for (const s of series) {
+      if (s.yAxisIndex === 1) continue;
+      for (const v of s.data) {
+        if (typeof v === 'number' && v > maxVal) maxVal = v;
+      }
     }
   }
   if (benchmark && benchmark.value > maxVal) maxVal = benchmark.value;
@@ -269,34 +281,102 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
       z: 2,
     };
 
-    // Benchmark line on the first primary series
-    if (idx === 0 && showBenchmark && benchmark && typeof benchmark.value === 'number') {
-      seriesItem.markLine = {
-        symbol: ['none', 'none'],
-        silent: false,
-        lineStyle: {
-          color: '#ef4444',
-          type: 'dashed',
-          width: 2,
-        },
-        label: {
-          position: isVertical ? 'end' : 'start',
-          formatter: `${benchmark.label}: ${benchmark.value.toLocaleString('it-IT')}`,
-          color: '#dc2626',
-          fontSize: 11,
-          fontWeight: 700,
-          backgroundColor: 'rgba(254, 242, 242, 0.92)',
-          borderColor: '#fca5a5',
-          borderWidth: 1,
-          borderRadius: 4,
-          padding: [3, 6],
-        },
-        data: [
+    // Mark lines (Benchmark line & Axis Break cutoff line) on the first primary series
+    if (idx === 0) {
+      const markLineData: any[] = [];
+
+      if (showBenchmark && benchmark && typeof benchmark.value === 'number') {
+        markLineData.push(
           isVertical
-            ? { yAxis: benchmark.value }
-            : { xAxis: benchmark.value },
-        ],
-      };
+            ? {
+                yAxis: benchmark.value,
+                lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+                label: {
+                  position: 'end',
+                  formatter: `${benchmark.label}: ${benchmark.value.toLocaleString('it-IT')}`,
+                  color: '#dc2626',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(254, 242, 242, 0.92)',
+                  borderColor: '#fca5a5',
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  padding: [3, 6],
+                },
+              }
+            : {
+                xAxis: benchmark.value,
+                lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+                label: {
+                  position: 'start',
+                  formatter: `${benchmark.label}: ${benchmark.value.toLocaleString('it-IT')}`,
+                  color: '#dc2626',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(254, 242, 242, 0.92)',
+                  borderColor: '#fca5a5',
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  padding: [3, 6],
+                },
+              }
+        );
+      }
+
+      // Visual Broken Axis Cutoff Line //
+      if (axisBreak.enabled && axisBreak.effectiveCutoff < axisBreak.displayMax) {
+        markLineData.push(
+          isVertical
+            ? {
+                yAxis: axisBreak.effectiveCutoff,
+                lineStyle: {
+                  color: isDark ? '#a855f7' : '#9333ea',
+                  type: [4, 4],
+                  width: 1.5,
+                },
+                label: {
+                  position: 'insideEndTop',
+                  formatter: `// Taglio Asse: ${axisBreak.effectiveCutoff.toLocaleString('it-IT')}`,
+                  color: isDark ? '#d8b4fe' : '#7e22ce',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  backgroundColor: isDark ? 'rgba(30, 27, 75, 0.85)' : 'rgba(243, 232, 255, 0.85)',
+                  borderColor: isDark ? '#6b21a8' : '#d8b4fe',
+                  borderWidth: 1,
+                  borderRadius: 3,
+                  padding: [2, 5],
+                },
+              }
+            : {
+                xAxis: axisBreak.effectiveCutoff,
+                lineStyle: {
+                  color: isDark ? '#a855f7' : '#9333ea',
+                  type: [4, 4],
+                  width: 1.5,
+                },
+                label: {
+                  position: 'insideEndTop',
+                  formatter: `// Taglio Asse: ${axisBreak.effectiveCutoff.toLocaleString('it-IT')}`,
+                  color: isDark ? '#d8b4fe' : '#7e22ce',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  backgroundColor: isDark ? 'rgba(30, 27, 75, 0.85)' : 'rgba(243, 232, 255, 0.85)',
+                  borderColor: isDark ? '#6b21a8' : '#d8b4fe',
+                  borderWidth: 1,
+                  borderRadius: 3,
+                  padding: [2, 5],
+                },
+              }
+        );
+      }
+
+      if (markLineData.length > 0) {
+        seriesItem.markLine = {
+          symbol: ['none', 'none'],
+          silent: false,
+          data: markLineData,
+        };
+      }
     }
 
     echartsSeries.push(seriesItem);

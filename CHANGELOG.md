@@ -4,6 +4,20 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.8] - 2026-09-21
+
+### Added
+- **2D Axis Break Cutoff Threshold MarkLine (`// Taglio Asse`)**:
+  - In 2D mode, when Axis Break is active, a dedicated styled markLine with dash pattern `[4, 4]` and pill badge label `// Taglio Asse: <val>` is drawn across the value axis at `effectiveCutoff`.
+  - Seamlessly integrates with benchmark lines, allowing both benchmark target lines and broken axis cutoff indicators to coexist harmoniously on the value axis.
+
+### Fixed
+- **Multi-Outlier Cluster Auto-Detection (`calculateAxisBreak`)**:
+  - Enhanced `'auto'` mode algorithm to locate the primary discontinuity breakpoint across the sorted upper distribution using relative gap detection (`curr / prev >= 2.0` and `curr > median * 2.5`).
+  - Correctly caps multiple extreme outliers simultaneously (e.g. `1331` and `1200` vs `73`, `25`, `8`, `7`), preventing secondary outliers from escaping capping.
+- **2D Stacked Category Sum Maximum (`renderers2D.ts`)**:
+  - Fixed `maxVal` calculation in stacked 2D mode to compute cumulative category sums (`sum += v`) across contributing primary series, rather than individual series values, ensuring accurate axis headroom and track background scaling.
+
 ## [0.3.7] - 2026-09-21
 
 ### Added

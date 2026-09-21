@@ -204,4 +204,109 @@ describe('Axis Break & Outlier Pinning (//)', () => {
     const labelElement = rendered0.children.find((c: any) => c.type === 'text' && c.style?.text?.startsWith('//') && c.style?.text?.includes('1331'));
     expect(labelElement).toBeDefined();
   });
+
+  it('calculateAxisBreak auto mode detects multiple outliers', () => {
+    // Two dominant outliers (1331 and 1200) vs normal values (73, 25, 8, 7)
+    const series = [{ data: [1331, 1200, 73, 25, 8, 7] }];
+    const result = calculateAxisBreak(series, false, 6, {
+      enabled: true,
+      mode: 'auto',
+    });
+
+    expect(result.enabled).toBe(true);
+    expect(result.hasOutliers).toBe(true);
+    // Cutoff should cap both 1331 and 1200 above 73 (73 * 1.25 = 92)
+    expect(result.effectiveCutoff).toBe(92);
+    expect(result.displayMax).toBeGreaterThan(result.effectiveCutoff);
+    expect(result.displayMax).toBeLessThan(200);
+  });
+
+  it('get2DBarOption includes visual broken axis mark line when enabled', () => {
+    const props: StratumBarTransformedProps = {
+      width: 800,
+      height: 500,
+      categories: ['A', 'B', 'C'],
+      series: [
+        {
+          name: 'Metric',
+          key: 'Metric',
+          data: [1331, 20, 15],
+          items: [],
+        },
+      ],
+      viewMode: '2d',
+      orientation: 'vertical',
+      stacking: 'none',
+      barShape3D: 'prism',
+      depth3D: 20,
+      tilt3D: 25,
+      shadow3D: true,
+      barBorderRadius: 6,
+      showTrackBackground: false,
+      showBenchmark: false,
+      showDeltaBadge: false,
+      deltaPolarity: 'normal',
+      showValue: true,
+      valuePosition: 'top',
+      numberFormat: ',.0f',
+      colorScheme: ['#3b82f6'],
+      showLegend: false,
+      legendOrientation: 'top',
+      emitFilter: false,
+      enableToolbar: true,
+      enableAxisBreak: true,
+      axisBreakMode: 'auto',
+      formData: {} as any,
+    };
+
+    const option = get2DBarOption(props);
+    const mainSeries = option.series.find((s: any) => s.name === 'Metric');
+    expect(mainSeries).toBeDefined();
+    expect(mainSeries.markLine).toBeDefined();
+    expect(mainSeries.markLine.data.length).toBeGreaterThanOrEqual(1);
+
+    const breakLine = mainSeries.markLine.data.find((d: any) => d.label?.formatter?.includes('// Taglio Asse'));
+    expect(breakLine).toBeDefined();
+    expect(breakLine.yAxis).toBe(25); // 20 * 1.25
+  });
+
+  it('get2DBarOption handles stacked mode max calculation correctly', () => {
+    const props: StratumBarTransformedProps = {
+      width: 800,
+      height: 500,
+      categories: ['Cat 1', 'Cat 2'],
+      series: [
+        { name: 'Seg A', key: 'Seg A', data: [100, 50], items: [] },
+        { name: 'Seg B', key: 'Seg B', data: [100, 50], items: [] },
+      ],
+      viewMode: '2d',
+      orientation: 'vertical',
+      stacking: 'stack',
+      barShape3D: 'prism',
+      depth3D: 20,
+      tilt3D: 25,
+      shadow3D: true,
+      barBorderRadius: 6,
+      showTrackBackground: false,
+      showBenchmark: false,
+      showDeltaBadge: false,
+      deltaPolarity: 'normal',
+      showValue: true,
+      valuePosition: 'inside',
+      numberFormat: ',.0f',
+      colorScheme: ['#3b82f6', '#10b981'],
+      showLegend: false,
+      legendOrientation: 'top',
+      emitFilter: false,
+      enableToolbar: true,
+      enableAxisBreak: false,
+      formData: {} as any,
+    };
+
+    const option = get2DBarOption(props);
+    const series0 = option.series.find((s: any) => s.name === 'Seg A');
+    expect(series0).toBeDefined();
+    expect(series0.stack).toBe('stratum_stack');
+  });
 });
+

@@ -102,22 +102,36 @@ export function calculateAxisBreak(
     const idx = Math.min(Math.floor(values.length * 0.95), values.length - 1);
     cutoff = Math.max(values[idx], minVal * 1.5);
   } else {
-    // 'auto' mode
-    // To detect outliers without the outlier itself inflating the upper quartile:
-    // We check against the non-outlier distribution (values excluding the highest)
-    const normalValues = values.length > 1 ? values.slice(0, values.length - 1) : values;
-    const midIdx = Math.floor(normalValues.length / 2);
-    const median = normalValues[midIdx] || 1;
-    const q3Idx = Math.min(Math.floor(normalValues.length * 0.75), normalValues.length - 1);
-    const q3 = normalValues[q3Idx] || median;
+    // 'auto' mode:
+    // Support single or multiple extreme outliers (e.g. [8, 7, 73, 1200, 1331]).
+    // We analyze the sorted values to locate the primary breakpoint between normal distribution and extreme outliers.
+    const midIdx = Math.floor(values.length / 2);
+    const median = values[midIdx] || 1;
 
-    // Second highest value (to preserve full scaling across all other normal bars)
-    const secondHighest = normalValues[normalValues.length - 1];
+    let bestGapIdx = -1;
+    let maxJumpRatio = 0;
 
-    // Outlier condition: max is significantly greater than second highest (e.g. > 1.8x) or median * 2.5
-    if (values.length > 1 && (maxOriginalVal > secondHighest * 1.8 || maxOriginalVal > median * 2.5) && maxOriginalVal > 10) {
-      // Cutoff nicely positioned slightly above second highest so normal bars occupy 80-85% of chart
-      cutoff = Math.ceil(secondHighest * 1.25);
+    // Check jumps in the upper half of the distribution
+    for (let i = values.length - 1; i >= Math.max(1, Math.floor(values.length * 0.4)); i--) {
+      const curr = values[i];
+      const prev = values[i - 1];
+      if (prev > 0) {
+        const ratio = curr / prev;
+        // Significant discontinuity: ratio >= 2.0 and value is far above median
+        if (ratio >= 2.0 && curr > median * 2.5 && curr > 10) {
+          if (ratio > maxJumpRatio) {
+            maxJumpRatio = ratio;
+            bestGapIdx = i;
+          }
+        }
+      }
+    }
+
+    if (bestGapIdx > 0) {
+      const highestNormal = values[bestGapIdx - 1];
+      cutoff = Math.ceil(highestNormal * 1.25);
+    } else if (values.length > 1 && maxOriginalVal > values[values.length - 2] * 1.8 && maxOriginalVal > median * 2.5 && maxOriginalVal > 10) {
+      cutoff = Math.ceil(values[values.length - 2] * 1.25);
     } else {
       cutoff = maxOriginalVal;
     }
