@@ -13,7 +13,7 @@ export default function transformProps(chartProps) {
     const { width, height, formData, queriesData, hooks } = chartProps;
     const fd = (formData || {});
     const data = (queriesData?.[0]?.data || []);
-    const { x_axis, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', secondary_area_gradient = true, secondary_line_width = 3, secondary_line_color = '#ea580c', theme_mode = 'light', enable_a11y_decal = false, combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, toolbar_show_view_mode = true, toolbar_show_orientation = true, toolbar_show_stacking = true, toolbar_show_dual_axis = true, toolbar_show_breakdown_toggle = true, toolbar_show_benchmark = true, toolbar_show_export = true, x_axis_title, y_axis_title, } = fd;
+    const { x_axis, x_axis_group, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', secondary_area_gradient = true, secondary_line_width = 3, secondary_line_color = '#ea580c', theme_mode = 'light', enable_a11y_decal = false, combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, toolbar_show_view_mode = true, toolbar_show_orientation = true, toolbar_show_stacking = true, toolbar_show_dual_axis = true, toolbar_show_breakdown_toggle = true, toolbar_show_benchmark = true, toolbar_show_export = true, x_axis_title, y_axis_title, } = fd;
     // Helper to extract string column name from string, Column object, or adhoc column
     const getColName = (col) => {
         if (!col)
@@ -25,18 +25,51 @@ export default function transformProps(chartProps) {
         }
         return String(col);
     };
-    // Resolve Primary Category dimension
-    const rawXAxis = x_axis || ensureIsArray(groupby)[0] || 'category';
-    const resolvedXAxis = getColName(rawXAxis);
-    // In data, find the exact key matching resolvedXAxis (case-insensitive)
     const sampleRow = data[0] || {};
-    const actualXKey = Object.keys(sampleRow).find(k => k.toLowerCase() === resolvedXAxis.toLowerCase()) || resolvedXAxis;
-    // Resolve Breakdown dimensions (dimensions other than x_axis)
-    const breakdownCols = ensureIsArray(groupby).map(getColName).filter(col => col.toLowerCase() !== resolvedXAxis.toLowerCase());
-    const breakdownCol = breakdownCols[0];
-    const actualBreakdownKey = breakdownCol
-        ? Object.keys(sampleRow).find(k => k.toLowerCase() === breakdownCol.toLowerCase())
-        : undefined;
+    const rowKeys = Object.keys(sampleRow);
+    const findRowKey = (name) => {
+        if (!name)
+            return undefined;
+        return rowKeys.find(k => k.toLowerCase() === name.toLowerCase());
+    };
+    // Extract dimension candidates
+    const rawXAxisList = ensureIsArray(x_axis).map(getColName).filter(Boolean);
+    const rawXGroup = getColName(x_axis_group);
+    const rawGroupbyList = ensureIsArray(groupby).map(getColName).filter(Boolean);
+    let primaryDimName = '';
+    let secondaryDimName = undefined;
+    if (rawXGroup) {
+        // Explicit X-axis grouping specified
+        primaryDimName = rawXGroup;
+        secondaryDimName =
+            rawXAxisList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase()) ||
+                rawGroupbyList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase());
+    }
+    else if (rawXAxisList.length >= 2) {
+        // Multiple dimensions specified directly in x_axis
+        primaryDimName = rawXAxisList[0];
+        secondaryDimName = rawXAxisList[1];
+    }
+    else if (rawXAxisList.length === 1 && rawGroupbyList.length > 0) {
+        // Single x_axis and groupby provided
+        primaryDimName = rawXAxisList[0];
+        secondaryDimName = rawGroupbyList.find(c => c.toLowerCase() !== primaryDimName.toLowerCase());
+    }
+    else if (rawXAxisList.length === 1) {
+        primaryDimName = rawXAxisList[0];
+    }
+    else if (rawGroupbyList.length > 0) {
+        primaryDimName = rawGroupbyList[0];
+        secondaryDimName = rawGroupbyList[1];
+    }
+    else {
+        primaryDimName = 'category';
+    }
+    // In data, find exact keys matching primary and secondary dimensions (case-insensitive)
+    const resolvedXAxis = primaryDimName;
+    const actualXKey = findRowKey(primaryDimName) || primaryDimName;
+    const actualBreakdownKey = findRowKey(secondaryDimName);
+    const breakdownCol = secondaryDimName;
     // Resolve metrics
     const metricList = ensureIsArray(metrics).map(m => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)));
     const primaryMetric = metricList[0] || 'value';
@@ -91,8 +124,8 @@ export default function transformProps(chartProps) {
         data.forEach(row => {
             const val = row[actualXKey];
             if (val !== null && val !== undefined) {
-                if (combineFlag && actualBreakdownKey && row[actualBreakdownKey]) {
-                    categoriesSet.add(`${val} [${row[actualBreakdownKey]}]`);
+                if (combineFlag && actualBreakdownKey && row[actualBreakdownKey] !== undefined && row[actualBreakdownKey] !== null) {
+                    categoriesSet.add(`${val} · ${row[actualBreakdownKey]}`);
                 }
                 else {
                     categoriesSet.add(String(val));
@@ -132,63 +165,74 @@ export default function transformProps(chartProps) {
             });
         }
         else if (actualBreakdownKey && actualBreakdownKey in sampleRow) {
+            // Group values (e.g. Convenzioni, Libera professione, Solventi, SSN)
+            const groupValuesSet = new Set();
+            data.forEach(row => {
+                const gVal = row[actualBreakdownKey];
+                if (gVal !== null && gVal !== undefined) {
+                    groupValuesSet.add(String(gVal));
+                }
+            });
+            const groupValues = Array.from(groupValuesSet);
             if (combineFlag) {
-                // UNPIVOTED WITH BREAKDOWN COMBINED ON AXIS: Single series with compound category labels
-                const seriesData = [];
-                const seriesItems = [];
-                repCategories.forEach(cat => {
-                    const row = data.find(r => `${r[actualXKey]} [${r[actualBreakdownKey]}]` === cat);
-                    const rawVal = row ? row[actualMetricKey] : null;
-                    const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
-                    seriesData.push(numVal);
-                    const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
-                    seriesItems.push({
-                        category: cat,
-                        value: numVal,
-                        formattedValue: numVal !== null ? formatter(numVal) : undefined,
-                        targetValue: targetVal,
-                        rawData: row,
+                // UNPIVOTED WITH COMPOUND LABELS ON X-AXIS:
+                // Each breakdown value maintains its own series/color so bars are colored cleanly by category
+                groupValues.forEach((gVal, sIdx) => {
+                    const seriesData = [];
+                    const seriesItems = [];
+                    repCategories.forEach(cat => {
+                        const matchingRow = data.find(r => `${r[actualXKey]} · ${r[actualBreakdownKey]}` === cat);
+                        const isMatch = matchingRow && String(matchingRow[actualBreakdownKey]) === gVal;
+                        const rawVal = isMatch ? matchingRow[actualMetricKey] : null;
+                        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+                        seriesData.push(numVal);
+                        const targetVal = targetMetricKey && matchingRow ? Number(matchingRow[targetMetricKey]) || null : null;
+                        seriesItems.push({
+                            category: cat,
+                            value: numVal,
+                            formattedValue: numVal !== null ? formatter(numVal) : undefined,
+                            targetValue: targetVal,
+                            rawData: matchingRow,
+                        });
                     });
-                });
-                repSeries.push({
-                    name: primaryMetric,
-                    key: primaryMetric,
-                    color: palette[0],
-                    data: seriesData,
-                    items: seriesItems,
-                    yAxisIndex: 0,
-                    seriesType: 'bar',
+                    repSeries.push({
+                        name: gVal,
+                        key: gVal,
+                        color: getColor(gVal, sIdx),
+                        data: seriesData,
+                        items: seriesItems,
+                        yAxisIndex: 0,
+                        seriesType: 'bar',
+                    });
                 });
             }
             else {
                 // UNPIVOTED WITH SEPARATE BREAKDOWN SERIES: Group by breakdown column value (e.g. REGIME)
-                const groupValuesSet = new Set();
-                data.forEach(row => {
-                    const gVal = row[actualBreakdownKey];
-                    if (gVal !== null && gVal !== undefined) {
-                        groupValuesSet.add(String(gVal));
-                    }
-                });
-                const groupValues = Array.from(groupValuesSet);
-                // Map: groupVal -> (cat -> record)
-                const lookup = new Map();
+                const lookupVal = new Map();
+                const lookupRow = new Map();
                 data.forEach(row => {
                     const rawCat = row[actualXKey] !== null && row[actualXKey] !== undefined ? String(row[actualXKey]) : 'N/D';
                     const gVal = row[actualBreakdownKey] !== null && row[actualBreakdownKey] !== undefined ? String(row[actualBreakdownKey]) : 'N/D';
-                    if (!lookup.has(gVal)) {
-                        lookup.set(gVal, new Map());
+                    if (!lookupVal.has(gVal)) {
+                        lookupVal.set(gVal, new Map());
+                        lookupRow.set(gVal, new Map());
                     }
-                    lookup.get(gVal).set(rawCat, row);
+                    const rawVal = row[actualMetricKey];
+                    const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : 0;
+                    const currentSum = lookupVal.get(gVal).get(rawCat) || 0;
+                    lookupVal.get(gVal).set(rawCat, currentSum + numVal);
+                    lookupRow.get(gVal).set(rawCat, row);
                 });
                 groupValues.forEach((gVal, sIdx) => {
-                    const gMap = lookup.get(gVal) || new Map();
+                    const gMapVal = lookupVal.get(gVal) || new Map();
+                    const gMapRow = lookupRow.get(gVal) || new Map();
                     const seriesData = [];
                     const seriesItems = [];
                     repCategories.forEach(cat => {
-                        const row = gMap.get(cat);
-                        const rawVal = row ? row[actualMetricKey] : null;
-                        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+                        const hasCat = gMapVal.has(cat);
+                        const numVal = hasCat ? gMapVal.get(cat) : null;
                         seriesData.push(numVal);
+                        const row = gMapRow.get(cat);
                         const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
                         seriesItems.push({
                             category: cat,
@@ -368,16 +412,22 @@ export default function transformProps(chartProps) {
     const onCrossFilter = (category, seriesName) => {
         if (!emit_filter)
             return;
+        const filters = [];
+        if (category.includes(' · ') && actualBreakdownKey) {
+            const parts = category.split(' · ');
+            filters.push({ col: actualXKey, op: 'IN', val: [parts[0]] });
+            filters.push({ col: actualBreakdownKey, op: 'IN', val: [parts[1]] });
+        }
+        else {
+            filters.push({ col: actualXKey, op: 'IN', val: [category] });
+            if (seriesName && actualBreakdownKey) {
+                filters.push({ col: actualBreakdownKey, op: 'IN', val: [seriesName] });
+            }
+        }
         if (typeof setDataMask === 'function') {
             setDataMask({
                 extraFormData: {
-                    filters: [
-                        {
-                            col: actualXKey,
-                            op: 'IN',
-                            val: [category],
-                        },
-                    ],
+                    filters,
                 },
                 filterState: {
                     value: [category],
@@ -386,11 +436,7 @@ export default function transformProps(chartProps) {
             });
         }
         else if (typeof onAddFilter === 'function') {
-            onAddFilter({
-                col: actualXKey,
-                op: 'IN',
-                val: [category],
-            });
+            filters.forEach(f => onAddFilter(f));
         }
     };
     return {

@@ -27,7 +27,8 @@ export interface BenchmarkConfig {
     label: string;
 }
 export interface StratumBarFormData extends QueryFormData {
-    x_axis?: string;
+    x_axis?: string | string[];
+    x_axis_group?: string;
     groupby?: string[];
     metrics: any;
     target_metric?: any;

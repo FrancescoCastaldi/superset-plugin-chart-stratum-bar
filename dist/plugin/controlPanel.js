@@ -13,8 +13,20 @@ const config = {
                             ...sharedControls.groupby,
                             label: t('X-Axis / Category Dimension'),
                             description: t('Primary category dimension (e.g., Canale di Prenotazione, Reparto, Mese)'),
-                            multi: false,
+                            multi: true,
                             clearable: false,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'x_axis_group',
+                        config: {
+                            ...sharedControls.groupby,
+                            label: t('X-Axis Group Dimension (Raggruppamento Ascisse)'),
+                            description: t('Dimensione opzionale per raggruppare le ascisse (es. Canale di Prenotazione raggruppato con Regime)'),
+                            multi: false,
+                            clearable: true,
                         },
                     },
                 ],
@@ -23,9 +35,21 @@ const config = {
                         name: 'groupby',
                         config: {
                             ...sharedControls.groupby,
-                            label: t('Breakdown Dimension (Series)'),
+                            label: t('Breakdown Dimension (Series / Colori)'),
                             description: t('Optional secondary dimension to break bars into series (e.g., Regime: Privato / SSN)'),
                             multi: true,
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'combine_category_breakdown',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Etichette Raggruppate su Ascisse (Compound Labels)'),
+                            description: t('Concatena le dimensioni direttamente sulle etichette dell\'asse X (es. Canale · Regime: App · SSN, Call center · Convenzioni)'),
+                            default: false,
+                            renderTrigger: true,
                         },
                     },
                 ],
@@ -311,17 +335,6 @@ const config = {
                             default: 'line',
                             renderTrigger: true,
                             visibility: ({ controls }) => Boolean(controls?.secondary_metrics?.value && controls.secondary_metrics.value.length > 0),
-                        },
-                    },
-                    {
-                        name: 'combine_category_breakdown',
-                        config: {
-                            type: 'CheckboxControl',
-                            label: t('Combine Breakdown on Axis'),
-                            description: t('Concatenate category and breakdown dimension labels directly on the X-axis (e.g., Reparto - Privato/SSN)'),
-                            default: false,
-                            renderTrigger: true,
-                            visibility: ({ controls }) => Boolean(controls?.groupby?.value && controls.groupby.value.length > 0),
                         },
                     },
                 ],

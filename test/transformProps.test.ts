@@ -137,4 +137,92 @@ describe('StratumBar transformProps', () => {
       }),
     );
   });
+
+  it('should support x_axis_group with separate x_axis (grouped booking channels on X-axis)', () => {
+    const chartProps: any = {
+      width: 800,
+      height: 500,
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '70__table',
+        x_axis_group: 'CANALE',
+        x_axis: 'REGIME',
+        metrics: ['richieste'],
+        orientation: 'vertical',
+      },
+      queriesData: [
+        {
+          data: sampleData,
+        },
+      ],
+    };
+
+    const transformed = transformProps(chartProps);
+    // Categories should be the group dimension: CANALE
+    expect(transformed.categories).toEqual(['Sportello', 'Call Center', 'Portale Web']);
+    // Series should be the secondary dimension: REGIME
+    expect(transformed.series.length).toBe(2);
+    expect(transformed.series[0].name).toBe('Convenzionato');
+    expect(transformed.series[1].name).toBe('Privato');
+    expect(transformed.canCombineBreakdown).toBe(true);
+  });
+
+  it('should support multi-column x_axis: [CANALE, REGIME]', () => {
+    const chartProps: any = {
+      width: 800,
+      height: 500,
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '70__table',
+        x_axis: ['CANALE', 'REGIME'],
+        metrics: ['richieste'],
+        orientation: 'vertical',
+      },
+      queriesData: [
+        {
+          data: sampleData,
+        },
+      ],
+    };
+
+    const transformed = transformProps(chartProps);
+    expect(transformed.categories).toEqual(['Sportello', 'Call Center', 'Portale Web']);
+    expect(transformed.series.length).toBe(2);
+    expect(transformed.series[0].name).toBe('Convenzionato');
+    expect(transformed.series[1].name).toBe('Privato');
+  });
+
+  it('should cross-filter both dimensions when clicking a compound label', () => {
+    const setDataMaskMock = jest.fn();
+    const chartProps: any = {
+      width: 500,
+      height: 400,
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '1__table',
+        x_axis_group: 'CANALE',
+        x_axis: 'REGIME',
+        metrics: ['richieste'],
+        emit_filter: true,
+      },
+      queriesData: [{ data: [{ CANALE: 'Online', REGIME: 'SSN', richieste: 500 }] }],
+      hooks: {
+        setDataMask: setDataMaskMock,
+      },
+    };
+
+    const transformed = transformProps(chartProps);
+    transformed.onCrossFilter?.('Online · SSN');
+
+    expect(setDataMaskMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        extraFormData: {
+          filters: [
+            { col: 'CANALE', op: 'IN', val: ['Online'] },
+            { col: 'REGIME', op: 'IN', val: ['SSN'] },
+          ],
+        },
+      }),
+    );
+  });
 });

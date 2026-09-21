@@ -4,6 +4,18 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.5] - 2026-09-21
+
+### Aggiunto
+- **Controllo Esplicito Raggruppamento Ascisse (`x_axis_group`)**:
+  - Aggiunto il controllo dedicato `X-Axis Group Dimension (Raggruppamento Ascisse)` in *Query Configuration* per consentire la configurazione immediata di dimensioni aggregate sulle ascisse (es. Canale di Prenotazione raggruppato con Regime).
+  - Supporto per selezione multipla su `x_axis` (`multi: true`) che permette di selezionare liberamente più dimensioni direttamente sull'asse X.
+- **Raggruppamento Flessibile su Ascisse**:
+  - Spostamento del controllo `combine_category_breakdown` ("Etichette Raggruppate su Ascisse - Compound Labels") direttamente nella sezione primaria *Query Configuration*.
+  - Visualizzazione ad alta leggibilità con separatore puntato (`Canale · Regime`, es. `App · SSN`, `Call center · Convenzioni`) mantenendo la colorazione coerente per serie e la legenda dei singoli regimi.
+  - Aggregazione robusta a sommatoria per righe multiple o duplicate nella matrice categoria/serie.
+  - Supporto cross-filtering a due dimensioni per etichette composte (`CANALE` + `REGIME`).
+
 ## [0.2.4] - 2026-09-21
 
 ### Ottimizzato & Risolto
