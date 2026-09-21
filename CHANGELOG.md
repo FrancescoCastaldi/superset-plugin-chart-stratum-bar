@@ -4,6 +4,12 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.6] - 2026-09-21
+
+### Fixed
+- **Stacked Mode "Sopra (Top)" Label Position**: when `valuePosition = 'top'` in stacked 3D mode, all segment labels were incorrectly forced inside (`isInside = true` for all stacked segments). Now only the **topmost non-zero segment** per category places its value label **above the 3D cap**, while lower segments correctly render their value centered inside their own block with white high-contrast text. Precomputed `topSeriesIdxPerCat[]` array tracks the topmost contributing series per category for O(1) lookup during renderItem.
+- **"Di traverso" in Stacked Mode**: slanted labels on the topmost segment are now angled 45° above the cap, while lower segments get inside-centered 45° rotated labels.
+
 ## [0.3.5] - 2026-09-21
 
 ### Added

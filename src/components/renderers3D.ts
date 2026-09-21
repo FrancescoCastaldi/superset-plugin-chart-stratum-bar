@@ -49,8 +49,9 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   const numSeries = series.length || 1;
   const isStacked = props.stacking !== 'none';
 
-  // Precompute accumulated bottoms for stacked mode and max values for scaling
+  // Precompute accumulated bottoms for stacked mode, topmost series per category, and max values for scaling
   const stackBottoms: number[][] = series.map(() => categories.map(() => 0));
+  const topSeriesIdxPerCat: number[] = categories.map(() => -1);
   let maxStackedSum = 0;
   let maxSingleVal = 0;
 
@@ -63,6 +64,9 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
         if (isStacked) {
           stackBottoms[s][c] = accum;
           accum += v;
+          if (v > 0) {
+            topSeriesIdxPerCat[c] = s;
+          }
         }
       }
     }
@@ -607,9 +611,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
 
             // In stacked mode, only render if segment has enough space
             if (!isStacked || !isTiny) {
-              const isInside = valuePosition === 'inside' || (isStacked && valuePosition !== 'slanted');
-              const isSlanted = valuePosition === 'slanted';
-
+              const isTopSegment = !isStacked || (seriesIdx === topSeriesIdxPerCat[categoryIndex]);
               const topCapOffset = barShape3D === 'cylinder' ? Math.max(offsetY * 0.7, 5) : offsetY;
               const rightCapOffset = barShape3D === 'cylinder' ? Math.max(offsetX * 0.7, 5) : offsetX;
 
@@ -618,50 +620,71 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
               let textAlign: 'left' | 'center' | 'right' = 'center';
               let textVerticalAlign: 'top' | 'middle' | 'bottom' = 'middle';
               let rotation = 0;
+              let isLightText = false;
 
-              if (isInside) {
-                // Dentro: Al centro della facciata frontale del blocco 3D
+              if (valuePosition === 'inside') {
+                // DENTRO: Tutti i blocchi hanno i valori al loro centro interno
                 labelX = (x0 + x1) / 2;
                 labelY = (yTop + yBase) / 2;
                 textAlign = 'center';
                 textVerticalAlign = 'middle';
-              } else if (isSlanted) {
-                // Di traverso: Inclinato a 45° sopra la colonna (o al termine della barra orizzontale)
-                if (isStacked) {
+                isLightText = true;
+              } else if (valuePosition === 'slanted') {
+                // DI TRAVERSO: Inclinato a 45°
+                if (isTopSegment) {
+                  // Cima della colonna: posizionato SOPRA inclinato a 45°
+                  if (isVertical) {
+                    labelX = (x0 + x1 + offsetX) / 2;
+                    labelY = yTop - topCapOffset - 6;
+                    textAlign = 'left';
+                    textVerticalAlign = 'middle';
+                    rotation = Math.PI / 4;
+                  } else {
+                    labelX = x1 + rightCapOffset + 6;
+                    labelY = (yTop + yBase - offsetY) / 2;
+                    textAlign = 'left';
+                    textVerticalAlign = 'middle';
+                    rotation = -35 * Math.PI / 180;
+                  }
+                  isLightText = false;
+                } else {
+                  // Blocco inferiore impilato: centrato dentro inclinato a 45°
                   labelX = (x0 + x1) / 2;
                   labelY = (yTop + yBase) / 2;
                   textAlign = 'center';
                   textVerticalAlign = 'middle';
                   rotation = Math.PI / 4;
-                } else if (isVertical) {
-                  labelX = (x0 + x1 + offsetX) / 2;
-                  labelY = yTop - topCapOffset - 6;
-                  textAlign = 'left';
-                  textVerticalAlign = 'middle';
-                  rotation = Math.PI / 4;
-                } else {
-                  labelX = x1 + rightCapOffset + 6;
-                  labelY = (yTop + yBase - offsetY) / 2;
-                  textAlign = 'left';
-                  textVerticalAlign = 'middle';
-                  rotation = -35 * Math.PI / 180;
+                  isLightText = true;
                 }
               } else {
-                // Sopra / Esterno: Sopra la calotta 3D
-                if (isVertical) {
-                  labelX = (x0 + x1 + offsetX) / 2;
-                  labelY = yTop - topCapOffset - 8;
-                  textAlign = 'center';
-                  textVerticalAlign = 'bottom';
+                // SOPRA (Top / Outside):
+                if (isTopSegment) {
+                  // Cima della colonna (o non impilato): TASSATIVAMENTE SOPRA LA CALOTTA!
+                  if (isVertical) {
+                    labelX = (x0 + x1 + offsetX) / 2;
+                    labelY = yTop - topCapOffset - 8;
+                    textAlign = 'center';
+                    textVerticalAlign = 'bottom';
+                    rotation = 0;
+                  } else {
+                    labelX = x1 + rightCapOffset + 8;
+                    labelY = (yTop + yBase - offsetY) / 2;
+                    textAlign = 'left';
+                    textVerticalAlign = 'middle';
+                    rotation = 0;
+                  }
+                  isLightText = false;
                 } else {
-                  labelX = x1 + rightCapOffset + 8;
-                  labelY = (yTop + yBase - offsetY) / 2;
-                  textAlign = 'left';
+                  // Blocco inferiore impilato: centrato dentro il proprio blocco in bianco ad alto contrasto
+                  labelX = (x0 + x1) / 2;
+                  labelY = (yTop + yBase) / 2;
+                  textAlign = 'center';
                   textVerticalAlign = 'middle';
+                  rotation = 0;
+                  isLightText = true;
                 }
               }
 
-              const isLightText = isInside || isStacked;
               const textElement: any = {
                 type: 'text',
                 style: {
