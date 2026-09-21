@@ -1,5 +1,5 @@
 import { StratumBarTransformedProps } from '../types';
-import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig } from '../utils/echartsUtils';
+import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 
 import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 
@@ -121,6 +121,35 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             yTop = pt[1];
             yBase = ptBase[1];
           }
+        } else {
+          // Horizontal 3D Bar
+          const bandHeight = api.size([0, 1])[1];
+          if (isStacked) {
+            const barHeight = Math.min(Math.max(bandHeight * 0.45, 14), 48);
+            const startPoint = api.coord([0, categoryIndex]);
+            const baseVal = stackBottoms[seriesIdx]?.[categoryIndex] || 0;
+            const topVal = baseVal + val;
+            const ptBase = api.coord([baseVal, categoryIndex]);
+            const ptEnd = api.coord([topVal, categoryIndex]);
+
+            yTop = startPoint[1] - barHeight / 2;
+            yBase = startPoint[1] + barHeight / 2;
+            x0 = ptBase[0];
+            x1 = ptEnd[0];
+          } else {
+            const maxGroupHeight = Math.min(bandHeight * 0.75, 140);
+            const barHeight = Math.min(Math.max(maxGroupHeight / numSeries - 3, 6), 40);
+            const gap = numSeries > 1 ? 2 : 0;
+            const groupOffset = (seriesIdx - (numSeries - 1) / 2) * (barHeight + gap);
+            const pt = api.coord([val, categoryIndex]);
+            const ptBase = api.coord([0, categoryIndex]);
+
+            yTop = pt[1] + groupOffset - barHeight / 2;
+            yBase = pt[1] + groupOffset + barHeight / 2;
+            x0 = ptBase[0];
+            x1 = pt[0];
+          }
+        }
 
           const children: any[] = [];
 
@@ -156,17 +185,13 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
               ],
             },
             style: {
-              fill: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 1,
-                y2: 0,
+              fill: isVertical ? {
+                type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
                 colorStops: [
                   { offset: 0, color: baseColor },
                   { offset: 1, color: adjustColorBrightness(baseColor, -10) },
                 ],
-              },
+              } : baseColor,
               stroke: adjustColorBrightness(baseColor, -35),
               lineWidth: 0.5,
             },
@@ -185,17 +210,13 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
               ],
             },
             style: {
-              fill: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
+              fill: isVertical ? {
+                type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
                 colorStops: [
                   { offset: 0, color: rightColor },
                   { offset: 1, color: adjustColorBrightness(rightColor, -20) },
                 ],
-              },
+              } : rightColor,
               stroke: adjustColorBrightness(rightColor, -40),
               lineWidth: 0.5,
             },
@@ -214,17 +235,13 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
               ],
             },
             style: {
-              fill: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 1,
-                y2: 1,
+              fill: isVertical ? {
+                type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
                 colorStops: [
                   { offset: 0, color: adjustColorBrightness(topColor, 20) },
                   { offset: 1, color: topColor },
                 ],
-              },
+              } : topColor,
               stroke: adjustColorBrightness(topColor, -20),
               lineWidth: 0.5,
             },
@@ -237,10 +254,10 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
               type: 'text',
               style: {
                 text: typeof val === 'number' ? val.toLocaleString('it-IT') : String(val),
-                x: (x0 + x1 + offsetX) / 2,
-                y: yTop - offsetY - 8,
-                textAlign: 'center',
-                textVerticalAlign: 'bottom',
+                x: isVertical ? (x0 + x1 + offsetX) / 2 : x1 + offsetX + 8,
+                y: isVertical ? yTop - offsetY - 8 : (yTop + yBase - offsetY) / 2,
+                textAlign: isVertical ? 'center' : 'left',
+                textVerticalAlign: isVertical ? 'bottom' : 'middle',
                 font: 'bold 11px sans-serif',
                 fill: '#1f2937',
               },
@@ -256,125 +273,6 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             type: 'group',
             children,
           };
-        } else {
-          // Horizontal 3D Bar
-          const bandHeight = api.size([0, 1])[1];
-          let xBase: number;
-          let xEnd: number;
-          let y0: number;
-          let y1: number;
-
-          if (isStacked) {
-            const barHeight = Math.min(Math.max(bandHeight * 0.45, 14), 48);
-            const startPoint = api.coord([0, categoryIndex]);
-            const baseVal = stackBottoms[seriesIdx]?.[categoryIndex] || 0;
-            const topVal = baseVal + val;
-            const ptBase = api.coord([baseVal, categoryIndex]);
-            const ptEnd = api.coord([topVal, categoryIndex]);
-
-            y0 = startPoint[1] - barHeight / 2;
-            y1 = startPoint[1] + barHeight / 2;
-            xBase = ptBase[0];
-            xEnd = ptEnd[0];
-          } else {
-            const maxGroupHeight = Math.min(bandHeight * 0.75, 140);
-            const barHeight = Math.min(Math.max(maxGroupHeight / numSeries - 3, 6), 40);
-            const gap = numSeries > 1 ? 2 : 0;
-            const groupOffset = (seriesIdx - (numSeries - 1) / 2) * (barHeight + gap);
-            const pt = api.coord([val, categoryIndex]);
-            const ptBase = api.coord([0, categoryIndex]);
-
-            y0 = pt[1] + groupOffset - barHeight / 2;
-            y1 = pt[1] + groupOffset + barHeight / 2;
-            xBase = ptBase[0];
-            xEnd = pt[0];
-          }
-
-          const children: any[] = [];
-
-          // Front Face
-          children.push({
-            type: 'polygon',
-            shape: {
-              points: [
-                [xBase, y0],
-                [xEnd, y0],
-                [xEnd, y1],
-                [xBase, y1],
-              ],
-            },
-            style: {
-              fill: baseColor,
-              stroke: adjustColorBrightness(baseColor, -30),
-              lineWidth: 0.5,
-            },
-            z2: 2,
-          });
-
-          // Top Face
-          children.push({
-            type: 'polygon',
-            shape: {
-              points: [
-                [xBase, y0],
-                [xEnd, y0],
-                [xEnd + offsetX, y0 - offsetY],
-                [xBase + offsetX, y0 - offsetY],
-              ],
-            },
-            style: {
-              fill: topColor,
-              stroke: adjustColorBrightness(topColor, -20),
-              lineWidth: 0.5,
-            },
-            z2: 3,
-          });
-
-          // Right Face
-          children.push({
-            type: 'polygon',
-            shape: {
-              points: [
-                [xEnd, y0],
-                [xEnd + offsetX, y0 - offsetY],
-                [xEnd + offsetX, y1 - offsetY],
-                [xEnd, y1],
-              ],
-            },
-            style: {
-              fill: rightColor,
-              stroke: adjustColorBrightness(rightColor, -30),
-              lineWidth: 0.5,
-            },
-            z2: 1,
-          });
-
-          // Value Label
-          if (showValue) {
-            children.push({
-              type: 'text',
-              style: {
-                text: typeof val === 'number' ? val.toLocaleString('it-IT') : String(val),
-                x: xEnd + offsetX + 8,
-                y: (y0 + y1 - offsetY) / 2,
-                textAlign: 'left',
-                textVerticalAlign: 'middle',
-                font: 'bold 11px sans-serif',
-                fill: '#1f2937',
-              },
-              z2: 4,
-            });
-          }
-
-          children.forEach((c: any) => {
-            if (c.style) c.style.opacity = itemOpacity;
-          });
-
-          return {
-            type: 'group',
-            children,
-          };
-        }
       },
       data: s.data.map((v, i) => ({
         name: categories[i],
@@ -484,59 +382,8 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   });
 
   // Tooltip
-  const tooltip = {
-    trigger: 'axis' as const,
-    axisPointer: { type: 'cross' as const, crossStyle: { color: isDark ? '#475569' : '#94a3b8', width: 1, type: 'dashed' as const } },
-    backgroundColor: isDark ? 'rgba(17, 24, 39, 0.94)' : 'rgba(255, 255, 255, 0.96)',
-    borderColor: isDark ? '#374151' : '#e2e8f0',
-    borderWidth: 1,
-    padding: [12, 16],
-    textStyle: { color: isDark ? '#f8fafc' : '#1f2937', fontSize: 13 },
-    extraCssText: isDark
-      ? 'backdrop-filter: blur(8px); box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.5); border-radius: 10px;'
-      : 'backdrop-filter: blur(8px); box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.12); border-radius: 10px;',
-    formatter: (params: any) => {
-      const items = Array.isArray(params) ? params : [params];
-      if (items.length === 0) return '';
-      const catName = categories[items[0].dataIndex] || items[0].name;
-
-      let html = `<div style="font-weight: 700; margin-bottom: 8px; font-size: 14px; color: ${isDark ? '#f8fafc' : '#111827'};">${catName} <span style="font-size: 10px; color: #38bdf8; margin-left: 4px;">[3D View]</span></div>`;
-
-      items.forEach(it => {
-        const val = it.value?.[1] ?? it.value;
-        const isSec = it.seriesName === yAxis2Title || it.seriesType === 'line';
-        const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'
-          ? `${(val * 100).toFixed(1)}%`
-          : (typeof val === 'number' ? val.toLocaleString('it-IT') : String(val ?? '-'));
-        const color = isSec ? secondaryLineColor : (colorScheme[it.seriesIndex % colorScheme.length] || '#38bdf8');
-
-        html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;">
-            <span style="display: flex; align-items: center; gap: 7px;">
-              <span style="display: inline-block; width: 10px; height: 10px; border-radius: ${isSec ? '50%' : '2px'}; background: ${color};"></span>
-              <span style="font-weight: 500;">${it.seriesName}</span>
-            </span>
-            <span style="font-weight: 700; font-variant-numeric: tabular-nums; color: ${isSec ? secondaryLineColor : 'inherit'};">${formatted}</span>
-          </div>
-        `;
-
-        if (showBenchmark && benchmark && typeof benchmark.value === 'number' && typeof val === 'number' && !isSec) {
-          const delta = val - benchmark.value;
-          const deltaPct = benchmark.value !== 0 ? (delta / benchmark.value) * 100 : 0;
-          const isPositive = delta >= 0;
-          const badgeColor = isPositive ? '#10b981' : '#ef4444';
-          const sign = isPositive ? '+' : '';
-          html += `
-            <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 2px;">
-              vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${delta.toLocaleString('it-IT')})
-            </div>
-          `;
-        }
-      });
-
-      return html;
-    },
-  };
+  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true);
+  const tooltip = getTooltipConfig(isDark, tooltipFormatter);
 
   
 

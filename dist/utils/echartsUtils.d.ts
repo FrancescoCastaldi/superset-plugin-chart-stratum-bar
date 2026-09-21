@@ -82,6 +82,7 @@ export declare function getLegendConfig(series: StratumBarSeries[], colorScheme:
         };
     }[];
 };
+export declare function getTooltipFormatter(categories: string[], isDark: boolean, colorScheme: string[], showBenchmark: boolean, benchmark: any, yAxis2Title?: string, yAxis2Format?: string, secondaryLineColor?: string, is3D?: boolean): (params: any) => string;
 export declare function getTooltipConfig(isDark: boolean, formatterFn: (params: any) => string): {
     trigger: "axis";
     axisPointer: {

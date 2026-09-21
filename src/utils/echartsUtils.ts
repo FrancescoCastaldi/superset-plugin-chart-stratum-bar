@@ -88,6 +88,55 @@ export function getLegendConfig(
   };
 }
 
+export function getTooltipFormatter(categories: string[], isDark: boolean, colorScheme: string[], showBenchmark: boolean, benchmark: any, yAxis2Title?: string, yAxis2Format?: string, secondaryLineColor?: string, is3D: boolean = false) {
+  return (params: any) => {
+    const items = Array.isArray(params) ? params : [params];
+    if (items.length === 0) return '';
+    
+    // params[0].axisValueLabel is available in 2D, fallback to categories in 3D
+    const catName = items[0].axisValueLabel || categories[items[0].dataIndex] || items[0].name;
+
+    let html = `<div style="font-weight: 700; margin-bottom: 8px; font-size: 14px; color: ${isDark ? '#f8fafc' : '#111827'};">${catName}${is3D ? ' <span style="font-size: 10px; color: #38bdf8; margin-left: 4px;">[3D View]</span>' : ''}</div>`;
+
+    items.forEach(it => {
+      if (it.seriesName === '__track_bg__') return;
+      const val = it.value?.[1] ?? it.value;
+      const isSec = it.seriesName === yAxis2Title || (it.seriesIndex != null && it.seriesIndex === items.length - 1 && secondaryLineColor !== undefined) || it.seriesType === 'line';
+      const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'
+        ? `${(val * 100).toFixed(1)}%`
+        : (typeof val === 'number' ? val.toLocaleString('it-IT') : (val !== null && val !== undefined ? String(val) : (is3D ? '-' : 'N/D')));
+      
+      const defaultColor = colorScheme[(it.seriesIndex || 0) % colorScheme.length] || '#38bdf8';
+      const color = isSec && secondaryLineColor ? secondaryLineColor : (it.color && typeof it.color === 'string' ? it.color : (it.color?.colorStops?.[0]?.color || defaultColor));
+
+      html += `
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;">
+          <span style="display: flex; align-items: center; gap: 7px;">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: ${it.seriesType === 'line' || isSec ? '50%' : '2px'}; background: ${color};"></span>
+            <span style="font-weight: 500;">${it.seriesName}</span>
+          </span>
+          <span style="font-weight: 700; font-variant-numeric: tabular-nums; color: ${isSec && secondaryLineColor ? secondaryLineColor : 'inherit'};">${formatted}</span>
+        </div>
+      `;
+
+      if (showBenchmark && benchmark && typeof benchmark.value === 'number' && typeof val === 'number' && (it.seriesIndex === 0 || !isSec)) {
+        const delta = val - benchmark.value;
+        const deltaPct = benchmark.value !== 0 ? (delta / benchmark.value) * 100 : 0;
+        const isPositive = delta >= 0;
+        const badgeColor = isPositive ? '#10b981' : '#ef4444';
+        const sign = isPositive ? '+' : '';
+        html += `
+          <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 2px;">
+            vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${delta.toLocaleString('it-IT')})
+          </div>
+        `;
+      }
+    });
+
+    return html;
+  };
+}
+
 export function getTooltipConfig(isDark: boolean, formatterFn: (params: any) => string) {
   return {
     trigger: 'axis' as const,

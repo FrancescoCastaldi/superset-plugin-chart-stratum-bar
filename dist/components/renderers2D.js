@@ -1,4 +1,4 @@
-import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getGridConfig } from '../utils/echartsUtils';
+import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 export function get2DBarOption(props) {
     const { categories, series, benchmark, orientation, stacking, barBorderRadius, showTrackBackground, showBenchmark, showValue, valuePosition, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, } = props;
@@ -218,56 +218,8 @@ export function get2DBarOption(props) {
         echartsSeries.push(seriesItem);
     });
     // Tooltip configuration (Glassmorphism & Theme support)
-    const tooltip = {
-        trigger: 'axis',
-        axisPointer: { type: 'cross', crossStyle: { color: isDark ? '#475569' : '#cbd5e1', width: 1, type: 'dashed' } },
-        backgroundColor: isDark ? 'rgba(17, 24, 39, 0.94)' : 'rgba(255, 255, 255, 0.96)',
-        borderColor: isDark ? '#374151' : '#e2e8f0',
-        borderWidth: 1,
-        padding: [12, 16],
-        textStyle: { color: isDark ? '#f8fafc' : '#1f2937', fontSize: 13 },
-        extraCssText: isDark
-            ? 'backdrop-filter: blur(8px); box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.5); border-radius: 10px;'
-            : 'backdrop-filter: blur(8px); box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.12); border-radius: 10px;',
-        formatter: (params) => {
-            if (!Array.isArray(params) || params.length === 0)
-                return '';
-            const cat = params[0].axisValueLabel;
-            let html = `<div style="font-weight: 700; margin-bottom: 8px; color: ${isDark ? '#f8fafc' : '#111827'}; font-size: 14px;">${cat}</div>`;
-            params.forEach((it) => {
-                if (it.seriesName === '__track_bg__')
-                    return;
-                const color = it.color && typeof it.color === 'string' ? it.color : (it.color?.colorStops?.[0]?.color || '#3b82f6');
-                const val = it.value;
-                const isSec = it.seriesName === yAxis2Title || it.seriesIndex === series.length - 1 && hasDualYAxis;
-                const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'
-                    ? `${(val * 100).toFixed(1)}%`
-                    : (typeof val === 'number' ? val.toLocaleString('it-IT') : (val !== null && val !== undefined ? String(val) : 'N/D'));
-                html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;">
-            <span style="display: flex; align-items: center; gap: 7px;">
-              <span style="display: inline-block; width: 10px; height: 10px; border-radius: ${it.seriesType === 'line' ? '50%' : '2px'}; background: ${color};"></span>
-              <span style="font-weight: 500;">${it.seriesName}</span>
-            </span>
-            <span style="font-weight: 700; font-variant-numeric: tabular-nums; color: ${isSec ? secondaryLineColor : 'inherit'};">${formatted}</span>
-          </div>
-        `;
-                if (showBenchmark && benchmark && typeof benchmark.value === 'number' && typeof val === 'number' && it.seriesIndex === 0) {
-                    const delta = val - benchmark.value;
-                    const deltaPct = benchmark.value !== 0 ? (delta / benchmark.value) * 100 : 0;
-                    const isPositive = delta >= 0;
-                    const badgeColor = isPositive ? '#10b981' : '#ef4444';
-                    const sign = isPositive ? '+' : '';
-                    html += `
-            <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 2px;">
-              vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${delta.toLocaleString('it-IT')})
-            </div>
-          `;
-                }
-            });
-            return html;
-        },
-    };
+    const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false);
+    const tooltip = getTooltipConfig(isDark, tooltipFormatter);
     // Legend — with explicit per-series colors so the legend swatches match the bars
     const legend = getLegendConfig(series, colorScheme, showLegend || false, legendOrientation || 'top', isDark);
     // Adaptive right padding: horizontal needs more room for value labels outside bars
