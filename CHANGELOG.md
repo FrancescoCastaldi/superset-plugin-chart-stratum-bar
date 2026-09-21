@@ -4,6 +4,13 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.9] - 2026-09-21
+
+### Risolto
+- **Colori Legenda Non Corrispondenti alle Barre**: la legenda ECharts usava i colori interni generati dal motore invece di quelli esplicitamente assegnati per serie (`label_colors` dashboard, mappa JSON manuale, palette). Aggiunto `data: legendData` alla configurazione della legenda con `itemStyle.color` basato sul campo `color` di ogni serie (sia 2D che 3D).
+- **Valori Invisibili in Modalità Impilata (Stacked)**: i label erano posizionati a `'top'` (fuori dalla barra) per tutte le serie, rendendoli invisibili o sovrapposti nei segmenti intermedi. Impostato `position: 'inside'` quando `stacking !== 'none'` e aggiunta soppressione automatica per segmenti inferiori all'1,5% del valore massimo.
+- **Overflow Testo in Modalità Orizzontale**: i valori etichetta all'estremità destra della barra uscivano dall'area del grafico. Aumentato dinamicamente il padding destro della griglia (`grid.right`) a 60px (senza doppio asse) e 90px (con doppio asse) in modalità orizzontale.
+
 ## [0.2.8] - 2026-09-21
 
 ### Risolto
