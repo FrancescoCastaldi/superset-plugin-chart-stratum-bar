@@ -44,6 +44,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const [depth3D, setDepth3D] = useState<number>(props.depth3D ?? 20);
   const [barShape3D, setBarShape3D] = useState<BarShape3D>(initialBarShape3D);
   const [showBenchmark, setShowBenchmark] = useState<boolean>(props.showBenchmark ?? false);
+  const [enableAxisBreak, setEnableAxisBreak] = useState<boolean>(props.enableAxisBreak ?? false);
   const [valuePosition, setValuePosition] = useState<ValuePosition>(props.valuePosition || 'top');
   const [showSettings3D, setShowSettings3D] = useState<boolean>(false);
 
@@ -120,6 +121,10 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   }, [initialBarShape3D]);
 
   useEffect(() => {
+    if (props.enableAxisBreak !== undefined) setEnableAxisBreak(props.enableAxisBreak);
+  }, [props.enableAxisBreak]);
+
+  useEffect(() => {
     if (props.valuePosition) {
       setValuePosition(props.valuePosition);
     }
@@ -186,10 +191,11 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       hasDualYAxis,
       showBenchmark,
       benchmark: showBenchmark ? props.benchmark : undefined,
+      enableAxisBreak,
       selectedValues: props.selectedValues,
       valuePosition,
     };
-  }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, barShape3D, hasDualYAxis, showBenchmark, valuePosition]);
+  }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, barShape3D, hasDualYAxis, showBenchmark, enableAxisBreak, valuePosition]);
 
   // Compute option using either 2D or 3D renderer
   const chartOption = useMemo(() => {
@@ -397,6 +403,18 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 title="Mostra/Nascondi soglia benchmark target a runtime"
               >
                 <span className={`stratum-bar-dot ${showBenchmark ? 'dot-blue' : 'dot-off'}`} /> Target
+              </button>
+            )}
+
+            {/* Axis Break / Outlier Pinning Micro-Pill */}
+            {toolbarConfig?.showAxisBreak !== false && (
+              <button
+                type="button"
+                className={`stratum-bar-btn ${enableAxisBreak ? 'active-accent' : ''}`}
+                onClick={() => setEnableAxisBreak(prev => !prev)}
+                title="Attiva/Disattiva scala spezzata (capping visivo outlier // per esaltare barre minori)"
+              >
+                <span className={`stratum-bar-dot ${enableAxisBreak ? 'dot-purple' : 'dot-off'}`} /> ✂️ Asse Spezzato
               </button>
             )}
 

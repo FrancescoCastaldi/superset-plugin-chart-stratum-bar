@@ -87,9 +87,13 @@ export function getTooltipFormatter(categories, isDark, colorScheme, showBenchma
         items.forEach(it => {
             if (it.seriesName === '__track_bg__')
                 return;
-            let val = it.value;
-            if (Array.isArray(it.value)) {
-                val = is3D ? (isVertical ? it.value[1] : it.value[0]) : (it.value[1] ?? it.value[0]);
+            // If data object carries originalVal (from Axis Break capping), use it for tooltip accuracy
+            const rawData = it.data;
+            let val = rawData && typeof rawData === 'object' && rawData.originalVal !== undefined
+                ? rawData.originalVal
+                : it.value;
+            if (Array.isArray(val)) {
+                val = is3D ? (isVertical ? val[1] : val[0]) : (val[1] ?? val[0]);
             }
             const isSec = it.seriesName === yAxis2Title || (it.seriesIndex != null && it.seriesIndex === items.length - 1 && secondaryLineColor !== undefined) || it.seriesType === 'line';
             const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'

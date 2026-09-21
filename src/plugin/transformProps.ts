@@ -69,6 +69,10 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     toolbar_show_breakdown_toggle = true,
     toolbar_show_benchmark = true,
     toolbar_show_export = true,
+    enable_axis_break = false,
+    axis_break_mode = 'auto',
+    axis_break_threshold,
+    toolbar_show_axis_break = true,
     x_axis_title,
     y_axis_title,
   } = fd;
@@ -243,6 +247,9 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     standardSeries: standardRep.series,
     combinedCategories: combinedRep.categories,
     combinedSeries: combinedRep.series,
+    enableAxisBreak: Boolean(enable_axis_break),
+    axisBreakMode: axis_break_mode,
+    axisBreakThreshold: axis_break_threshold !== undefined && axis_break_threshold !== null ? Number(axis_break_threshold) : undefined,
     toolbarConfig: {
       showViewMode: toolbar_show_view_mode !== false,
       showOrientation: toolbar_show_orientation !== false,
@@ -250,6 +257,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       showDualAxis: toolbar_show_dual_axis !== false,
       showBreakdownToggle: toolbar_show_breakdown_toggle !== false,
       showBenchmark: toolbar_show_benchmark !== false,
+      showAxisBreak: toolbar_show_axis_break !== false,
       showExport: toolbar_show_export !== false,
     },
     formData: fd,

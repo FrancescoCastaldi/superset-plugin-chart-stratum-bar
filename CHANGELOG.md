@@ -4,6 +4,17 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.7] - 2026-09-21
+
+### Added
+- **Asse Spezzato & Gestione Outlier (Axis Break / Outlier Pinning `//`)**:
+  - **Visual Outlier Capping**: automatically caps disproportionately high values (e.g. 1331 vs 8, 7, 73) so the chart's primary scale accommodates the minor bars with full visual contrast and readable proportions.
+  - **Preserved Real Numbers**: values displayed on top of the bars and in interactive tooltips remain the authentic absolute values (e.g. `// 1.331`), with a clear double slash prefix (`//`) indicating the capped scale break.
+  - **Universal Support**: completely generic and customer-agnostic, functioning across 2D Curved Modern & 3D Isometric, Horizontal & Vertical orientations, and Grouped & Stacked bars.
+  - **3D Visual Break Indicator**: rendered an authentic `//` break symbol across capped 3D prisms and cylinders.
+  - **Interactive Runtime Toolbar Pill (`✂️ Asse Spezzato`)**: live 1-click toggle button on the chart toolbar with glowing indicator dot for instant client-side switching.
+  - **Superset Explore Control Panel**: added dedicated section `✂️ Asse Spezzato & Gestione Outlier (Axis Break)` with options for Auto detection, P90, P95, or custom manual numeric threshold.
+
 ## [0.3.6] - 2026-09-21
 
 ### Fixed

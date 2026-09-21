@@ -82,6 +82,11 @@ export interface StratumBarFormData extends QueryFormData {
   custom_colors_json?: string;
   label_colors?: Record<string, string>;
   renderer?: 'canvas' | 'svg';
+  // Axis Break / Outlier Pinning Controls
+  enable_axis_break?: boolean;
+  axis_break_mode?: 'auto' | 'p90' | 'p95' | 'manual';
+  axis_break_threshold?: number;
+  toolbar_show_axis_break?: boolean;
 }
 
 export interface StratumBarTransformedProps {
@@ -127,6 +132,10 @@ export interface StratumBarTransformedProps {
   combinedSeries?: StratumBarSeries[];
   standardCategories?: string[];
   standardSeries?: StratumBarSeries[];
+  // Axis Break / Outlier Capping
+  enableAxisBreak?: boolean;
+  axisBreakMode?: 'auto' | 'p90' | 'p95' | 'manual';
+  axisBreakThreshold?: number;
   toolbarConfig?: {
     showViewMode: boolean;
     showOrientation: boolean;
@@ -134,6 +143,7 @@ export interface StratumBarTransformedProps {
     showDualAxis: boolean;
     showBreakdownToggle: boolean;
     showBenchmark: boolean;
+    showAxisBreak: boolean;
     showExport: boolean;
   };
   formData: StratumBarFormData;

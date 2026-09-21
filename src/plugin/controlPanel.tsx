@@ -552,6 +552,55 @@ const config: ControlPanelConfig = {
       ],
     },
     {
+      label: t('✂️ Asse Spezzato & Gestione Outlier (Axis Break)'),
+      expanded: false,
+      controlSetRows: [
+        [
+          {
+            name: 'enable_axis_break',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Attiva Asse Spezzato / Outlier Capping'),
+              description: t('Taglia la scala delle barre anomale/outlier preservando le proporzioni e leggibilità delle barre minori, mantenendo in cima il valore numerico reale assoluto'),
+              default: false,
+              renderTrigger: true,
+            },
+          },
+          {
+            name: 'axis_break_mode',
+            config: {
+              type: 'SelectControl',
+              label: t('Modalità Calcolo Soglia'),
+              description: t('Metodo per determinare il punto di taglio: Automatico (rileva skewness), Percentile 90, Percentile 95, o Manuale'),
+              choices: [
+                ['auto', t('Automatico Smart (Auto Outlier Detection)')],
+                ['p90', t('Percentile 90 (P90)')],
+                ['p95', t('Percentile 95 (P95)')],
+                ['manual', t('Soglia Manuale Fissa')],
+              ],
+              default: 'auto',
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enable_axis_break?.value),
+            },
+          },
+        ],
+        [
+          {
+            name: 'axis_break_threshold',
+            config: {
+              type: 'TextControl',
+              label: t('Soglia Manuale di Taglio'),
+              description: t('Valore massimo della scala oltre il quale le barre vengono tagliate con l\'indicatore //'),
+              default: 150,
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls?.enable_axis_break?.value) && controls?.axis_break_mode?.value === 'manual',
+            },
+          },
+        ],
+      ],
+    },
+    {
       label: t('Axes & Dashboard Interactivity'),
       expanded: false,
       controlSetRows: [
@@ -707,6 +756,17 @@ const config: ControlPanelConfig = {
           },
         ],
         [
+          {
+            name: 'toolbar_show_axis_break',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Pulsante Toolbar Asse Spezzato (✂️)'),
+              description: t('Mostra il pulsante "✂️ Asse Spezzato" sulla barra degli strumenti a runtime'),
+              default: true,
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
+            },
+          },
           {
             name: 'toolbar_show_export',
             config: {

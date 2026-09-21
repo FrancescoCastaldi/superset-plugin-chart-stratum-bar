@@ -1,12 +1,22 @@
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
+import { calculateAxisBreak, transformValueForAxisBreak } from '../utils/axisBreakUtils';
 import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 export function get2DBarOption(props) {
-    const { categories, series, benchmark, orientation, stacking, barBorderRadius, showTrackBackground, showBenchmark, showValue, valuePosition, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, } = props;
+    const { categories, series, benchmark, orientation, stacking, barBorderRadius, showTrackBackground, showBenchmark, showValue, valuePosition, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, enableAxisBreak = false, axisBreakMode = 'auto', axisBreakThreshold, } = props;
     const isDark = themeMode === 'dark';
     const isVertical = orientation === 'vertical';
-    // Calculate max value for track background
+    const isStacked = stacking !== 'none';
+    // Calculate Axis Break / Outlier Pinning
+    const axisBreak = calculateAxisBreak(series, isStacked, categories.length, {
+        enabled: enableAxisBreak,
+        mode: axisBreakMode,
+        threshold: axisBreakThreshold,
+    });
+    // Calculate max value for track background and primary axis
     let maxVal = 0;
     for (const s of series) {
+        if (s.yAxisIndex === 1)
+            continue;
         for (const v of s.data) {
             if (typeof v === 'number' && v > maxVal)
                 maxVal = v;
@@ -14,11 +24,12 @@ export function get2DBarOption(props) {
     }
     if (benchmark && benchmark.value > maxVal)
         maxVal = benchmark.value;
-    const trackMax = Math.ceil(maxVal * 1.15) || 100;
+    const effectiveMaxVal = axisBreak.enabled ? axisBreak.displayMax : maxVal;
+    const trackMax = Math.ceil(effectiveMaxVal * 1.15) || 100;
     // Category Axis
     const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
-    // Value Axis (Primary)
-    const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle);
+    // Value Axis (Primary) - pass effective max so outlier zone or standard scale has proper limit
+    const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisBreak.enabled ? axisBreak.displayMax : undefined);
     // Secondary Value Axis (Right Y-Axis - Color-coded)
     const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
     const echartsSeries = [];
@@ -130,8 +141,14 @@ export function get2DBarOption(props) {
                 props.selectedValues.includes(catName) ||
                 props.selectedValues.includes(s.name) ||
                 props.selectedValues.includes(`${catName} · ${s.name}`);
+            // Apply axis break transform if enabled
+            const { visualVal, isCapped, originalVal } = axisBreak.enabled && !isSecondary
+                ? transformValueForAxisBreak(val, axisBreak)
+                : { visualVal: val, isCapped: false, originalVal: val };
             return {
-                value: val,
+                value: visualVal,
+                originalVal: originalVal,
+                isCapped: isCapped,
                 name: catName,
                 itemStyle: {
                     opacity: isSelected ? 1.0 : 0.28,
@@ -187,16 +204,19 @@ export function get2DBarOption(props) {
                 // Hide label for very small segments to avoid overlap
                 minMargin: 4,
                 formatter: (params) => {
-                    const val = params.value;
-                    if (val === null || val === undefined)
+                    const rawItem = params.data;
+                    const isCapped = rawItem?.isCapped;
+                    const realVal = rawItem?.originalVal !== undefined ? rawItem.originalVal : params.value;
+                    if (realVal === null || realVal === undefined)
                         return '';
-                    if (typeof val === 'number') {
+                    if (typeof realVal === 'number') {
                         // In stacked mode suppress near-zero labels (< 1.5% of max) to avoid clutter
-                        if (stacking !== 'none' && maxVal > 0 && Math.abs(val) / maxVal < 0.015)
+                        if (stacking !== 'none' && effectiveMaxVal > 0 && Math.abs(realVal) / effectiveMaxVal < 0.015)
                             return '';
-                        return val.toLocaleString('it-IT');
+                        const formatted = realVal.toLocaleString('it-IT');
+                        return isCapped ? `// ${formatted}` : formatted;
                     }
-                    return String(val);
+                    return isCapped ? `// ${String(realVal)}` : String(realVal);
                 },
             },
             z: 2,

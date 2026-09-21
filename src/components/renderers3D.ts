@@ -1,5 +1,6 @@
 import { StratumBarTransformedProps } from '../types';
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
+import { calculateAxisBreak, transformValueForAxisBreak } from '../utils/axisBreakUtils';
 
 import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 
@@ -38,6 +39,9 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
     secondaryLineColor = '#ea580c',
     themeMode = 'light',
     enableA11yDecal = false,
+    enableAxisBreak = false,
+    axisBreakMode = 'auto',
+    axisBreakThreshold,
   } = props;
 
   const isDark = themeMode === 'dark';
@@ -49,6 +53,13 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   const numSeries = series.length || 1;
   const isStacked = props.stacking !== 'none';
 
+  // Calculate Axis Break / Outlier Pinning
+  const axisBreak = calculateAxisBreak(series, isStacked, categories.length, {
+    enabled: enableAxisBreak,
+    mode: axisBreakMode,
+    threshold: axisBreakThreshold,
+  });
+
   // Precompute accumulated bottoms for stacked mode, topmost series per category, and max values for scaling
   const stackBottoms: number[][] = series.map(() => categories.map(() => 0));
   const topSeriesIdxPerCat: number[] = categories.map(() => -1);
@@ -58,13 +69,19 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   for (let c = 0; c < categories.length; c++) {
     let accum = 0;
     for (let s = 0; s < series.length; s++) {
-      const v = series[s].data[c];
-      if (typeof v === 'number' && !isNaN(v)) {
-        if (v > maxSingleVal) maxSingleVal = v;
+      if (series[s].yAxisIndex === 1) continue;
+      const rawV = series[s].data[c];
+      if (typeof rawV === 'number' && !isNaN(rawV)) {
+        // Visual value under axis break
+        const visualV = axisBreak.enabled
+          ? (transformValueForAxisBreak(rawV, axisBreak).visualVal ?? rawV)
+          : rawV;
+
+        if (visualV > maxSingleVal) maxSingleVal = visualV;
         if (isStacked) {
           stackBottoms[s][c] = accum;
-          accum += v;
-          if (v > 0) {
+          accum += visualV;
+          if (visualV > 0) {
             topSeriesIdxPerCat[c] = s;
           }
         }
@@ -74,7 +91,10 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   }
 
   // Value Axis (Primary) - custom series in ECharts needs explicit axisMax for headroom and proper scaling
-  let ceilingVal = isStacked ? maxStackedSum : maxSingleVal;
+  let ceilingVal = axisBreak.enabled
+    ? axisBreak.displayMax
+    : (isStacked ? maxStackedSum : maxSingleVal);
+
   if (showBenchmark && benchmark && typeof benchmark.value === 'number' && benchmark.value > ceilingVal) {
     ceilingVal = benchmark.value;
   }
@@ -685,10 +705,18 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
                 }
               }
 
+              const rawVal = s.data[categoryIndex];
+              const isCapped = axisBreak.enabled && typeof rawVal === 'number' && rawVal > axisBreak.effectiveCutoff;
+              const displayVal = rawVal !== undefined && rawVal !== null ? rawVal : val;
+              const formattedVal = typeof displayVal === 'number'
+                ? displayVal.toLocaleString('it-IT')
+                : String(displayVal);
+              const labelText = isCapped ? `// ${formattedVal}` : formattedVal;
+
               const textElement: any = {
                 type: 'text',
                 style: {
-                  text: typeof val === 'number' ? val.toLocaleString('it-IT') : String(val),
+                  text: labelText,
                   x: labelX,
                   y: labelY,
                   textAlign,
@@ -711,6 +739,47 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             }
           }
 
+          // 6. Draw visual Axis Break mark ("//") across the column if capped
+          const rawItemVal = s.data[categoryIndex];
+          if (axisBreak.enabled && typeof rawItemVal === 'number' && rawItemVal > axisBreak.effectiveCutoff) {
+            const cutY = (yTop + yBase) / 2;
+            const cutX = (x0 + x1) / 2;
+            if (isVertical) {
+              const breakWidth = Math.abs(x1 - x0) * 0.7;
+              children.push({
+                type: 'text',
+                style: {
+                  text: '//',
+                  x: cutX,
+                  y: yTop + 8,
+                  textAlign: 'center',
+                  textVerticalAlign: 'middle',
+                  font: 'bold 14px monospace',
+                  fill: isDark ? '#ffffff' : '#ffffff',
+                  stroke: 'rgba(0, 0, 0, 0.8)',
+                  lineWidth: 2,
+                },
+                z2: 6,
+              });
+            } else {
+              children.push({
+                type: 'text',
+                style: {
+                  text: '//',
+                  x: x1 - 8,
+                  y: cutY,
+                  textAlign: 'center',
+                  textVerticalAlign: 'middle',
+                  font: 'bold 14px monospace',
+                  fill: '#ffffff',
+                  stroke: 'rgba(0, 0, 0, 0.8)',
+                  lineWidth: 2,
+                },
+                z2: 6,
+              });
+            }
+          }
+
           children.forEach((c: any) => {
             if (c.style) c.style.opacity = itemOpacity;
           });
@@ -720,10 +789,17 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             children,
           };
       },
-      data: s.data.map((v, i) => ({
-        name: categories[i],
-        value: isVertical ? [i, v] : [v, i],
-      })),
+      data: s.data.map((v, i) => {
+        const { visualVal, isCapped, originalVal } = axisBreak.enabled && s.yAxisIndex !== 1
+          ? transformValueForAxisBreak(v, axisBreak)
+          : { visualVal: v, isCapped: false, originalVal: v };
+        return {
+          name: categories[i],
+          value: isVertical ? [i, visualVal] : [visualVal, i],
+          originalVal,
+          isCapped,
+        };
+      }),
       encode: {
         x: 0,
         y: 1,
