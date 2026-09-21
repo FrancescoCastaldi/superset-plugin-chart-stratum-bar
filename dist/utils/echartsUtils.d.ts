@@ -25,8 +25,9 @@ export declare function getCategoryAxisConfig(categories: string[], isVertical: 
         padding: number[];
     };
 };
-export declare function getValueAxisConfig(isVertical: boolean, isDark: boolean, axisTitle?: string): {
+export declare function getValueAxisConfig(isVertical: boolean, isDark: boolean, axisTitle?: string, maxVal?: number): {
     type: "value";
+    max: number | undefined;
     axisLabel: {
         color: string;
         fontSize: number;

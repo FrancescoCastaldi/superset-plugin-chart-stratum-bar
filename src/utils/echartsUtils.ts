@@ -18,9 +18,10 @@ export function getCategoryAxisConfig(categories: string[], isVertical: boolean,
   };
 }
 
-export function getValueAxisConfig(isVertical: boolean, isDark: boolean, axisTitle?: string) {
+export function getValueAxisConfig(isVertical: boolean, isDark: boolean, axisTitle?: string, maxVal?: number) {
   return {
     type: 'value' as const,
+    max: maxVal,
     axisLabel: {
       color: isDark ? '#94a3b8' : '#6b7280',
       fontSize: 11,

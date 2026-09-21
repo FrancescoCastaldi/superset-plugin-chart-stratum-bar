@@ -4,6 +4,12 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.1] - 2026-09-21
+
+### Fixed
+- **3D Stacked Bar Labels**: in 3D stacked view, value labels were overlapping or displaying poorly on small segments. Labels are now cleanly positioned inside the facet with high-contrast text and border stroke. Tiny/micro segments (<14px) are suppressed to prevent visual clutter.
+- **3D Stacked Y-Axis Scale**: calculated total accumulated stacked sum across series and provided explicit `max` scale constraint to `valueAxis` in ECharts, ensuring stacked 3D columns don't overflow the top boundary of the canvas.
+
 ## [0.3.0] - 2026-09-21
 
 ### Changed

@@ -36,22 +36,12 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   const offsetX = Math.round(depth3D * Math.cos(tiltRad));
   const offsetY = Math.round(depth3D * Math.sin(tiltRad));
 
-  // Category Axis
-  const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
-
-  // Value Axis (Primary)
-  const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle);
-
-  // Secondary Value Axis (Right Y-Axis - Color-coded)
-  const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
-
-  const echartsSeries: any[] = [];
-
   const numSeries = series.length || 1;
   const isStacked = props.stacking !== 'none';
 
-  // If stacked, precompute accumulated bottoms for each series
+  // If stacked, precompute accumulated bottoms for each series and max total
   const stackBottoms: number[][] = series.map(() => categories.map(() => 0));
+  let maxStackedSum = 0;
   if (isStacked) {
     for (let c = 0; c < categories.length; c++) {
       let accum = 0;
@@ -62,8 +52,21 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
           accum += v;
         }
       }
+      if (accum > maxStackedSum) maxStackedSum = accum;
     }
   }
+
+  // Value Axis (Primary) - when stacked with custom series, ECharts doesn't know the stacked sum automatically
+  const axisMax = isStacked && maxStackedSum > 0 ? Math.ceil(maxStackedSum * 1.15) : undefined;
+  const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisMax);
+
+  // Category Axis
+  const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
+
+  // Secondary Value Axis (Right Y-Axis - Color-coded)
+  const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
+
+  const echartsSeries: any[] = [];
 
   // Render 3D Isometric Bar using ECharts Custom Series (renderItem)
   series.forEach((s, seriesIdx) => {
@@ -250,19 +253,35 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
 
           // 5. Value Label
           if (showValue) {
-            children.push({
-              type: 'text',
-              style: {
-                text: typeof val === 'number' ? val.toLocaleString('it-IT') : String(val),
-                x: isVertical ? (x0 + x1 + offsetX) / 2 : x1 + offsetX + 8,
-                y: isVertical ? yTop - offsetY - 8 : (yTop + yBase - offsetY) / 2,
-                textAlign: isVertical ? 'center' : 'left',
-                textVerticalAlign: isVertical ? 'bottom' : 'middle',
-                font: 'bold 11px sans-serif',
-                fill: '#1f2937',
-              },
-              z2: 4,
-            });
+            const segmentHeight = Math.abs(yBase - yTop);
+            const segmentWidth = Math.abs(x1 - x0);
+            const isTiny = isVertical ? segmentHeight < 14 : segmentWidth < 20;
+
+            // In stacked mode, only render if segment has enough space, and place inside the face
+            if (!isStacked || !isTiny) {
+              const labelX = isStacked
+                ? (isVertical ? (x0 + x1) / 2 : (x0 + x1) / 2)
+                : (isVertical ? (x0 + x1 + offsetX) / 2 : x1 + offsetX + 8);
+              const labelY = isStacked
+                ? (isVertical ? (yTop + yBase) / 2 : (yTop + yBase) / 2)
+                : (isVertical ? yTop - offsetY - 8 : (yTop + yBase - offsetY) / 2);
+
+              children.push({
+                type: 'text',
+                style: {
+                  text: typeof val === 'number' ? val.toLocaleString('it-IT') : String(val),
+                  x: labelX,
+                  y: labelY,
+                  textAlign: isStacked ? 'center' : (isVertical ? 'center' : 'left'),
+                  textVerticalAlign: isStacked ? 'middle' : (isVertical ? 'bottom' : 'middle'),
+                  font: 'bold 11px sans-serif',
+                  fill: isStacked ? '#ffffff' : (isDark ? '#f8fafc' : '#1f2937'),
+                  stroke: isStacked ? 'rgba(0, 0, 0, 0.45)' : undefined,
+                  lineWidth: isStacked ? 2 : undefined,
+                },
+                z2: 5,
+              });
+            }
           }
 
           children.forEach((c: any) => {

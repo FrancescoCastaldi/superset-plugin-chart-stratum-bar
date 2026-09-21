@@ -80,6 +80,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         };
     } | {
         type: "value";
+        max: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -99,6 +100,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         };
     } | ({
         type: "value";
+        max: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -163,6 +165,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         };
     } | {
         type: "value";
+        max: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -182,6 +185,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         };
     } | ({
         type: "value";
+        max: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
