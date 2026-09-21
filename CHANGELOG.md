@@ -4,6 +4,13 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.6] - 2026-09-21
+
+### Risolto
+- **Allineamento Dimensioni Query Backend (`groupby: columns`)**:
+  - Risolto problema critico di precedenza nel query builder di Superset: quando `groupby` è presente in `baseQueryObject` da `formData`, il backend Superset poteva ignorare `columns` e raggruppare esclusivamente per `groupby`, omettendo le dimensioni dell'asse X (es. `CANALE`) dalla query SQL.
+  - Sincronizzato esplicitamente `groupby: columns` nell'oggetto di query ritornato da `buildQuery.ts`, garantendo che tutte le dimensioni (`x_axis`, `x_axis_group`, `groupby`) siano sempre presenti sia nella clausola `SELECT` che nel `GROUP BY` del database.
+
 ## [0.2.5] - 2026-09-21
 
 ### Aggiunto

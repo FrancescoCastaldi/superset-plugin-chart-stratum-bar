@@ -61,6 +61,7 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       {
         ...baseQueryObject,
         columns,
+        groupby: columns,
         metrics: resolvedMetrics,
       },
     ];

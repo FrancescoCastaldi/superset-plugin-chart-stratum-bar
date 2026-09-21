@@ -47,6 +47,7 @@ export default function buildQuery(formData) {
             {
                 ...baseQueryObject,
                 columns,
+                groupby: columns,
                 metrics: resolvedMetrics,
             },
         ];
