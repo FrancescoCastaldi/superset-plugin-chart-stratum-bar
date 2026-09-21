@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import * as echarts from 'echarts';
 import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries } from '../types';
 import { get2DBarOption } from './renderers2D';
@@ -28,6 +29,8 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const btn3DRef = useRef<HTMLButtonElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
   // Runtime interactive state (client-side 60fps toggling)
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
@@ -40,12 +43,33 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const [showBenchmark, setShowBenchmark] = useState<boolean>(props.showBenchmark ?? false);
   const [showSettings3D, setShowSettings3D] = useState<boolean>(false);
 
-  // Close 3D settings popover on click outside
+  // Toggle 3D settings popover — compute absolute screen position via Portal
+  const handleToggle3D = useCallback(() => {
+    if (showSettings3D) {
+      setShowSettings3D(false);
+      setPopoverPos(null);
+      return;
+    }
+    if (btn3DRef.current) {
+      const rect = btn3DRef.current.getBoundingClientRect();
+      setPopoverPos({
+        top: rect.bottom + window.scrollY + 6,
+        left: rect.right + window.scrollX,
+      });
+    }
+    setShowSettings3D(true);
+  }, [showSettings3D]);
+
+  // Close 3D settings popover on click outside (portal-safe)
   useEffect(() => {
     if (!showSettings3D) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedButton = btn3DRef.current?.contains(target);
+      const clickedPopover = popoverRef.current?.contains(target);
+      if (!clickedButton && !clickedPopover) {
         setShowSettings3D(false);
+        setPopoverPos(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -354,19 +378,29 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
           </div>
 
           <div className="stratum-bar-toolbar-right">
-            {/* 3D Depth & Tilt Mini Settings Popover */}
+            {/* 3D Depth & Tilt Mini Settings Popover — rendered as Portal to escape overflow clipping */}
             {viewMode === '3d' && (
-              <div className="stratum-bar-popover-wrapper" ref={popoverRef}>
+              <>
                 <button
+                  ref={btn3DRef}
                   type="button"
                   className={`stratum-bar-btn ${showSettings3D ? 'active' : ''}`}
-                  onClick={() => setShowSettings3D(prev => !prev)}
+                  onClick={handleToggle3D}
                   title="Parametri 3D (Inclinazione & Profondità)"
                 >
                   ⚙️ 3D
                 </button>
-                {showSettings3D && (
-                  <div className="stratum-bar-popover">
+                {showSettings3D && popoverPos && createPortal(
+                  <div
+                    ref={popoverRef}
+                    className="stratum-bar-popover stratum-bar-popover-portal"
+                    style={{
+                      position: 'fixed',
+                      top: popoverPos.top - window.scrollY,
+                      left: popoverPos.left,
+                      transform: 'translateX(-100%)',
+                    }}
+                  >
                     <div className="stratum-bar-popover-row">
                       <span>Inclinazione</span>
                       <input
@@ -391,9 +425,10 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                       />
                       <span className="stratum-bar-val">{depth3D}px</span>
                     </div>
-                  </div>
+                  </div>,
+                  document.body
                 )}
-              </div>
+              </>
             )}
 
             {/* Export Micro-Buttons */}
