@@ -4,6 +4,15 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.4] - 2026-09-21
+
+### Fixed
+- **Architectural 3D Base Pedestals (Basamento / Pedana 3D)**: added solid isometric 3D base pedestals under each category group (`seriesIdx === 0`) with isometric top surface, front bevel lip, and right side depth. Columns now stand firmly on an architectural foundation instead of floating in empty void.
+- **Minimum Visual Dimension for Small Values**: enforced a minimum visual height (`minBarHeight = 6px`) and width (`minBarWidth = 6px`) for non-zero values (e.g., 2, 5, 6) relative to dominant bars (e.g., 1331). Columns maintain solid 3D facet geometry instead of collapsing into flat, distorted paper wafers.
+- **Zero-Value Treatment**: 0-value series now render a subtle, neat recessed footprint slot with dashed borders on the pedestal surface instead of drawing deformed 0-height prisms and colliding floating "0" text labels.
+- **3D Ground Shadows**: reoriented ground shadows to cast downward/forward onto the pedestal surface (`z2: 1`) with dark/light mode opacity.
+- **Category Axis Baseline Harmony**: refined `axisLine` width and `axisLabel.margin` in `echartsUtils.ts` for clean alignment beneath 3D pedestals.
+
 ## [0.3.3] - 2026-09-21
 
 ### Fixed

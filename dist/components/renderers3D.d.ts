@@ -61,6 +61,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             color: string;
             fontSize: number;
             interval: number;
+            margin: number;
             rotate: number;
         };
         axisLine: {
@@ -146,6 +147,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             color: string;
             fontSize: number;
             interval: number;
+            margin: number;
             rotate: number;
         };
         axisLine: {

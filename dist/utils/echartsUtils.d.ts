@@ -6,6 +6,7 @@ export declare function getCategoryAxisConfig(categories: string[], isVertical: 
         color: string;
         fontSize: number;
         interval: number;
+        margin: number;
         rotate: number;
     };
     axisLine: {

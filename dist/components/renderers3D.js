@@ -101,6 +101,14 @@ export function get3DBarOption(props) {
                         yTop = pt[1];
                         yBase = ptBase[1];
                     }
+                    // Enforce minimum visual height for non-zero values so miniature bars are never flat wafers
+                    const minBarHeight = 6;
+                    if (val > 0 && yBase - yTop < minBarHeight) {
+                        yTop = yBase - minBarHeight;
+                    }
+                    else if (val < 0 && yTop - yBase < minBarHeight) {
+                        yTop = yBase + minBarHeight;
+                    }
                 }
                 else {
                     // Horizontal 3D Bar
@@ -129,8 +137,169 @@ export function get3DBarOption(props) {
                         x0 = ptBase[0];
                         x1 = pt[0];
                     }
+                    // Enforce minimum visual width for non-zero values
+                    const minBarWidth = 6;
+                    if (val > 0 && x1 - x0 < minBarWidth) {
+                        x1 = x0 + minBarWidth;
+                    }
+                    else if (val < 0 && x0 - x1 < minBarWidth) {
+                        x1 = x0 - minBarWidth;
+                    }
                 }
                 const children = [];
+                // 0. Render Architectural 3D Base Pedestal under this category (rendered once by the first series)
+                if (seriesIdx === 0) {
+                    if (isVertical) {
+                        const startPt = api.coord([categoryIndex, 0]);
+                        const baseBandW = Math.abs(api.size([1, 0])[0]);
+                        const pedW = isStacked
+                            ? Math.min(Math.max(baseBandW * 0.55, 28), 70)
+                            : Math.min(Math.max(baseBandW * 0.85, 40), 160);
+                        const pedX0 = startPt[0] - pedW / 2;
+                        const pedX1 = startPt[0] + pedW / 2;
+                        const pedYBase = startPt[1];
+                        const plinthH = 5;
+                        // Pedestal Top Face (Piano d'appoggio 3D)
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: [
+                                    [pedX0, pedYBase],
+                                    [pedX1, pedYBase],
+                                    [pedX1 + offsetX, pedYBase - offsetY],
+                                    [pedX0 + offsetX, pedYBase - offsetY],
+                                ],
+                            },
+                            style: {
+                                fill: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.95)',
+                                stroke: isDark ? '#334155' : '#cbd5e1',
+                                lineWidth: 1,
+                            },
+                            silent: true,
+                            z2: 0,
+                        });
+                        // Pedestal Front Bevel (Bordo frontale ribassato)
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: [
+                                    [pedX0, pedYBase],
+                                    [pedX1, pedYBase],
+                                    [pedX1, pedYBase + plinthH],
+                                    [pedX0, pedYBase + plinthH],
+                                ],
+                            },
+                            style: {
+                                fill: isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(226, 232, 240, 0.98)',
+                                stroke: isDark ? '#1e293b' : '#94a3b8',
+                                lineWidth: 1,
+                            },
+                            silent: true,
+                            z2: 0,
+                        });
+                        // Pedestal Right Bevel (Profondità laterale)
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: [
+                                    [pedX1, pedYBase],
+                                    [pedX1 + offsetX, pedYBase - offsetY],
+                                    [pedX1 + offsetX, pedYBase - offsetY + plinthH],
+                                    [pedX1, pedYBase + plinthH],
+                                ],
+                            },
+                            style: {
+                                fill: isDark ? 'rgba(15, 23, 42, 0.98)' : 'rgba(203, 213, 225, 0.98)',
+                                stroke: isDark ? '#1e293b' : '#94a3b8',
+                                lineWidth: 1,
+                            },
+                            silent: true,
+                            z2: 0,
+                        });
+                    }
+                    else {
+                        const startPt = api.coord([0, categoryIndex]);
+                        const baseBandH = Math.abs(api.size([0, 1])[1]);
+                        const pedH = isStacked
+                            ? Math.min(Math.max(baseBandH * 0.55, 28), 70)
+                            : Math.min(Math.max(baseBandH * 0.85, 40), 160);
+                        const pedY0 = startPt[1] - pedH / 2;
+                        const pedY1 = startPt[1] + pedH / 2;
+                        const pedXBase = startPt[0];
+                        const plinthW = 5;
+                        // Backing plinth
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: [
+                                    [pedXBase - plinthW, pedY0],
+                                    [pedXBase, pedY0],
+                                    [pedXBase, pedY1],
+                                    [pedXBase - plinthW, pedY1],
+                                ],
+                            },
+                            style: {
+                                fill: isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(226, 232, 240, 0.98)',
+                                stroke: isDark ? '#1e293b' : '#cbd5e1',
+                                lineWidth: 1,
+                            },
+                            silent: true,
+                            z2: 0,
+                        });
+                        // Top facet
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: [
+                                    [pedXBase - plinthW, pedY0],
+                                    [pedXBase, pedY0],
+                                    [pedXBase + offsetX, pedY0 - offsetY],
+                                    [pedXBase - plinthW + offsetX, pedY0 - offsetY],
+                                ],
+                            },
+                            style: {
+                                fill: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.95)',
+                                stroke: isDark ? '#334155' : '#cbd5e1',
+                                lineWidth: 1,
+                            },
+                            silent: true,
+                            z2: 0,
+                        });
+                    }
+                }
+                // Zero-value handling: render subtle footprint slot and skip drawing deformed 0-height bars
+                if (val === 0) {
+                    if (!isStacked) {
+                        children.push({
+                            type: 'polygon',
+                            shape: {
+                                points: isVertical ? [
+                                    [x0, yBase],
+                                    [x1, yBase],
+                                    [x1 + offsetX * 0.5, yBase - offsetY * 0.5],
+                                    [x0 + offsetX * 0.5, yBase - offsetY * 0.5],
+                                ] : [
+                                    [x0, yTop],
+                                    [x0 + offsetX * 0.5, yTop - offsetY * 0.5],
+                                    [x0 + offsetX * 0.5, yBase - offsetY * 0.5],
+                                    [x0, yBase],
+                                ],
+                            },
+                            style: {
+                                fill: isDark ? 'rgba(51, 65, 85, 0.25)' : 'rgba(203, 213, 225, 0.4)',
+                                stroke: isDark ? 'rgba(100, 116, 139, 0.4)' : 'rgba(148, 163, 184, 0.5)',
+                                lineWidth: 0.75,
+                                lineDash: [2, 2],
+                            },
+                            silent: true,
+                            z2: 1,
+                        });
+                    }
+                    return {
+                        type: 'group',
+                        children,
+                    };
+                }
                 const isCylinder = barShape3D === 'cylinder';
                 if (isCylinder) {
                     if (isVertical) {
@@ -278,23 +447,23 @@ export function get3DBarOption(props) {
                 }
                 else {
                     // Rectangular Prism
-                    // 1. Base Shadow on ground
+                    // 1. Base Shadow on ground (cast onto pedestal surface)
                     if (shadow3D) {
                         children.push({
                             type: 'polygon',
                             shape: {
                                 points: [
-                                    [x0, yBase],
-                                    [x1, yBase],
-                                    [x1 + offsetX * 0.7, yBase - offsetY * 0.4],
-                                    [x0 + offsetX * 0.7, yBase - offsetY * 0.4],
+                                    [x0 + 1, yBase + 1],
+                                    [x1 + 1, yBase + 1],
+                                    [x1 + offsetX * 0.7, yBase - offsetY * 0.35 + 1],
+                                    [x0 + offsetX * 0.7, yBase - offsetY * 0.35 + 1],
                                 ],
                             },
                             style: {
-                                fill: 'rgba(0, 0, 0, 0.12)',
+                                fill: isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.12)',
                             },
                             silent: true,
-                            z2: 0,
+                            z2: 1,
                         });
                     }
                     // 2. Front Face
@@ -370,8 +539,8 @@ export function get3DBarOption(props) {
                         z2: 3,
                     });
                 }
-                // 5. Value Label
-                if (showValue) {
+                // 5. Value Label (rendered only for non-zero values)
+                if (showValue && val !== 0) {
                     const segmentHeight = Math.abs(yBase - yTop);
                     const segmentWidth = Math.abs(x1 - x0);
                     const isTiny = isVertical ? segmentHeight < 14 : segmentWidth < 20;
