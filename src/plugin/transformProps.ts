@@ -79,6 +79,10 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     y_axis_title,
   } = fd;
 
+  const rawFd = ((chartProps as any).rawFormData || {}) as any;
+  const filterState = (chartProps as any).filterState || {};
+  const selectedValues: string[] = ensureIsArray(filterState.selectedValues || filterState.value);
+
   // Helper to extract string column name from string, Column object, or adhoc column
   const getColName = (col: any): string => {
     if (!col) return '';
@@ -142,22 +146,84 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
 
   const formatter = getNumberFormatter(numberFormat);
 
-  // Palette resolution with scale support
-  let palette = DEFAULT_COLORS;
-  let getColor = (key: string, idx: number) => palette[idx % palette.length];
-  if (color_scheme) {
+  // 1. Resolve Dashboard Label Colors & Manual JSON Colors
+  // Dashboard metadata passes label_colors in rawFormData.label_colors or formData.label_colors
+  const dashLabelColors: Record<string, string> = {
+    ...(rawFd.label_colors || {}),
+    ...(fd.label_colors || {}),
+  };
+
+  // Parse manual custom_colors_json if provided
+  let manualJsonColors: Record<string, string> = {};
+  if (fd.custom_colors_json) {
     try {
-      const scale = CategoricalColorNamespace.getScale(color_scheme);
-      if (scale) {
-        if (typeof scale.colors === 'object' && Array.isArray(scale.colors)) {
-          palette = scale.colors;
-        }
-        getColor = (key: string, idx: number) => scale.getColor(key) || palette[idx % palette.length];
+      if (typeof fd.custom_colors_json === 'string' && fd.custom_colors_json.trim()) {
+        manualJsonColors = JSON.parse(fd.custom_colors_json);
+      } else if (typeof fd.custom_colors_json === 'object') {
+        manualJsonColors = fd.custom_colors_json;
+      }
+    } catch (e) {
+      console.warn('[StratumBar] Errore nel parsing di custom_colors_json:', e);
+    }
+  }
+
+  // Combined explicit label colors (manual JSON takes top priority, then dashboard label_colors)
+  const combinedLabelColors: Record<string, string> = {
+    ...dashLabelColors,
+    ...manualJsonColors,
+  };
+
+  // Helper for case-insensitive lookup in label colors
+  const lookupColor = (key: string): string | undefined => {
+    if (!key) return undefined;
+    if (combinedLabelColors[key]) return combinedLabelColors[key];
+    const lowerKey = key.toLowerCase();
+    const found = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === lowerKey);
+    if (found) return combinedLabelColors[found];
+
+    // If key has compound separator ' · ', check secondary part (breakdown dimension)
+    if (key.includes(' · ')) {
+      const parts = key.split(' · ');
+      for (const p of parts) {
+        const trimmed = p.trim();
+        if (combinedLabelColors[trimmed]) return combinedLabelColors[trimmed];
+        const subFound = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === trimmed.toLowerCase());
+        if (subFound) return combinedLabelColors[subFound];
+      }
+    }
+    return undefined;
+  };
+
+  // Effective color scheme: prioritize dashboard color scheme if present
+  const effectiveColorScheme = fd.color_scheme || rawFd.color_scheme;
+
+  let palette = DEFAULT_COLORS;
+  let scaleInstance: any = null;
+  if (effectiveColorScheme) {
+    try {
+      scaleInstance = CategoricalColorNamespace.getScale(effectiveColorScheme);
+      if (scaleInstance && typeof scaleInstance.colors === 'object' && Array.isArray(scaleInstance.colors)) {
+        palette = scaleInstance.colors;
       }
     } catch {
       // Fallback to default
     }
   }
+
+  const getColor = (key: string, idx: number): string => {
+    // 1. Direct or compound match in dashboard label_colors / manual JSON
+    const explicit = lookupColor(key);
+    if (explicit) return explicit;
+
+    // 2. Superset Categorical scale (e.g. wavesOfBlue)
+    if (scaleInstance && typeof scaleInstance.getColor === 'function') {
+      const scaleColor = scaleInstance.getColor(key);
+      if (scaleColor) return scaleColor;
+    }
+
+    // 3. Sequential palette fallback
+    return palette[idx % palette.length];
+  };
 
 
   // 2. Determine Data Structure: PIVOTED vs UNPIVOTED
@@ -508,19 +574,44 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     });
   }
 
-  // 4. Cross-filtering hook
+  // 4. Cross-filtering hook with toggle support
   const { setDataMask, onAddFilter } = (hooks || {}) as any;
+  const currentSelected = selectedValues;
+
   const onCrossFilter = (category: string, seriesName?: string) => {
     if (!emit_filter) return;
+
+    // Compound key or plain category
+    const filterKey = seriesName && actualBreakdownKey && seriesName !== primaryMetric
+      ? `${category} · ${seriesName}`
+      : category;
+
+    // Toggle off if already selected
+    const isAlreadySelected = currentSelected.includes(filterKey) || currentSelected.includes(category);
+
+    if (isAlreadySelected) {
+      if (typeof setDataMask === 'function') {
+        setDataMask({
+          extraFormData: {
+            filters: [],
+          },
+          filterState: {
+            value: null,
+            selectedValues: null,
+          },
+        });
+      }
+      return;
+    }
 
     const filters: any[] = [];
     if (category.includes(' · ') && actualBreakdownKey) {
       const parts = category.split(' · ');
-      filters.push({ col: actualXKey, op: 'IN', val: [parts[0]] });
-      filters.push({ col: actualBreakdownKey, op: 'IN', val: [parts[1]] });
+      filters.push({ col: actualXKey, op: 'IN', val: [parts[0].trim()] });
+      filters.push({ col: actualBreakdownKey, op: 'IN', val: [parts[1].trim()] });
     } else {
       filters.push({ col: actualXKey, op: 'IN', val: [category] });
-      if (seriesName && actualBreakdownKey) {
+      if (seriesName && actualBreakdownKey && seriesName !== primaryMetric) {
         filters.push({ col: actualBreakdownKey, op: 'IN', val: [seriesName] });
       }
     }
@@ -531,8 +622,8 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
           filters,
         },
         filterState: {
-          value: [category],
-          label: category,
+          value: filters.map(f => f.val),
+          selectedValues: [filterKey, category],
         },
       });
     } else if (typeof onAddFilter === 'function') {
@@ -593,6 +684,9 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       showExport: toolbar_show_export !== false,
     },
     formData: fd,
+    selectedValues,
+    labelColors: combinedLabelColors,
+    renderer: fd.renderer || 'canvas',
     onCrossFilter,
   };
 }

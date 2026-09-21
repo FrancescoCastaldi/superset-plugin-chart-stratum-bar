@@ -4,6 +4,22 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.2.7] - 2026-09-21
+
+### Aggiunto
+- **Reattività Completa ai Filtri Nativi della Dashboard (`buildQuery.ts`)**:
+  - Unione e conservazione esplicita e resiliente di tutti i filtri nativi (`extra_form_data.filters`) e dei filtri ad-hoc (`extra_form_data.adhoc_filters`), garantendo che cambi di periodo, sede, branca, ambulatorio o canale aggiornino istantaneamente la query e i dati del grafico.
+  - Sincronizzazione di `series_columns` con la dimensione di breakdown per l'aggiornamento automatico del contesto dashboard.
+- **Cross-Filtering Avanzato con Deselezione Toggle e Dimming Visivo**:
+  - Supporto completo per interazione cross-filter: al click su una barra, il grafico emette filtri nativi su `CANALE` e `REGIME` via `setDataMask` verso tutti i grafici della dashboard.
+  - Implementata la deselezione toggle a due vie: cliccando nuovamente sulla barra o categoria già selezionata, il filtro viene rimosso automaticamente riportando tutti i grafici allo stato globale.
+  - Feedback visivo immediato: le barre non selezionate vengono sfumate (`opacity: 0.28`) evidenziando la barra o categoria attiva in 2D e 3D.
+- **Gestione Dinamica della Palette Colori (Dashboard, JSON e CSS)**:
+  - **Ereditarietà Totale da Dashboard (`label_colors`)**: prioritizzazione assoluta dei colori definiti nella dashboard (`json_metadata.label_colors`, es. `SSN: #3a6a9b`, `Convenzioni: #1c3d5e`, `Libera professione: #7aa8cf`, `Solventi: #bcd5ea`), con supporto per corrispondenza esatta, case-insensitive e scomposizione di etichette composte (`Canale · Regime`).
+  - **Mappatura Manuale JSON (`custom_colors_json`)**: nuovo controllo in backend/Explore per sovrascrivere o definire a mano una mappa colori JSON (`{"SSN": "#3a6a9b", ...}`).
+  - **Personalizzazione Diretta via CSS**: supporto a variabili CSS custom property sul contenitore (es. `--color-ssn`, `--stratum-color-ssn`) per applicare stili e palette personalizzate direttamente dal pannello CSS della dashboard.
+  - **Scelta Engine di Rendering (`renderer`)**: opzione per selezionare `Canvas` (default, massime prestazioni 60fps) oppure `SVG` (vettoriale, permette sovrascrittura diretta degli stili dal DOM tramite CSS).
+
 ## [0.2.6] - 2026-09-21
 
 ### Risolto

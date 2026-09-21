@@ -215,13 +215,29 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
       ],
     };
 
+    const hasSelection = Boolean(props.selectedValues && props.selectedValues.length > 0);
+    const barData = s.data.map((val, catIdx) => {
+      const catName = categories[catIdx] || '';
+      const isSelected = !hasSelection ||
+        props.selectedValues!.includes(catName) ||
+        props.selectedValues!.includes(s.name) ||
+        props.selectedValues!.includes(`${catName} · ${s.name}`);
+      return {
+        value: val,
+        name: catName,
+        itemStyle: {
+          opacity: isSelected ? 1.0 : 0.28,
+        },
+      };
+    });
+
     const seriesItem: any = {
       name: s.name,
       type: 'bar',
       stack: stacking !== 'none' && !isSecondary ? 'stratum_stack' : undefined,
       yAxisIndex: isVertical ? (s.yAxisIndex ?? 0) : 0,
       xAxisIndex: !isVertical ? (s.yAxisIndex ?? 0) : 0,
-      data: s.data,
+      data: barData,
       itemStyle: {
         color: gradientColor,
         borderRadius: isVertical

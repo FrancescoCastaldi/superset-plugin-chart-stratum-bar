@@ -71,23 +71,11 @@ const config: ControlPanelConfig = {
         ],
         [
           {
-            name: 'secondary_metrics',
+            name: 'metrics',
             config: {
               ...sharedControls.metrics,
-              label: t('Secondary Metrics (Right Axis)'),
-              description: t('Optional metrics plotted on the independent right secondary Y-axis (e.g., Tasso %, Degenza Media, Costo Unitario)'),
-              multi: true,
-            },
-          },
-        ],
-        [
-          {
-            name: 'target_metric',
-            config: {
-              ...sharedControls.metric,
-              label: t('Target / Benchmark Metric (Optional)'),
-              description: t('Dynamic target metric used to compute benchmark reference lines and delta % per category'),
-              clearable: true,
+              label: t('Primary Metrics (Left Axis)'),
+              description: t('Metrics to measure primary bar height (e.g., Numero Richieste, Fatturato)'),
             },
           },
         ],
@@ -147,6 +135,37 @@ const config: ControlPanelConfig = {
               label: t('A11y Pattern Decals'),
               description: t('Enable accessible geometric texture decals for color-blind viewers (W3C A11y)'),
               default: false,
+              renderTrigger: true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'custom_colors_json',
+            config: {
+              type: 'TextAreaControl',
+              language: 'json',
+              label: t('Mappa Colori Personalizzata (JSON)'),
+              description: t(
+                'Mappa manuale dei colori in formato JSON (es. {"SSN": "#3a6a9b", "Convenzioni": "#1c3d5e", "Solventi": "#bcd5ea"}). Ha massima priorità su palette e dashboard.',
+              ),
+              default: '',
+              renderTrigger: true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'renderer',
+            config: {
+              type: 'SelectControl',
+              label: t('Rendering Engine'),
+              description: t('Canvas (consigliato per 3D ad alte prestazioni) oppure SVG (permette stilizzazione diretta da CSS di dashboard)'),
+              choices: [
+                ['canvas', t('Canvas (Default - Prestazioni 60fps)')],
+                ['svg', t('SVG (Vettoriale - Stilizzabile via CSS)')],
+              ],
+              default: 'canvas',
               renderTrigger: true,
             },
           },
@@ -329,6 +348,18 @@ const config: ControlPanelConfig = {
       controlSetRows: [
         [
           {
+            name: 'secondary_metrics',
+            config: {
+              ...sharedControls.metrics,
+              label: t('Secondary Metrics (Right Axis)'),
+              description: t('Optional metrics plotted on the independent right secondary Y-axis (e.g., Tasso %, Degenza Media, Costo Unitario)'),
+              multi: true,
+              validators: [],
+            },
+          },
+        ],
+        [
+          {
             name: 'secondary_series_type',
             config: {
               type: 'SelectControl',
@@ -472,6 +503,19 @@ const config: ControlPanelConfig = {
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
                 Boolean(controls?.showBenchmark?.value) && controls?.benchmarkType?.value === 'fixed_value',
+            },
+          },
+          {
+            name: 'target_metric',
+            config: {
+              ...sharedControls.metric,
+              label: t('Dynamic Target Metric'),
+              description: t('Dynamic benchmark target metric (e.g. Budget, Target) used for reference line and delta %'),
+              clearable: true,
+              validators: [],
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls?.showBenchmark?.value) && controls?.benchmarkType?.value === 'target_metric',
             },
           },
           {

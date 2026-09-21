@@ -14,6 +14,9 @@ export default function transformProps(chartProps) {
     const fd = (formData || {});
     const data = (queriesData?.[0]?.data || []);
     const { x_axis, x_axis_group, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', secondary_area_gradient = true, secondary_line_width = 3, secondary_line_color = '#ea580c', theme_mode = 'light', enable_a11y_decal = false, combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, toolbar_show_view_mode = true, toolbar_show_orientation = true, toolbar_show_stacking = true, toolbar_show_dual_axis = true, toolbar_show_breakdown_toggle = true, toolbar_show_benchmark = true, toolbar_show_export = true, x_axis_title, y_axis_title, } = fd;
+    const rawFd = (chartProps.rawFormData || {});
+    const filterState = chartProps.filterState || {};
+    const selectedValues = ensureIsArray(filterState.selectedValues || filterState.value);
     // Helper to extract string column name from string, Column object, or adhoc column
     const getColName = (col) => {
         if (!col)
@@ -77,23 +80,85 @@ export default function transformProps(chartProps) {
         ? target_metric.label || target_metric.metric_name
         : target_metric ? String(target_metric) : undefined;
     const formatter = getNumberFormatter(numberFormat);
-    // Palette resolution with scale support
-    let palette = DEFAULT_COLORS;
-    let getColor = (key, idx) => palette[idx % palette.length];
-    if (color_scheme) {
+    // 1. Resolve Dashboard Label Colors & Manual JSON Colors
+    // Dashboard metadata passes label_colors in rawFormData.label_colors or formData.label_colors
+    const dashLabelColors = {
+        ...(rawFd.label_colors || {}),
+        ...(fd.label_colors || {}),
+    };
+    // Parse manual custom_colors_json if provided
+    let manualJsonColors = {};
+    if (fd.custom_colors_json) {
         try {
-            const scale = CategoricalColorNamespace.getScale(color_scheme);
-            if (scale) {
-                if (typeof scale.colors === 'object' && Array.isArray(scale.colors)) {
-                    palette = scale.colors;
-                }
-                getColor = (key, idx) => scale.getColor(key) || palette[idx % palette.length];
+            if (typeof fd.custom_colors_json === 'string' && fd.custom_colors_json.trim()) {
+                manualJsonColors = JSON.parse(fd.custom_colors_json);
+            }
+            else if (typeof fd.custom_colors_json === 'object') {
+                manualJsonColors = fd.custom_colors_json;
+            }
+        }
+        catch (e) {
+            console.warn('[StratumBar] Errore nel parsing di custom_colors_json:', e);
+        }
+    }
+    // Combined explicit label colors (manual JSON takes top priority, then dashboard label_colors)
+    const combinedLabelColors = {
+        ...dashLabelColors,
+        ...manualJsonColors,
+    };
+    // Helper for case-insensitive lookup in label colors
+    const lookupColor = (key) => {
+        if (!key)
+            return undefined;
+        if (combinedLabelColors[key])
+            return combinedLabelColors[key];
+        const lowerKey = key.toLowerCase();
+        const found = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === lowerKey);
+        if (found)
+            return combinedLabelColors[found];
+        // If key has compound separator ' · ', check secondary part (breakdown dimension)
+        if (key.includes(' · ')) {
+            const parts = key.split(' · ');
+            for (const p of parts) {
+                const trimmed = p.trim();
+                if (combinedLabelColors[trimmed])
+                    return combinedLabelColors[trimmed];
+                const subFound = Object.keys(combinedLabelColors).find(k => k.toLowerCase() === trimmed.toLowerCase());
+                if (subFound)
+                    return combinedLabelColors[subFound];
+            }
+        }
+        return undefined;
+    };
+    // Effective color scheme: prioritize dashboard color scheme if present
+    const effectiveColorScheme = fd.color_scheme || rawFd.color_scheme;
+    let palette = DEFAULT_COLORS;
+    let scaleInstance = null;
+    if (effectiveColorScheme) {
+        try {
+            scaleInstance = CategoricalColorNamespace.getScale(effectiveColorScheme);
+            if (scaleInstance && typeof scaleInstance.colors === 'object' && Array.isArray(scaleInstance.colors)) {
+                palette = scaleInstance.colors;
             }
         }
         catch {
             // Fallback to default
         }
     }
+    const getColor = (key, idx) => {
+        // 1. Direct or compound match in dashboard label_colors / manual JSON
+        const explicit = lookupColor(key);
+        if (explicit)
+            return explicit;
+        // 2. Superset Categorical scale (e.g. wavesOfBlue)
+        if (scaleInstance && typeof scaleInstance.getColor === 'function') {
+            const scaleColor = scaleInstance.getColor(key);
+            if (scaleColor)
+                return scaleColor;
+        }
+        // 3. Sequential palette fallback
+        return palette[idx % palette.length];
+    };
     // 2. Determine Data Structure: PIVOTED vs UNPIVOTED
     // In Superset, Timeseries pivotOperator pivots the dataframe:
     // sampleRow has columns like: { CANALE: 'App', 'Convenzioni': 7, 'Libera professione': 13, 'SSN': 120, 'Solventi': 17 }
@@ -407,20 +472,41 @@ export default function transformProps(chartProps) {
             });
         });
     }
-    // 4. Cross-filtering hook
+    // 4. Cross-filtering hook with toggle support
     const { setDataMask, onAddFilter } = (hooks || {});
+    const currentSelected = selectedValues;
     const onCrossFilter = (category, seriesName) => {
         if (!emit_filter)
             return;
+        // Compound key or plain category
+        const filterKey = seriesName && actualBreakdownKey && seriesName !== primaryMetric
+            ? `${category} · ${seriesName}`
+            : category;
+        // Toggle off if already selected
+        const isAlreadySelected = currentSelected.includes(filterKey) || currentSelected.includes(category);
+        if (isAlreadySelected) {
+            if (typeof setDataMask === 'function') {
+                setDataMask({
+                    extraFormData: {
+                        filters: [],
+                    },
+                    filterState: {
+                        value: null,
+                        selectedValues: null,
+                    },
+                });
+            }
+            return;
+        }
         const filters = [];
         if (category.includes(' · ') && actualBreakdownKey) {
             const parts = category.split(' · ');
-            filters.push({ col: actualXKey, op: 'IN', val: [parts[0]] });
-            filters.push({ col: actualBreakdownKey, op: 'IN', val: [parts[1]] });
+            filters.push({ col: actualXKey, op: 'IN', val: [parts[0].trim()] });
+            filters.push({ col: actualBreakdownKey, op: 'IN', val: [parts[1].trim()] });
         }
         else {
             filters.push({ col: actualXKey, op: 'IN', val: [category] });
-            if (seriesName && actualBreakdownKey) {
+            if (seriesName && actualBreakdownKey && seriesName !== primaryMetric) {
                 filters.push({ col: actualBreakdownKey, op: 'IN', val: [seriesName] });
             }
         }
@@ -430,8 +516,8 @@ export default function transformProps(chartProps) {
                     filters,
                 },
                 filterState: {
-                    value: [category],
-                    label: category,
+                    value: filters.map(f => f.val),
+                    selectedValues: [filterKey, category],
                 },
             });
         }
@@ -492,6 +578,9 @@ export default function transformProps(chartProps) {
             showExport: toolbar_show_export !== false,
         },
         formData: fd,
+        selectedValues,
+        labelColors: combinedLabelColors,
+        renderer: fd.renderer || 'canvas',
         onCrossFilter,
     };
 }

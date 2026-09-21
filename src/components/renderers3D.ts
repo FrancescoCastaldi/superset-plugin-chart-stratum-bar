@@ -138,6 +138,14 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
         let x0: number;
         let x1: number;
 
+        const catName = categories[categoryIndex] || '';
+        const hasSelection = Boolean(props.selectedValues && props.selectedValues.length > 0);
+        const isSelected = !hasSelection ||
+          props.selectedValues!.includes(catName) ||
+          props.selectedValues!.includes(s.name) ||
+          props.selectedValues!.includes(`${catName} · ${s.name}`);
+        const itemOpacity = isSelected ? 1.0 : 0.28;
+
         if (isVertical) {
           // Vertical 3D Column / Prism
           const bandWidth = api.size([1, 0])[0];
@@ -294,6 +302,10 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             });
           }
 
+          children.forEach((c: any) => {
+            if (c.style) c.style.opacity = itemOpacity;
+          });
+
           return {
             type: 'group',
             children,
@@ -408,13 +420,20 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             });
           }
 
+          children.forEach((c: any) => {
+            if (c.style) c.style.opacity = itemOpacity;
+          });
+
           return {
             type: 'group',
             children,
           };
         }
       },
-      data: s.data.map((v, i) => [i, v]),
+      data: s.data.map((v, i) => ({
+        name: categories[i],
+        value: [i, v],
+      })),
       z: 2 + seriesIdx,
     };
 

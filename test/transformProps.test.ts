@@ -192,11 +192,80 @@ describe('StratumBar transformProps', () => {
     expect(transformed.series[1].name).toBe('Privato');
   });
 
-  it('should cross-filter both dimensions when clicking a compound label', () => {
+  it('should prioritize dashboard label_colors for series matching keys', () => {
+    const chartProps: any = {
+      width: 500,
+      height: 400,
+      rawFormData: {
+        label_colors: {
+          SSN: '#3a6a9b',
+          Convenzioni: '#1c3d5e',
+          'Libera professione': '#7aa8cf',
+          Solventi: '#bcd5ea',
+        },
+      },
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '1__table',
+        x_axis: 'CANALE',
+        groupby: ['CANALE', 'REGIME'],
+        metrics: ['richieste'],
+      },
+      queriesData: [
+        {
+          data: [
+            { CANALE: 'App', REGIME: 'Convenzioni', richieste: 10 },
+            { CANALE: 'App', REGIME: 'SSN', richieste: 100 },
+          ],
+        },
+      ],
+    };
+
+    const transformed = transformProps(chartProps);
+    const convSeries = transformed.series.find(s => s.name === 'Convenzioni');
+    const ssnSeries = transformed.series.find(s => s.name === 'SSN');
+
+    expect(convSeries?.color).toBe('#1c3d5e');
+    expect(ssnSeries?.color).toBe('#3a6a9b');
+  });
+
+  it('should prioritize custom_colors_json over dashboard label_colors', () => {
+    const chartProps: any = {
+      width: 500,
+      height: 400,
+      rawFormData: {
+        label_colors: {
+          SSN: '#3a6a9b',
+        },
+      },
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '1__table',
+        x_axis: 'CANALE',
+        groupby: ['CANALE', 'REGIME'],
+        metrics: ['richieste'],
+        custom_colors_json: JSON.stringify({ SSN: '#ff0000' }),
+      },
+      queriesData: [
+        {
+          data: [{ CANALE: 'App', REGIME: 'SSN', richieste: 100 }],
+        },
+      ],
+    };
+
+    const transformed = transformProps(chartProps);
+    const ssnSeries = transformed.series.find(s => s.name === 'SSN');
+    expect(ssnSeries?.color).toBe('#ff0000');
+  });
+
+  it('should toggle off (clear) cross-filter when clicked item is already selected', () => {
     const setDataMaskMock = jest.fn();
     const chartProps: any = {
       width: 500,
       height: 400,
+      filterState: {
+        selectedValues: ['App · SSN'],
+      },
       formData: {
         viz_type: 'stratum_bar',
         datasource: '1__table',
@@ -205,22 +274,24 @@ describe('StratumBar transformProps', () => {
         metrics: ['richieste'],
         emit_filter: true,
       },
-      queriesData: [{ data: [{ CANALE: 'Online', REGIME: 'SSN', richieste: 500 }] }],
+      queriesData: [{ data: [{ CANALE: 'App', REGIME: 'SSN', richieste: 100 }] }],
       hooks: {
         setDataMask: setDataMaskMock,
       },
     };
 
     const transformed = transformProps(chartProps);
-    transformed.onCrossFilter?.('Online · SSN');
+    // Clicking already selected category should toggle off (clear)
+    transformed.onCrossFilter?.('App · SSN');
 
     expect(setDataMaskMock).toHaveBeenCalledWith(
       expect.objectContaining({
         extraFormData: {
-          filters: [
-            { col: 'CANALE', op: 'IN', val: ['Online'] },
-            { col: 'REGIME', op: 'IN', val: ['SSN'] },
-          ],
+          filters: [],
+        },
+        filterState: {
+          value: null,
+          selectedValues: null,
         },
       }),
     );

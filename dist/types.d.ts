@@ -73,6 +73,9 @@ export interface StratumBarFormData extends QueryFormData {
     toolbar_show_breakdown_toggle?: boolean;
     toolbar_show_benchmark?: boolean;
     toolbar_show_export?: boolean;
+    custom_colors_json?: string;
+    label_colors?: Record<string, string>;
+    renderer?: 'canvas' | 'svg';
 }
 export interface StratumBarTransformedProps {
     width: number;
@@ -127,6 +130,9 @@ export interface StratumBarTransformedProps {
         showExport: boolean;
     };
     formData: StratumBarFormData;
+    selectedValues?: string[];
+    labelColors?: Record<string, string>;
+    renderer?: 'canvas' | 'svg';
     onCrossFilter?: (category: string, seriesName?: string) => void;
 }
 export type StratumBarChartProps = ChartProps & {

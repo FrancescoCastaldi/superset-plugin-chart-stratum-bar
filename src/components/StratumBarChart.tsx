@@ -91,12 +91,39 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     return base;
   }, [combineBreakdown, combinedSeries, initialSeries, hasDualYAxis]);
 
+  // Support manual colors defined in Dashboard CSS via custom properties:
+  // e.g. --color-ssn: #3a6a9b; or --stratum-color-ssn: #3a6a9b;
+  const seriesWithCssOverrides = useMemo(() => {
+    if (!chartContainerRef.current) return activeSeries;
+    try {
+      const computed = window.getComputedStyle(chartContainerRef.current);
+      return activeSeries.map(s => {
+        const key = s.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        const candidates = [
+          `--color-${key}`,
+          `--stratum-color-${key}`,
+          `--${key}-color`,
+          `--color-${s.key.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+        ];
+        for (const c of candidates) {
+          const val = computed.getPropertyValue(c)?.trim();
+          if (val) {
+            return { ...s, color: val };
+          }
+        }
+        return s;
+      });
+    } catch {
+      return activeSeries;
+    }
+  }, [activeSeries]);
+
   // Merge runtime state into effective props passed to renderers
   const effectiveProps = useMemo(() => {
     return {
       ...props,
       categories: activeCategories,
-      series: activeSeries,
+      series: seriesWithCssOverrides,
       viewMode,
       orientation,
       stacking,
@@ -105,8 +132,9 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       hasDualYAxis,
       showBenchmark,
       benchmark: showBenchmark ? props.benchmark : undefined,
+      selectedValues: props.selectedValues,
     };
-  }, [props, activeCategories, activeSeries, viewMode, orientation, stacking, tilt3D, depth3D, hasDualYAxis, showBenchmark]);
+  }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, hasDualYAxis, showBenchmark]);
 
   // Compute option using either 2D or 3D renderer
   const chartOption = useMemo(() => {
@@ -157,8 +185,9 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     if (!chartContainerRef.current) return;
 
     if (!chartInstanceRef.current) {
+      const chosenRenderer = props.renderer === 'svg' ? 'svg' : 'canvas';
       chartInstanceRef.current = echarts.init(chartContainerRef.current, undefined, {
-        renderer: 'canvas',
+        renderer: chosenRenderer,
       });
 
       chartInstanceRef.current.on('click', (params: any) => {
@@ -168,6 +197,8 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
 
         if (params.name) {
           selectedCategory = params.name;
+        } else if (params.data && typeof params.data === 'object' && !Array.isArray(params.data) && params.data.name) {
+          selectedCategory = params.data.name;
         } else if (params.data && Array.isArray(params.data) && params.data[0] !== undefined) {
           const catIdx = params.data[0];
           selectedCategory = activeCategories[catIdx] || String(catIdx);
@@ -186,7 +217,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       chartInstanceRef.current.setOption(chartOption as any, true);
       chartInstanceRef.current.resize();
     }
-  }, [chartOption, activeCategories, onCrossFilter]);
+  }, [chartOption, activeCategories, onCrossFilter, props.renderer]);
 
   // Handle auto-resize
   useEffect(() => {
@@ -216,7 +247,11 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const hasSecondarySeries = initialHasDualYAxis || initialSeries.some((s: StratumBarSeries) => s.yAxisIndex === 1);
 
   return (
-    <div className={`stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''}`} style={{ width, height }}>
+    <div
+      className={`stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''} ${props.selectedValues && props.selectedValues.length > 0 ? 'is-filtered' : ''}`}
+      style={{ width, height }}
+      data-selected-values={props.selectedValues?.join(',')}
+    >
       {enableToolbar && (
         <div className="stratum-bar-toolbar">
           <div className="stratum-bar-toolbar-left">

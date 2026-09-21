@@ -43,12 +43,31 @@ export default function buildQuery(formData) {
                 resolvedMetrics.push(sm);
             }
         });
+        // Explicitly merge base filters with extra_form_data filters (native dashboard & cross filters)
+        const baseFilters = ensureIsArray(baseQueryObject.filters);
+        const extraFilters = ensureIsArray(fd.extra_form_data?.filters);
+        const mergedFilters = [...baseFilters];
+        extraFilters.forEach(ef => {
+            if (ef && ef.col) {
+                const alreadyExists = mergedFilters.some(mf => mf.col === ef.col && mf.op === ef.op && JSON.stringify(mf.val) === JSON.stringify(ef.val));
+                if (!alreadyExists) {
+                    mergedFilters.push(ef);
+                }
+            }
+        });
+        // Merge adhoc filters from extra_form_data
+        const baseAdhoc = ensureIsArray(baseQueryObject.adhoc_filters || fd.adhoc_filters);
+        const extraAdhoc = ensureIsArray(fd.extra_form_data?.adhoc_filters);
+        const mergedAdhoc = [...baseAdhoc, ...extraAdhoc];
         return [
             {
                 ...baseQueryObject,
                 columns,
                 groupby: columns,
+                series_columns: rawBreakdown,
                 metrics: resolvedMetrics,
+                filters: mergedFilters,
+                adhoc_filters: mergedAdhoc,
             },
         ];
     });

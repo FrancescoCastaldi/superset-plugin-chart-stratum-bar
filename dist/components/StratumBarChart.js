@@ -62,12 +62,40 @@ const StratumBarChart = props => {
         }
         return base;
     }, [combineBreakdown, combinedSeries, initialSeries, hasDualYAxis]);
+    // Support manual colors defined in Dashboard CSS via custom properties:
+    // e.g. --color-ssn: #3a6a9b; or --stratum-color-ssn: #3a6a9b;
+    const seriesWithCssOverrides = useMemo(() => {
+        if (!chartContainerRef.current)
+            return activeSeries;
+        try {
+            const computed = window.getComputedStyle(chartContainerRef.current);
+            return activeSeries.map(s => {
+                const key = s.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                const candidates = [
+                    `--color-${key}`,
+                    `--stratum-color-${key}`,
+                    `--${key}-color`,
+                    `--color-${s.key.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+                ];
+                for (const c of candidates) {
+                    const val = computed.getPropertyValue(c)?.trim();
+                    if (val) {
+                        return { ...s, color: val };
+                    }
+                }
+                return s;
+            });
+        }
+        catch {
+            return activeSeries;
+        }
+    }, [activeSeries]);
     // Merge runtime state into effective props passed to renderers
     const effectiveProps = useMemo(() => {
         return {
             ...props,
             categories: activeCategories,
-            series: activeSeries,
+            series: seriesWithCssOverrides,
             viewMode,
             orientation,
             stacking,
@@ -76,8 +104,9 @@ const StratumBarChart = props => {
             hasDualYAxis,
             showBenchmark,
             benchmark: showBenchmark ? props.benchmark : undefined,
+            selectedValues: props.selectedValues,
         };
-    }, [props, activeCategories, activeSeries, viewMode, orientation, stacking, tilt3D, depth3D, hasDualYAxis, showBenchmark]);
+    }, [props, activeCategories, seriesWithCssOverrides, viewMode, orientation, stacking, tilt3D, depth3D, hasDualYAxis, showBenchmark]);
     // Compute option using either 2D or 3D renderer
     const chartOption = useMemo(() => {
         if (!activeCategories || activeCategories.length === 0 || !activeSeries || activeSeries.length === 0) {
@@ -126,8 +155,9 @@ const StratumBarChart = props => {
         if (!chartContainerRef.current)
             return;
         if (!chartInstanceRef.current) {
+            const chosenRenderer = props.renderer === 'svg' ? 'svg' : 'canvas';
             chartInstanceRef.current = echarts.init(chartContainerRef.current, undefined, {
-                renderer: 'canvas',
+                renderer: chosenRenderer,
             });
             chartInstanceRef.current.on('click', (params) => {
                 if (!onCrossFilter)
@@ -136,6 +166,9 @@ const StratumBarChart = props => {
                 let selectedSeriesName = '';
                 if (params.name) {
                     selectedCategory = params.name;
+                }
+                else if (params.data && typeof params.data === 'object' && !Array.isArray(params.data) && params.data.name) {
+                    selectedCategory = params.data.name;
                 }
                 else if (params.data && Array.isArray(params.data) && params.data[0] !== undefined) {
                     const catIdx = params.data[0];
@@ -153,7 +186,7 @@ const StratumBarChart = props => {
             chartInstanceRef.current.setOption(chartOption, true);
             chartInstanceRef.current.resize();
         }
-    }, [chartOption, activeCategories, onCrossFilter]);
+    }, [chartOption, activeCategories, onCrossFilter, props.renderer]);
     // Handle auto-resize
     useEffect(() => {
         if (chartInstanceRef.current) {
@@ -171,7 +204,7 @@ const StratumBarChart = props => {
         return (_jsx("div", { className: `stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''}`, style: { width, height }, children: _jsx("div", { className: "stratum-bar-empty", children: _jsx("span", { children: "Nessun dato disponibile da visualizzare nel grafico StratumBar." }) }) }));
     }
     const hasSecondarySeries = initialHasDualYAxis || initialSeries.some((s) => s.yAxisIndex === 1);
-    return (_jsxs("div", { className: `stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''}`, style: { width, height }, children: [enableToolbar && (_jsxs("div", { className: "stratum-bar-toolbar", children: [_jsxs("div", { className: "stratum-bar-toolbar-left", children: [toolbarConfig?.showViewMode !== false && (_jsxs("div", { className: "stratum-bar-segmented", children: [_jsx("button", { type: "button", className: `stratum-bar-btn ${viewMode === '2d' ? 'active' : ''}`, onClick: () => setViewMode('2d'), title: "2D Moderno (Curved)", children: "2D" }), _jsx("button", { type: "button", className: `stratum-bar-btn ${viewMode === '3d' ? 'active' : ''}`, onClick: () => setViewMode('3d'), title: "3D Isometrico Volumetrico", children: "3D" })] })), toolbarConfig?.showOrientation !== false && (_jsx("button", { type: "button", className: `stratum-bar-btn ${orientation === 'horizontal' ? 'active' : ''}`, onClick: () => setOrientation(prev => (prev === 'vertical' ? 'horizontal' : 'vertical')), title: orientation === 'vertical' ? 'Orientamento: Verticale (clicca per Orizzontale)' : 'Orientamento: Orizzontale (clicca per Verticale)', children: orientation === 'vertical' ? '↕ Colonne' : '↔ Barre' })), toolbarConfig?.showStacking !== false && (_jsx("button", { type: "button", className: `stratum-bar-btn ${stacking === 'stack' ? 'active' : ''}`, onClick: () => setStacking(prev => (prev === 'none' ? 'stack' : 'none')), title: stacking === 'none' ? 'Disposizione: Raggruppate (clicca per Impilare)' : 'Disposizione: Impilate (clicca per Raggruppare)', children: stacking === 'stack' ? '☷ Impilate' : '☷ Affiancate' })), toolbarConfig?.showDualAxis !== false && hasSecondarySeries && (_jsxs("button", { type: "button", className: `stratum-bar-btn ${hasDualYAxis ? 'active-secondary' : ''}`, onClick: () => setHasDualYAxis(prev => !prev), title: "Attiva/Disattiva Secondo Asse Y a runtime", children: [_jsx("span", { className: `stratum-bar-dot ${hasDualYAxis ? 'dot-orange' : 'dot-off'}` }), " Asse 2"] })), toolbarConfig?.showBreakdownToggle !== false && canCombineBreakdown && (_jsxs("button", { type: "button", className: `stratum-bar-btn ${combineBreakdown ? 'active-accent' : ''}`, onClick: () => setCombineBreakdown(prev => !prev), title: `Unifica o separa la dimensione "${breakdownDimName || 'Breakdown'}" sull'asse X`, children: [_jsx("span", { className: `stratum-bar-dot ${combineBreakdown ? 'dot-green' : 'dot-off'}` }), " ", breakdownDimName ? `Combina ${breakdownDimName}` : 'Combina'] })), toolbarConfig?.showBenchmark !== false && props.benchmark && (_jsxs("button", { type: "button", className: `stratum-bar-btn ${showBenchmark ? 'active' : ''}`, onClick: () => setShowBenchmark(prev => !prev), title: "Mostra/Nascondi soglia benchmark target a runtime", children: [_jsx("span", { className: `stratum-bar-dot ${showBenchmark ? 'dot-blue' : 'dot-off'}` }), " Target"] }))] }), _jsxs("div", { className: "stratum-bar-toolbar-right", children: [viewMode === '3d' && (_jsxs("div", { className: "stratum-bar-popover-wrapper", children: [_jsx("button", { type: "button", className: `stratum-bar-btn ${showSettings3D ? 'active' : ''}`, onClick: () => setShowSettings3D(prev => !prev), title: "Parametri 3D (Inclinazione & Profondit\u00E0)", children: "\u2699\uFE0F 3D" }), showSettings3D && (_jsxs("div", { className: "stratum-bar-popover", children: [_jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Inclinazione" }), _jsx("input", { type: "range", min: "10", max: "60", value: tilt3D, className: "stratum-bar-slider", onChange: e => setTilt3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [tilt3D, "\u00B0"] })] }), _jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Profondit\u00E0" }), _jsx("input", { type: "range", min: "8", max: "45", value: depth3D, className: "stratum-bar-slider", onChange: e => setDepth3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [depth3D, "px"] })] })] }))] })), toolbarConfig?.showExport !== false && (_jsxs("div", { className: "stratum-bar-segmented", children: [_jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportPNG, title: "Esporta immagine PNG ad alta risoluzione", children: "\uD83D\uDCF7" }), _jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportCSV, title: "Esporta dati in formato CSV", children: "\uD83D\uDCCA" })] }))] })] })), _jsx("div", { className: "stratum-bar-canvas-container", ref: chartContainerRef })] }));
+    return (_jsxs("div", { className: `stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''} ${props.selectedValues && props.selectedValues.length > 0 ? 'is-filtered' : ''}`, style: { width, height }, "data-selected-values": props.selectedValues?.join(','), children: [enableToolbar && (_jsxs("div", { className: "stratum-bar-toolbar", children: [_jsxs("div", { className: "stratum-bar-toolbar-left", children: [toolbarConfig?.showViewMode !== false && (_jsxs("div", { className: "stratum-bar-segmented", children: [_jsx("button", { type: "button", className: `stratum-bar-btn ${viewMode === '2d' ? 'active' : ''}`, onClick: () => setViewMode('2d'), title: "2D Moderno (Curved)", children: "2D" }), _jsx("button", { type: "button", className: `stratum-bar-btn ${viewMode === '3d' ? 'active' : ''}`, onClick: () => setViewMode('3d'), title: "3D Isometrico Volumetrico", children: "3D" })] })), toolbarConfig?.showOrientation !== false && (_jsx("button", { type: "button", className: `stratum-bar-btn ${orientation === 'horizontal' ? 'active' : ''}`, onClick: () => setOrientation(prev => (prev === 'vertical' ? 'horizontal' : 'vertical')), title: orientation === 'vertical' ? 'Orientamento: Verticale (clicca per Orizzontale)' : 'Orientamento: Orizzontale (clicca per Verticale)', children: orientation === 'vertical' ? '↕ Colonne' : '↔ Barre' })), toolbarConfig?.showStacking !== false && (_jsx("button", { type: "button", className: `stratum-bar-btn ${stacking === 'stack' ? 'active' : ''}`, onClick: () => setStacking(prev => (prev === 'none' ? 'stack' : 'none')), title: stacking === 'none' ? 'Disposizione: Raggruppate (clicca per Impilare)' : 'Disposizione: Impilate (clicca per Raggruppare)', children: stacking === 'stack' ? '☷ Impilate' : '☷ Affiancate' })), toolbarConfig?.showDualAxis !== false && hasSecondarySeries && (_jsxs("button", { type: "button", className: `stratum-bar-btn ${hasDualYAxis ? 'active-secondary' : ''}`, onClick: () => setHasDualYAxis(prev => !prev), title: "Attiva/Disattiva Secondo Asse Y a runtime", children: [_jsx("span", { className: `stratum-bar-dot ${hasDualYAxis ? 'dot-orange' : 'dot-off'}` }), " Asse 2"] })), toolbarConfig?.showBreakdownToggle !== false && canCombineBreakdown && (_jsxs("button", { type: "button", className: `stratum-bar-btn ${combineBreakdown ? 'active-accent' : ''}`, onClick: () => setCombineBreakdown(prev => !prev), title: `Unifica o separa la dimensione "${breakdownDimName || 'Breakdown'}" sull'asse X`, children: [_jsx("span", { className: `stratum-bar-dot ${combineBreakdown ? 'dot-green' : 'dot-off'}` }), " ", breakdownDimName ? `Combina ${breakdownDimName}` : 'Combina'] })), toolbarConfig?.showBenchmark !== false && props.benchmark && (_jsxs("button", { type: "button", className: `stratum-bar-btn ${showBenchmark ? 'active' : ''}`, onClick: () => setShowBenchmark(prev => !prev), title: "Mostra/Nascondi soglia benchmark target a runtime", children: [_jsx("span", { className: `stratum-bar-dot ${showBenchmark ? 'dot-blue' : 'dot-off'}` }), " Target"] }))] }), _jsxs("div", { className: "stratum-bar-toolbar-right", children: [viewMode === '3d' && (_jsxs("div", { className: "stratum-bar-popover-wrapper", children: [_jsx("button", { type: "button", className: `stratum-bar-btn ${showSettings3D ? 'active' : ''}`, onClick: () => setShowSettings3D(prev => !prev), title: "Parametri 3D (Inclinazione & Profondit\u00E0)", children: "\u2699\uFE0F 3D" }), showSettings3D && (_jsxs("div", { className: "stratum-bar-popover", children: [_jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Inclinazione" }), _jsx("input", { type: "range", min: "10", max: "60", value: tilt3D, className: "stratum-bar-slider", onChange: e => setTilt3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [tilt3D, "\u00B0"] })] }), _jsxs("div", { className: "stratum-bar-popover-row", children: [_jsx("span", { children: "Profondit\u00E0" }), _jsx("input", { type: "range", min: "8", max: "45", value: depth3D, className: "stratum-bar-slider", onChange: e => setDepth3D(Number(e.target.value)) }), _jsxs("span", { className: "stratum-bar-val", children: [depth3D, "px"] })] })] }))] })), toolbarConfig?.showExport !== false && (_jsxs("div", { className: "stratum-bar-segmented", children: [_jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportPNG, title: "Esporta immagine PNG ad alta risoluzione", children: "\uD83D\uDCF7" }), _jsx("button", { type: "button", className: "stratum-bar-btn stratum-bar-icon-btn", onClick: handleExportCSV, title: "Esporta dati in formato CSV", children: "\uD83D\uDCCA" })] }))] })] })), _jsx("div", { className: "stratum-bar-canvas-container", ref: chartContainerRef })] }));
 };
 export default StratumBarChart;
 //# sourceMappingURL=StratumBarChart.js.map
