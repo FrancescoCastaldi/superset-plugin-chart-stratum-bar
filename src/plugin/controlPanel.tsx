@@ -19,7 +19,7 @@ const config: ControlPanelConfig = {
               ...sharedControls.groupby,
               label: t('X-Axis / Category Dimension'),
               description: t('Primary category dimension (e.g., Canale di Prenotazione, Reparto, Mese)'),
-              multi: true,
+              multi: false,
               clearable: true,
               validators: [],
             },

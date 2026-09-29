@@ -2,7 +2,15 @@ import { buildQueryContext, QueryContext, ensureIsArray } from '@superset-ui/cor
 import { StratumBarFormData } from '../types';
 
 export default function buildQuery(formData: StratumBarFormData): QueryContext {
-  const fd: any = formData || {};
+  const fd: any = { ...(formData || {}) };
+  // Sanitize x_axis and x_axis_group so Superset backend never receives a list for x_axis
+  if (Array.isArray(fd.x_axis)) {
+    fd.x_axis = fd.x_axis.length > 0 ? fd.x_axis[0] : null;
+  }
+  if (Array.isArray(fd.x_axis_group)) {
+    fd.x_axis_group = fd.x_axis_group.length > 0 ? fd.x_axis_group[0] : null;
+  }
+
   const {
     x_axis,
     x_axis_group,
@@ -12,7 +20,7 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     secondary_metrics,
   } = fd;
 
-  return buildQueryContext(formData as any, (baseQueryObject: any) => {
+  return buildQueryContext(fd as any, (baseQueryObject: any) => {
     // Helper to extract column key
     const getDimKey = (col: any): string => {
       if (!col) return '';

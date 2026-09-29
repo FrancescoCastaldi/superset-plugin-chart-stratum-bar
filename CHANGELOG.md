@@ -4,6 +4,13 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.12] - 2026-09-29
+
+### Fixed
+- **X-Axis Single Dimension Enforcement & Unhashable Type Fix (`controlPanel.tsx` & `buildQuery.ts`)**:
+  - Set `multi: false` for `x_axis` control in `controlPanel.tsx` to match Superset core standards, preventing dimensions from being serialized as an array of strings in chart formData.
+  - Added defensive sanitization in `buildQuery.ts` ensuring `formData.x_axis` and `formData.x_axis_group` are unwrapped to scalar strings before invoking `buildQueryContext`, completely eliminating backend `TypeError: unhashable type: 'list'` (Issue 1011 / DB engine error) across Dashboards and Explore views.
+
 ## [0.3.11] - 2026-09-29
 
 ### Fixed
