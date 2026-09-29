@@ -16,10 +16,11 @@ export function getCategoryAxisConfig(categories, isVertical, isDark, axisTitle)
         nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 0, 0, 8] },
     };
 }
-export function getValueAxisConfig(isVertical, isDark, axisTitle, maxVal) {
+export function getValueAxisConfig(isVertical, isDark, axisTitle, maxVal, minVal) {
     return {
         type: 'value',
-        max: maxVal,
+        max: maxVal !== undefined && maxVal > 0 ? maxVal : undefined,
+        min: minVal !== undefined && minVal < 0 ? minVal : undefined,
         axisLabel: {
             color: isDark ? '#94a3b8' : '#6b7280',
             fontSize: 11,

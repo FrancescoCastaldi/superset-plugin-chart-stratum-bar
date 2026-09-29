@@ -4,6 +4,14 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.10] - 2026-09-29
+
+### Added
+- **Bi-Directional Bar Rendering & Negative Value Support (`minVal`)**:
+  - Enhanced `renderers2D.ts` and `echartsUtils.ts` to compute both `maxVal` and `minVal`, properly passing `min` to ECharts `getValueAxisConfig` when datasets include negative numbers (e.g. negative percentage variations, drops, contraction deltas).
+  - Added smart bi-directional bar borderRadius: inverted rounding to bottom/left for negative bars to gracefully reflect outward direction.
+  - Implemented dynamic label position callback: positive values sit atop/right of bars, while negative values sit below/left.
+
 ## [0.3.9] - 2026-09-29
 
 ### Fixed

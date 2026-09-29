@@ -12,20 +12,26 @@ export function get2DBarOption(props) {
         mode: axisBreakMode,
         threshold: axisBreakThreshold,
     });
-    // Calculate max value for track background and primary axis
+    // Calculate max and min values for track background and primary axis
     let maxVal = 0;
+    let minVal = 0;
     if (isStacked) {
         for (let c = 0; c < categories.length; c++) {
-            let sum = 0;
+            let posSum = 0;
+            let negSum = 0;
             for (const s of series) {
                 if (s.yAxisIndex === 1)
                     continue;
                 const v = s.data[c];
-                if (typeof v === 'number' && !isNaN(v) && v > 0)
-                    sum += v;
+                if (typeof v === 'number' && !isNaN(v)) {
+                    if (v > 0) posSum += v;
+                    else negSum += v;
+                }
             }
-            if (sum > maxVal)
-                maxVal = sum;
+            if (posSum > maxVal)
+                maxVal = posSum;
+            if (negSum < minVal)
+                minVal = negSum;
         }
     }
     else {
@@ -33,19 +39,24 @@ export function get2DBarOption(props) {
             if (s.yAxisIndex === 1)
                 continue;
             for (const v of s.data) {
-                if (typeof v === 'number' && v > maxVal)
-                    maxVal = v;
+                if (typeof v === 'number' && !isNaN(v)) {
+                    if (v > maxVal) maxVal = v;
+                    if (v < minVal) minVal = v;
+                }
             }
         }
     }
     if (benchmark && benchmark.value > maxVal)
         maxVal = benchmark.value;
-    const effectiveMaxVal = axisBreak.enabled ? axisBreak.displayMax : maxVal;
-    const trackMax = Math.ceil(effectiveMaxVal * 1.15) || 100;
+    if (benchmark && benchmark.value < minVal)
+        minVal = benchmark.value;
+    const effectiveMaxVal = axisBreak.enabled && axisBreak.hasOutliers ? axisBreak.displayMax : (maxVal > 0 ? maxVal : undefined);
+    const effectiveMinVal = minVal < 0 ? minVal : undefined;
+    const trackMax = Math.ceil((effectiveMaxVal || 100) * 1.15);
     // Category Axis
     const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
-    // Value Axis (Primary) - pass effective max so outlier zone or standard scale has proper limit
-    const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisBreak.enabled ? axisBreak.displayMax : undefined);
+    // Value Axis (Primary) - pass effective max and min so outlier zone or standard scale has proper limit
+    const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, effectiveMaxVal, effectiveMinVal);
     // Secondary Value Axis (Right Y-Axis - Color-coded)
     const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
     const echartsSeries = [];
@@ -161,12 +172,17 @@ export function get2DBarOption(props) {
             const { visualVal, isCapped, originalVal } = axisBreak.enabled && !isSecondary
                 ? transformValueForAxisBreak(val, axisBreak)
                 : { visualVal: val, isCapped: false, originalVal: val };
+            const isNegative = typeof visualVal === 'number' && visualVal < 0;
+            const itemRadius = isVertical
+                ? (isNegative ? [0, 0, barBorderRadius, barBorderRadius] : [barBorderRadius, barBorderRadius, 0, 0])
+                : (isNegative ? [barBorderRadius, 0, 0, barBorderRadius] : [0, barBorderRadius, barBorderRadius, 0]);
             return {
                 value: visualVal,
                 originalVal: originalVal,
                 isCapped: isCapped,
                 name: catName,
                 itemStyle: {
+                    borderRadius: itemRadius,
                     opacity: isSelected ? 1.0 : 0.28,
                 },
             };
@@ -195,11 +211,15 @@ export function get2DBarOption(props) {
             },
             label: {
                 show: showValue,
-                position: valuePosition === 'inside'
-                    ? 'inside'
-                    : (stacking !== 'none'
-                        ? 'inside'
-                        : (isVertical ? 'top' : 'right')),
+                position: (params) => {
+                    if (valuePosition === 'inside' || stacking !== 'none') return 'inside';
+                    const val = params?.value;
+                    const isNeg = typeof val === 'number' && val < 0;
+                    if (isVertical) {
+                        return isNeg ? 'bottom' : 'top';
+                    }
+                    return isNeg ? 'left' : 'right';
+                },
                 rotate: valuePosition === 'slanted' ? (isVertical ? 45 : -35) : 0,
                 align: valuePosition === 'slanted'
                     ? 'left'

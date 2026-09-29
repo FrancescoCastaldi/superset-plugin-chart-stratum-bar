@@ -19,10 +19,17 @@ export function getCategoryAxisConfig(categories: string[], isVertical: boolean,
   };
 }
 
-export function getValueAxisConfig(isVertical: boolean, isDark: boolean, axisTitle?: string, maxVal?: number) {
+export function getValueAxisConfig(
+  isVertical: boolean,
+  isDark: boolean,
+  axisTitle?: string,
+  maxVal?: number,
+  minVal?: number,
+) {
   return {
     type: 'value' as const,
-    max: maxVal,
+    max: maxVal !== undefined && maxVal > 0 ? maxVal : undefined,
+    min: minVal !== undefined && minVal < 0 ? minVal : undefined,
     axisLabel: {
       color: isDark ? '#94a3b8' : '#6b7280',
       fontSize: 11,
