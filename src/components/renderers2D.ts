@@ -1,6 +1,7 @@
 import { StratumBarTransformedProps } from '../types';
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 import { calculateAxisBreak, transformValueForAxisBreak } from '../utils/axisBreakUtils';
+import { getNumberFormatter } from '@superset-ui/core';
 
 import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 
@@ -16,6 +17,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
     showBenchmark,
     showValue,
     valuePosition,
+    numberFormat,
     colorScheme,
     showLegend,
     legendOrientation,
@@ -218,9 +220,28 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
         : { visualVal: val, isCapped: false, originalVal: val };
 
       const isNegative = typeof visualVal === 'number' && visualVal < 0;
+      const isSignedSeries = !isSecondary && stacking === 'none' && minVal < 0;
       const itemRadius = isVertical
         ? (isNegative ? [0, 0, barBorderRadius, barBorderRadius] : [barBorderRadius, barBorderRadius, 0, 0])
         : (isNegative ? [barBorderRadius, 0, 0, barBorderRadius] : [0, barBorderRadius, barBorderRadius, 0]);
+
+      let itemColor = undefined;
+      if (isSignedSeries && typeof visualVal === 'number') {
+        const posColor = '#1e8e3e';
+        const negColor = '#d93025';
+        const targetColor = visualVal >= 0 ? posColor : negColor;
+        itemColor = {
+          type: 'linear' as const,
+          x: 0,
+          y: 0,
+          x2: isVertical ? 0 : 1,
+          y2: isVertical ? 1 : 0,
+          colorStops: [
+            { offset: 0, color: targetColor },
+            { offset: 1, color: adjustColorBrightness(targetColor, -15) },
+          ],
+        };
+      }
 
       return {
         value: visualVal,
@@ -228,6 +249,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
         isCapped: isCapped,
         name: catName,
         itemStyle: {
+          color: itemColor,
           borderRadius: itemRadius,
           opacity: isSelected ? 1.0 : 0.28,
         },
@@ -294,7 +316,16 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
           if (typeof realVal === 'number') {
             // In stacked mode suppress near-zero labels (< 1.5% of max) to avoid clutter
             if (stacking !== 'none' && effectiveMaxVal > 0 && Math.abs(realVal) / effectiveMaxVal < 0.015) return '';
-            const formatted = realVal.toLocaleString('it-IT');
+            let formatted = '';
+            try {
+              if (numberFormat) {
+                formatted = getNumberFormatter(numberFormat)(realVal);
+              } else {
+                formatted = realVal.toLocaleString('it-IT');
+              }
+            } catch {
+              formatted = realVal.toLocaleString('it-IT');
+            }
             return isCapped ? `// ${formatted}` : formatted;
           }
           return isCapped ? `// ${String(realVal)}` : String(realVal);

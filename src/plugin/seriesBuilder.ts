@@ -36,7 +36,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
   const categoriesSet = new Set<string>();
   data.forEach(row => {
-    const val = row[actualXKey];
+    const val = row[actualXKey] ?? row[resolvedXAxis] ?? Object.values(row)[0];
     if (val !== null && val !== undefined) {
       if (combineFlag && actualBreakdownKey && row[actualBreakdownKey] !== undefined && row[actualBreakdownKey] !== null) {
         categoriesSet.add(`${val} · ${row[actualBreakdownKey]}`);
@@ -178,9 +178,17 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       const seriesItems: StratumBarSeriesItem[] = [];
 
       repCategories.forEach(cat => {
-        const row = data.find(r => String(r[resolvedXAxis]) === cat);
-        const rawVal = row ? row[mKey] : null;
-        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+        const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
+        let rawVal: any = null;
+        if (row) {
+          if (mKey in row) {
+            rawVal = row[mKey];
+          } else {
+            const matchKey = Object.keys(row).find(k => k.toLowerCase() === mKey.toLowerCase());
+            rawVal = matchKey ? row[matchKey] : row[mKey];
+          }
+        }
+        const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
         seriesData.push(numVal);
 
         seriesItems.push({
@@ -206,9 +214,19 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     const seriesItems: StratumBarSeriesItem[] = [];
 
     repCategories.forEach(cat => {
-      const row = data.find(r => String(r[resolvedXAxis]) === cat);
-      const rawVal = row ? row[primaryMetric] : null;
-      const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+      const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
+      let rawVal: any = null;
+      if (row) {
+        if (actualMetricKey in row) {
+          rawVal = row[actualMetricKey];
+        } else {
+          const matchKey = Object.keys(row).find(k => k.toLowerCase() === primaryMetric.toLowerCase())
+            || Object.keys(row).find(k => k.toLowerCase() === actualMetricKey.toLowerCase())
+            || Object.keys(row).find(k => k !== actualXKey && k !== '__timestamp' && !k.startsWith('__') && typeof row[k] === 'number');
+          rawVal = matchKey ? row[matchKey] : row[primaryMetric];
+        }
+      }
+      const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
       seriesData.push(numVal);
 
       const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;

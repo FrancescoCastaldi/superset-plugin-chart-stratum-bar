@@ -4,6 +4,16 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.11] - 2026-09-29
+
+### Fixed
+- **Metric and Dimension Key Resolution (`seriesBuilder.ts` & `transformPropsUtils.ts`)**:
+  - Replaced strict `resolvedXAxis` row lookups with priority cascade (`actualXKey ?? resolvedXAxis ?? Object.values(row)[0]`), ensuring category data is 100% matched even when custom adhoc SQL aliases or non-standard casings are used.
+  - Implemented case-insensitive and numeric column fallback for metric values, preventing false-positive empty series states (*"Nessun dato disponibile da visualizzare nel grafico StratumBar"*).
+- **Signed Bar Auto Bicolor Conditioning (`renderers2D.ts`)**:
+  - Implemented automatic bi-color gradient rendering for single-metric signed series containing negative values (`minVal < 0`): positive bars ($\ge 0$) rendered in vibrant green (`#1e8e3e`), negative bars ($< 0$) rendered in vivid red (`#d93025`).
+  - Added full support for `numberFormat` (including signed percentages `+,.1f%`) in 2D bar labels via `@superset-ui/core`'s `getNumberFormatter`.
+
 ## [0.3.10] - 2026-09-29
 
 ### Added
