@@ -34,7 +34,12 @@ export default function buildQuery(formData) {
             columns.push(rawBreakdown[0]);
         }
         // Collect all required metrics including optional target_metric and secondary_metrics
-        const resolvedMetrics = [...ensureIsArray(metrics)];
+        const rawMetrics = fd.metrics && (Array.isArray(fd.metrics) ? fd.metrics.length > 0 : true)
+            ? ensureIsArray(fd.metrics)
+            : fd.metric
+            ? [fd.metric]
+            : [];
+        const resolvedMetrics = [...rawMetrics];
         if (target_metric && !resolvedMetrics.includes(target_metric)) {
             resolvedMetrics.push(target_metric);
         }

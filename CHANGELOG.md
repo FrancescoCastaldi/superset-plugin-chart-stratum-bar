@@ -4,6 +4,16 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.9] - 2026-09-29
+
+### Fixed
+- **Explore Control Panel Required Validations & Duplicate Controls**:
+  - Removed duplicate `metrics` row declaration in `controlPanel.tsx` Query configuration.
+  - Made category dimensions (`x_axis`, `x_axis_group`, `groupby`) and primary metrics fully flexible and clearable (`clearable: true, validators: []`), eliminating blocking red error icons (`❗`) and allow explore queries without artificial constraints.
+- **Metric Schema Backward Compatibility**:
+  - Added robust fallback between `metrics` (multi-array) and `metric` (single string/object) in both `buildQuery.ts` and `transformProps.ts`, preventing blank renderings when switching from legacy single-metric charts.
+  - Updated `StratumBarFormData` interface in `types.ts` to include optional `metric` property.
+
 ## [0.3.8] - 2026-09-21
 
 ### Added

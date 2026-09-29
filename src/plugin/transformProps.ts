@@ -103,7 +103,12 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const breakdownCol = secondaryDimName;
 
   // Resolve metrics
-  const metricList = ensureIsArray(metrics).map(m => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)));
+  const rawMetrics = fd.metrics && (Array.isArray(fd.metrics) ? fd.metrics.length > 0 : true)
+    ? ensureIsArray(fd.metrics)
+    : fd.metric
+    ? [fd.metric]
+    : [];
+  const metricList = rawMetrics.map((m: any) => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)));
   const primaryMetric = metricList[0] || 'value';
   const targetMetricKey = typeof target_metric === 'object' && target_metric !== null
     ? target_metric.label || target_metric.metric_name
