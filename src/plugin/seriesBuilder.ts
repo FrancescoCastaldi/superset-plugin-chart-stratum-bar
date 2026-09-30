@@ -1,5 +1,6 @@
 import { DataRecord } from '@superset-ui/core';
 import { StratumBarSeries, StratumBarSeriesItem } from '../types';
+import { sortCategories } from '../utils/sortingUtils';
 
 export interface BuildRepresentationOptions {
   data: DataRecord[];
@@ -23,6 +24,8 @@ export interface BuildRepresentationOptions {
   combineFlag: boolean;
   sampleRow: any;
   potentialPivotedKeys: string[];
+  sortBy?: 'category' | 'metric';
+  isOrderDesc?: boolean;
 }
 
 export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
@@ -31,7 +34,8 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     targetMetricKey, primaryMetric, metricList, secondaryMetricList,
     getColor, palette, formatter, resolvedXAxis, secFormatter,
     secondary_line_color, secondary_series_type, secPalette,
-    combineFlag, sampleRow, potentialPivotedKeys
+    combineFlag, sampleRow, potentialPivotedKeys,
+    sortBy = 'category', isOrderDesc = false,
   } = options;
 
   const categoriesSet = new Set<string>();
@@ -45,7 +49,11 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       }
     }
   });
-  const repCategories = Array.from(categoriesSet);
+  const rawCategories = Array.from(categoriesSet);
+  const repCategories = sortBy === 'category'
+    ? sortCategories(rawCategories, isOrderDesc)
+    : rawCategories;
+
   const repSeries: StratumBarSeries[] = [];
 
   if (isPivoted) {

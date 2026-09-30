@@ -1,8 +1,15 @@
 import { buildQueryContext, ensureIsArray } from '@superset-ui/core';
 export default function buildQuery(formData) {
-    const fd = formData || {};
+    const fd = { ...(formData || {}) };
+    // Sanitize x_axis and x_axis_group so Superset backend never receives a list for x_axis
+    if (Array.isArray(fd.x_axis)) {
+        fd.x_axis = fd.x_axis.length > 0 ? fd.x_axis[0] : null;
+    }
+    if (Array.isArray(fd.x_axis_group)) {
+        fd.x_axis_group = fd.x_axis_group.length > 0 ? fd.x_axis_group[0] : null;
+    }
     const { x_axis, x_axis_group, groupby = [], metrics = [], target_metric, secondary_metrics, } = fd;
-    return buildQueryContext(formData, (baseQueryObject) => {
+    return buildQueryContext(fd, (baseQueryObject) => {
         // Helper to extract column key
         const getDimKey = (col) => {
             if (!col)
@@ -37,8 +44,8 @@ export default function buildQuery(formData) {
         const rawMetrics = fd.metrics && (Array.isArray(fd.metrics) ? fd.metrics.length > 0 : true)
             ? ensureIsArray(fd.metrics)
             : fd.metric
-            ? [fd.metric]
-            : [];
+                ? [fd.metric]
+                : [];
         const resolvedMetrics = [...rawMetrics];
         if (target_metric && !resolvedMetrics.includes(target_metric)) {
             resolvedMetrics.push(target_metric);
@@ -64,6 +71,29 @@ export default function buildQuery(formData) {
         const baseAdhoc = ensureIsArray(baseQueryObject.adhoc_filters || fd.adhoc_filters);
         const extraAdhoc = ensureIsArray(fd.extra_form_data?.adhoc_filters);
         const mergedAdhoc = [...baseAdhoc, ...extraAdhoc];
+        // Ordering logic: configurable sort by category dimension vs metric value
+        const sortBy = fd.sort_by || (fd.timeseries_limit_metric ? 'metric' : 'category');
+        let orderby = [];
+        if (sortBy === 'category') {
+            // For category, order_desc === true means descending (Z-A / 7-1), false means ascending (A-Z / 1-7)
+            const isOrderDesc = fd.order_desc === true;
+            const catCol = columns.length > 0 ? columns[0] : (fd.x_axis || null);
+            if (catCol) {
+                orderby = [[catCol, !isOrderDesc]];
+            }
+        }
+        else {
+            // sortBy === 'metric'
+            // For metric, order_desc !== false means descending (Top N), false means ascending
+            const isOrderDesc = fd.order_desc !== false;
+            const sortMetric = fd.timeseries_limit_metric || (resolvedMetrics.length > 0 ? resolvedMetrics[0] : null);
+            if (sortMetric) {
+                orderby = [[sortMetric, !isOrderDesc]];
+            }
+        }
+        if (orderby.length === 0 && baseQueryObject.orderby) {
+            orderby = baseQueryObject.orderby;
+        }
         return [
             {
                 ...baseQueryObject,
@@ -71,6 +101,7 @@ export default function buildQuery(formData) {
                 groupby: columns,
                 series_columns: rawBreakdown,
                 metrics: resolvedMetrics,
+                orderby,
                 filters: mergedFilters,
                 adhoc_filters: mergedAdhoc,
             },

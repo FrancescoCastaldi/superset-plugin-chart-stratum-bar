@@ -13,7 +13,7 @@ const config = {
                             ...sharedControls.groupby,
                             label: t('X-Axis / Category Dimension'),
                             description: t('Primary category dimension (e.g., Canale di Prenotazione, Reparto, Mese)'),
-                            multi: true,
+                            multi: false,
                             clearable: true,
                             validators: [],
                         },
@@ -66,6 +66,32 @@ const config = {
                             description: t('Metrics to measure primary bar height (e.g., Numero Richieste, Fatturato)'),
                             clearable: true,
                             validators: [],
+                        },
+                    },
+                ],
+                [
+                    {
+                        name: 'sort_by',
+                        config: {
+                            type: 'SelectControl',
+                            label: t('Criterio di Ordinamento (Sort By)'),
+                            description: t('Scegli se ordinare per Categoria/Dimensione (es. Giorni Lun-Dom, Mesi cronologici) o per Valore Metrica (es. Classifiche Top N)'),
+                            choices: [
+                                ['category', t('Categoria / Dimensione (es. Lun-Dom, Mesi, A-Z)')],
+                                ['metric', t('Valore Metrica (es. Top N, Volume Richieste)')],
+                            ],
+                            default: 'category',
+                            renderTrigger: false,
+                        },
+                    },
+                    {
+                        name: 'order_desc',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Ordinamento Decrescente (Sort Descending)'),
+                            description: t('Se attivo: Z-A o valore più alto in cima. Se disattivo: A-Z / 1-7 cronologico o valore più basso in cima.'),
+                            default: false,
+                            renderTrigger: false,
                         },
                     },
                 ],

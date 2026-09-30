@@ -163,6 +163,10 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const secFormatter = getNumberFormatter(y_axis_2_format);
   const secPalette = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4'];
 
+  // Sorting configuration
+  const sortBy = fd.sort_by || ((fd as any).timeseries_limit_metric ? 'metric' : 'category');
+  const isOrderDesc = fd.order_desc === true;
+
   // Helper to build categories and series for either separated or combined representation
   const buildRepresentation = (combineFlag: boolean) => {
     return buildSeriesRepresentation({
@@ -170,7 +174,8 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       targetMetricKey, primaryMetric, metricList, secondaryMetricList,
       y_axis_2_format, getColor, palette, formatter, resolvedXAxis, secFormatter,
       secondary_line_color, secondary_series_type, secPalette,
-      combineFlag, sampleRow, potentialPivotedKeys
+      combineFlag, sampleRow, potentialPivotedKeys,
+      sortBy, isOrderDesc,
     });
   };
 

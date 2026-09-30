@@ -4,6 +4,21 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.15] - 2026-09-30
+
+### Added
+- **Natural & Chronological Category Sorting Engine (`src/utils/sortingUtils.ts`)**:
+  - Implemented `sortCategories` and `getCategoryRank` for intelligent dimension sorting when `sort_by === 'category'`.
+  - Added native awareness for hospital and business time slots (`8–13`, `13–18`, `18–22`, `22–8`, `08-13`, `08:00 - 13:00`), handling en-dashes (`–`), hyphens (`-`), slashes, and leading zeros.
+  - Automatically sorts time slots chronologically from left to right: `8–13` (Mattina) ➔ `13–18` (Pomeriggio) ➔ `18–22` (Sera) ➔ `22–8` (Notte).
+  - Added support for Italian and English day names (`Lunedì` .. `Domenica`), month names (`Gennaio` .. `Dicembre`), numbered prefixes (`1 - Lunedì`), and natural alphanumeric collation (`2` < `10`, ISO dates).
+  - Comprehensive unit test suite in `test/sortingUtils.test.ts`.
+
+### Changed
+- **Series Representation Sorting Integration (`seriesBuilder.ts` & `transformProps.ts`)**:
+  - Integrated `sortCategories` in `buildSeriesRepresentation`, ensuring that `repCategories` and associated series data arrays are arranged in chronological order before passing them to Apache ECharts.
+  - Passed `sortBy` and `isOrderDesc` from `transformProps.ts` into `buildSeriesRepresentation`.
+
 ## [0.3.14] - 2026-09-30
 
 ### Added

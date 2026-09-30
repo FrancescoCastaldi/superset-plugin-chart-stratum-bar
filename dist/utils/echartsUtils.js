@@ -2,6 +2,7 @@ export function getCategoryAxisConfig(categories, isVertical, isDark, axisTitle)
     return {
         type: 'category',
         data: categories,
+        inverse: !isVertical,
         axisLabel: {
             color: isDark ? '#cbd5e1' : '#4b5563',
             fontSize: 12,

@@ -1,8 +1,9 @@
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 import { calculateAxisBreak, transformValueForAxisBreak } from '../utils/axisBreakUtils';
+import { getNumberFormatter } from '@superset-ui/core';
 import { adjustColorBrightness, hexToRgba } from '../utils/colors';
 export function get2DBarOption(props) {
-    const { categories, series, benchmark, orientation, stacking, barBorderRadius, showTrackBackground, showBenchmark, showValue, valuePosition, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, enableAxisBreak = false, axisBreakMode = 'auto', axisBreakThreshold, } = props;
+    const { categories, series, benchmark, orientation, stacking, barBorderRadius, showTrackBackground, showBenchmark, showValue, valuePosition, numberFormat, colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, enableAxisBreak = false, axisBreakMode = 'auto', axisBreakThreshold, } = props;
     const isDark = themeMode === 'dark';
     const isVertical = orientation === 'vertical';
     const isStacked = stacking !== 'none';
@@ -24,8 +25,10 @@ export function get2DBarOption(props) {
                     continue;
                 const v = s.data[c];
                 if (typeof v === 'number' && !isNaN(v)) {
-                    if (v > 0) posSum += v;
-                    else negSum += v;
+                    if (v > 0)
+                        posSum += v;
+                    else
+                        negSum += v;
                 }
             }
             if (posSum > maxVal)
@@ -40,8 +43,10 @@ export function get2DBarOption(props) {
                 continue;
             for (const v of s.data) {
                 if (typeof v === 'number' && !isNaN(v)) {
-                    if (v > maxVal) maxVal = v;
-                    if (v < minVal) minVal = v;
+                    if (v > maxVal)
+                        maxVal = v;
+                    if (v < minVal)
+                        minVal = v;
                 }
             }
         }
@@ -173,15 +178,34 @@ export function get2DBarOption(props) {
                 ? transformValueForAxisBreak(val, axisBreak)
                 : { visualVal: val, isCapped: false, originalVal: val };
             const isNegative = typeof visualVal === 'number' && visualVal < 0;
+            const isSignedSeries = !isSecondary && stacking === 'none' && minVal < 0;
             const itemRadius = isVertical
                 ? (isNegative ? [0, 0, barBorderRadius, barBorderRadius] : [barBorderRadius, barBorderRadius, 0, 0])
                 : (isNegative ? [barBorderRadius, 0, 0, barBorderRadius] : [0, barBorderRadius, barBorderRadius, 0]);
+            let itemColor = undefined;
+            if (isSignedSeries && typeof visualVal === 'number') {
+                const posColor = '#1e8e3e';
+                const negColor = '#d93025';
+                const targetColor = visualVal >= 0 ? posColor : negColor;
+                itemColor = {
+                    type: 'linear',
+                    x: 0,
+                    y: 0,
+                    x2: isVertical ? 0 : 1,
+                    y2: isVertical ? 1 : 0,
+                    colorStops: [
+                        { offset: 0, color: targetColor },
+                        { offset: 1, color: adjustColorBrightness(targetColor, -15) },
+                    ],
+                };
+            }
             return {
                 value: visualVal,
                 originalVal: originalVal,
                 isCapped: isCapped,
                 name: catName,
                 itemStyle: {
+                    color: itemColor,
                     borderRadius: itemRadius,
                     opacity: isSelected ? 1.0 : 0.28,
                 },
@@ -211,15 +235,9 @@ export function get2DBarOption(props) {
             },
             label: {
                 show: showValue,
-                position: (params) => {
-                    if (valuePosition === 'inside' || stacking !== 'none') return 'inside';
-                    const val = params?.value;
-                    const isNeg = typeof val === 'number' && val < 0;
-                    if (isVertical) {
-                        return isNeg ? 'bottom' : 'top';
-                    }
-                    return isNeg ? 'left' : 'right';
-                },
+                position: (valuePosition === 'inside' || stacking !== 'none')
+                    ? 'inside'
+                    : (isVertical ? 'top' : 'right'),
                 rotate: valuePosition === 'slanted' ? (isVertical ? 45 : -35) : 0,
                 align: valuePosition === 'slanted'
                     ? 'left'
@@ -227,7 +245,7 @@ export function get2DBarOption(props) {
                 verticalAlign: valuePosition === 'slanted'
                     ? 'middle'
                     : (valuePosition === 'inside' ? 'middle' : (isVertical ? 'bottom' : 'middle')),
-                distance: valuePosition === 'slanted' ? 8 : (valuePosition === 'inside' ? 0 : 5),
+                distance: valuePosition === 'slanted' ? 8 : (valuePosition === 'inside' ? 0 : 8),
                 color: (stacking !== 'none' || valuePosition === 'inside')
                     ? '#ffffff'
                     : (isDark ? '#f8fafc' : '#1f2937'),
@@ -249,7 +267,18 @@ export function get2DBarOption(props) {
                         // In stacked mode suppress near-zero labels (< 1.5% of max) to avoid clutter
                         if (stacking !== 'none' && effectiveMaxVal > 0 && Math.abs(realVal) / effectiveMaxVal < 0.015)
                             return '';
-                        const formatted = realVal.toLocaleString('it-IT');
+                        let formatted = '';
+                        try {
+                            if (numberFormat) {
+                                formatted = getNumberFormatter(numberFormat)(realVal);
+                            }
+                            else {
+                                formatted = realVal.toLocaleString('it-IT');
+                            }
+                        }
+                        catch {
+                            formatted = realVal.toLocaleString('it-IT');
+                        }
                         return isCapped ? `// ${formatted}` : formatted;
                     }
                     return isCapped ? `// ${String(realVal)}` : String(realVal);

@@ -6,6 +6,7 @@ export type BarShape3D = 'prism' | 'cylinder';
 export type BenchmarkType = 'fixed_value' | 'average' | 'median' | 'target_metric';
 export type DeltaPolarity = 'normal' | 'inverted';
 export type ValuePosition = 'inside' | 'top' | 'outside' | 'slanted';
+export type SortByMode = 'category' | 'metric';
 export interface StratumBarSeriesItem {
     category: string;
     value: number | null;
@@ -27,7 +28,6 @@ export interface BenchmarkConfig {
     value: number;
     label: string;
 }
-
 export interface StratumBarFormData extends QueryFormData {
     x_axis?: string | string[];
     x_axis_group?: string;
@@ -40,6 +40,8 @@ export interface StratumBarFormData extends QueryFormData {
     y_axis_2_title?: string;
     y_axis_2_format?: string;
     combine_category_breakdown?: boolean;
+    sort_by?: SortByMode;
+    order_desc?: boolean;
     viewMode?: ViewMode;
     orientation?: OrientationType;
     stacking?: StackingMode;

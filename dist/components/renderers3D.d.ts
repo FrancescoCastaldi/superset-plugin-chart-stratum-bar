@@ -2,7 +2,7 @@ import { StratumBarTransformedProps } from '../types';
 export declare function get3DBarOption(props: StratumBarTransformedProps): {
     backgroundColor: string;
     animationDuration: number;
-    animationEasing: "cubicOut";
+    animationEasing: 'cubicOut';
     aria: {
         enabled: boolean;
         decal: {
@@ -17,13 +17,13 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         containLabel: boolean;
     };
     tooltip: {
-        trigger: "axis";
+        trigger: 'axis';
         axisPointer: {
-            type: "cross";
+            type: 'cross';
             crossStyle: {
                 color: string;
                 width: number;
-                type: "dashed";
+                type: 'dashed';
             };
         };
         backgroundColor: string;
@@ -39,7 +39,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
     };
     legend: {
         show: boolean;
-        orient: "vertical" | "horizontal";
+        orient: "horizontal" | "vertical";
         top: string | number;
         left: string | number;
         textStyle: {
@@ -54,9 +54,50 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             };
         }[];
     };
-    xAxis: {
-        type: "category";
+    xAxis: ({
+        type: 'value';
+        max: number | undefined;
+        min: number | undefined;
+        axisLabel: {
+            color: string;
+            fontSize: number;
+            formatter: (val: number) => string;
+        };
+        splitLine: {
+            lineStyle: {
+                color: string;
+                type: 'dashed';
+            };
+        };
+        name: string | undefined;
+        nameTextStyle: {
+            color: string;
+            fontSize: number;
+            padding: number[];
+        };
+    } | {
+        type: 'value';
+        position: "right" | "top";
+        axisLabel: {
+            color: string;
+            fontWeight: number;
+            fontSize: number;
+            formatter: (val: number) => string;
+        };
+        splitLine: {
+            show: boolean;
+        };
+        name: string;
+        nameTextStyle: {
+            color: string;
+            fontWeight: number;
+            fontSize: number;
+            padding: number[];
+        };
+    })[] | {
+        type: 'category';
         data: string[];
+        inverse: boolean;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -74,15 +115,16 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
-        nameLocation: "end";
+        nameLocation: 'end';
         nameTextStyle: {
             color: string;
             fontSize: number;
             padding: number[];
         };
     } | {
-        type: "value";
+        type: 'value';
         max: number | undefined;
+        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -91,7 +133,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         splitLine: {
             lineStyle: {
                 color: string;
-                type: "dashed";
+                type: 'dashed';
             };
         };
         name: string | undefined;
@@ -100,9 +142,11 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
-    } | ({
-        type: "value";
+    };
+    yAxis: ({
+        type: 'value';
         max: number | undefined;
+        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -111,7 +155,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         splitLine: {
             lineStyle: {
                 color: string;
-                type: "dashed";
+                type: 'dashed';
             };
         };
         name: string | undefined;
@@ -121,8 +165,8 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             padding: number[];
         };
     } | {
-        type: "value";
-        position: "top" | "right";
+        type: 'value';
+        position: "right" | "top";
         axisLabel: {
             color: string;
             fontWeight: number;
@@ -139,10 +183,10 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
-    })[];
-    yAxis: {
-        type: "category";
+    })[] | {
+        type: 'category';
         data: string[];
+        inverse: boolean;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -160,15 +204,16 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
-        nameLocation: "end";
+        nameLocation: 'end';
         nameTextStyle: {
             color: string;
             fontSize: number;
             padding: number[];
         };
     } | {
-        type: "value";
+        type: 'value';
         max: number | undefined;
+        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
@@ -177,7 +222,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         splitLine: {
             lineStyle: {
                 color: string;
-                type: "dashed";
+                type: 'dashed';
             };
         };
         name: string | undefined;
@@ -186,46 +231,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
-    } | ({
-        type: "value";
-        max: number | undefined;
-        axisLabel: {
-            color: string;
-            fontSize: number;
-            formatter: (val: number) => string;
-        };
-        splitLine: {
-            lineStyle: {
-                color: string;
-                type: "dashed";
-            };
-        };
-        name: string | undefined;
-        nameTextStyle: {
-            color: string;
-            fontSize: number;
-            padding: number[];
-        };
-    } | {
-        type: "value";
-        position: "top" | "right";
-        axisLabel: {
-            color: string;
-            fontWeight: number;
-            fontSize: number;
-            formatter: (val: number) => string;
-        };
-        splitLine: {
-            show: boolean;
-        };
-        name: string;
-        nameTextStyle: {
-            color: string;
-            fontWeight: number;
-            fontSize: number;
-            padding: number[];
-        };
-    })[];
+    };
     series: any[];
 };
 //# sourceMappingURL=renderers3D.d.ts.map

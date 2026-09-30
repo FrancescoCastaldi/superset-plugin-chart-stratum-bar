@@ -1,8 +1,9 @@
+import { sortCategories } from '../utils/sortingUtils';
 export function buildSeriesRepresentation(options) {
-    const { data, isPivoted, actualXKey, actualBreakdownKey, actualMetricKey, targetMetricKey, primaryMetric, metricList, secondaryMetricList, getColor, palette, formatter, resolvedXAxis, secFormatter, secondary_line_color, secondary_series_type, secPalette, combineFlag, sampleRow, potentialPivotedKeys } = options;
+    const { data, isPivoted, actualXKey, actualBreakdownKey, actualMetricKey, targetMetricKey, primaryMetric, metricList, secondaryMetricList, getColor, palette, formatter, resolvedXAxis, secFormatter, secondary_line_color, secondary_series_type, secPalette, combineFlag, sampleRow, potentialPivotedKeys, sortBy = 'category', isOrderDesc = false, } = options;
     const categoriesSet = new Set();
     data.forEach(row => {
-        const val = row[actualXKey];
+        const val = row[actualXKey] ?? row[resolvedXAxis] ?? Object.values(row)[0];
         if (val !== null && val !== undefined) {
             if (combineFlag && actualBreakdownKey && row[actualBreakdownKey] !== undefined && row[actualBreakdownKey] !== null) {
                 categoriesSet.add(`${val} · ${row[actualBreakdownKey]}`);
@@ -12,7 +13,10 @@ export function buildSeriesRepresentation(options) {
             }
         }
     });
-    const repCategories = Array.from(categoriesSet);
+    const rawCategories = Array.from(categoriesSet);
+    const repCategories = sortBy === 'category'
+        ? sortCategories(rawCategories, isOrderDesc)
+        : rawCategories;
     const repSeries = [];
     if (isPivoted) {
         potentialPivotedKeys.forEach((sName, sIdx) => {
@@ -134,9 +138,18 @@ export function buildSeriesRepresentation(options) {
             const seriesData = [];
             const seriesItems = [];
             repCategories.forEach(cat => {
-                const row = data.find(r => String(r[resolvedXAxis]) === cat);
-                const rawVal = row ? row[mKey] : null;
-                const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+                const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
+                let rawVal = null;
+                if (row) {
+                    if (mKey in row) {
+                        rawVal = row[mKey];
+                    }
+                    else {
+                        const matchKey = Object.keys(row).find(k => k.toLowerCase() === mKey.toLowerCase());
+                        rawVal = matchKey ? row[matchKey] : row[mKey];
+                    }
+                }
+                const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
                 seriesData.push(numVal);
                 seriesItems.push({
                     category: cat,
@@ -160,9 +173,20 @@ export function buildSeriesRepresentation(options) {
         const seriesData = [];
         const seriesItems = [];
         repCategories.forEach(cat => {
-            const row = data.find(r => String(r[resolvedXAxis]) === cat);
-            const rawVal = row ? row[primaryMetric] : null;
-            const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
+            const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
+            let rawVal = null;
+            if (row) {
+                if (actualMetricKey in row) {
+                    rawVal = row[actualMetricKey];
+                }
+                else {
+                    const matchKey = Object.keys(row).find(k => k.toLowerCase() === primaryMetric.toLowerCase())
+                        || Object.keys(row).find(k => k.toLowerCase() === actualMetricKey.toLowerCase())
+                        || Object.keys(row).find(k => k !== actualXKey && k !== '__timestamp' && !k.startsWith('__') && typeof row[k] === 'number');
+                    rawVal = matchKey ? row[matchKey] : row[primaryMetric];
+                }
+            }
+            const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
             seriesData.push(numVal);
             const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
             seriesItems.push({

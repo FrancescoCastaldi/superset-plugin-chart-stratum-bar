@@ -109,8 +109,14 @@ export function resolveDimensions(fd, sampleRow) {
         return rowKeys.find(k => k.toLowerCase() === name.toLowerCase());
     };
     const resolvedXAxis = primaryDimName;
-    const actualXKey = findRowKey(primaryDimName) || primaryDimName;
+    let actualXKey = findRowKey(primaryDimName) || primaryDimName;
     const actualBreakdownKey = findRowKey(secondaryDimName);
+    // Fallback: se actualXKey non è presente nelle chiavi di sampleRow, individua la prima colonna non-numerica
+    if (!(actualXKey in sampleRow) && rowKeys.length > 0) {
+        const candidate = rowKeys.find(k => k !== '__timestamp' && !k.startsWith('__') && typeof sampleRow[k] === 'string');
+        if (candidate)
+            actualXKey = candidate;
+    }
     return { resolvedXAxis, actualXKey, actualBreakdownKey, secondaryDimName };
 }
 export function computeBenchmark(series, showBenchmark, benchmarkType, benchmarkValue, formatter) {
