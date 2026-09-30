@@ -91,10 +91,30 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     const extraAdhoc = ensureIsArray(fd.extra_form_data?.adhoc_filters);
     const mergedAdhoc = [...baseAdhoc, ...extraAdhoc];
 
-    // Ordering logic: ensure SQL query orders by metric descending/ascending for top-N ranking
-    const isOrderDesc = fd.order_desc !== false;
-    const sortMetric = fd.timeseries_limit_metric || (resolvedMetrics.length > 0 ? resolvedMetrics[0] : null);
-    const orderby = sortMetric ? [[sortMetric, !isOrderDesc]] : (baseQueryObject.orderby || []);
+    // Ordering logic: configurable sort by category dimension vs metric value
+    const sortBy = fd.sort_by || (fd.timeseries_limit_metric ? 'metric' : 'category');
+    let orderby: any[] = [];
+
+    if (sortBy === 'category') {
+      // For category, order_desc === true means descending (Z-A / 7-1), false means ascending (A-Z / 1-7)
+      const isOrderDesc = fd.order_desc === true;
+      const catCol = columns.length > 0 ? columns[0] : (fd.x_axis || null);
+      if (catCol) {
+        orderby = [[catCol, !isOrderDesc]];
+      }
+    } else {
+      // sortBy === 'metric'
+      // For metric, order_desc !== false means descending (Top N), false means ascending
+      const isOrderDesc = fd.order_desc !== false;
+      const sortMetric = fd.timeseries_limit_metric || (resolvedMetrics.length > 0 ? resolvedMetrics[0] : null);
+      if (sortMetric) {
+        orderby = [[sortMetric, !isOrderDesc]];
+      }
+    }
+
+    if (orderby.length === 0 && baseQueryObject.orderby) {
+      orderby = baseQueryObject.orderby;
+    }
 
     return [
       {

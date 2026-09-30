@@ -4,6 +4,20 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.14] - 2026-09-30
+
+### Added
+- **Configurable Universal Sorting (`controlPanel.tsx` & `types.ts`)**:
+  - Added `sort_by` control (`'category'` vs `'metric'`) in Explore Query section, allowing the user to explicitly choose whether to sort by Category Dimension (e.g. Days of the week Lun-Dom, chronological Months, time slots, A-Z) or by Metric Value (Top N rankings).
+  - Added `order_desc` checkbox control (`Sort Descending`) to toggle ascending vs descending order across both category and metric sorting modes.
+  - Added `SortByMode` type and `sort_by` field to `StratumBarFormData` in `types.ts`.
+
+### Changed
+- **Deterministic SQL OrderBy Generation (`buildQuery.ts`)**:
+  - Refactored `buildQuery.ts` ordering engine to dynamically translate `sort_by` and `order_desc` into SQL `ORDER BY` expressions:
+    - `sort_by === 'category'`: generates `ORDER BY [CategoryColumn] ASC` (or `DESC` if `order_desc: true`), perfectly preserving chronological months and Monday-Sunday calendar sequences.
+    - `sort_by === 'metric'`: generates `ORDER BY [Metric] DESC` (or `ASC` if `order_desc: false`), providing true Top N or Bottom N volume rankings.
+
 ## [0.3.13] - 2026-09-30
 
 ### Fixed
