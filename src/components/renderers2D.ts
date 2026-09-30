@@ -280,15 +280,9 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
       },
       label: {
         show: showValue,
-        position: (params: any) => {
-          if (valuePosition === 'inside' || stacking !== 'none') return 'inside';
-          const val = params?.value;
-          const isNeg = typeof val === 'number' && val < 0;
-          if (isVertical) {
-            return isNeg ? 'bottom' : 'top';
-          }
-          return isNeg ? 'left' : 'right';
-        },
+        position: (valuePosition === 'inside' || stacking !== 'none')
+          ? 'inside'
+          : (isVertical ? 'top' : 'right'),
         rotate: valuePosition === 'slanted' ? (isVertical ? 45 : -35) : 0,
         align: valuePosition === 'slanted'
           ? 'left'
@@ -296,7 +290,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
         verticalAlign: valuePosition === 'slanted'
           ? 'middle'
           : (valuePosition === 'inside' ? 'middle' : (isVertical ? 'bottom' : 'middle')),
-        distance: valuePosition === 'slanted' ? 8 : (valuePosition === 'inside' ? 0 : 5),
+        distance: valuePosition === 'slanted' ? 8 : (valuePosition === 'inside' ? 0 : 8),
         color: (stacking !== 'none' || valuePosition === 'inside')
           ? '#ffffff'
           : (isDark ? '#f8fafc' : '#1f2937'),

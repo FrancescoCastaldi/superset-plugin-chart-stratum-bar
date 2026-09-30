@@ -4,6 +4,19 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.13] - 2026-09-30
+
+### Fixed
+- **Query Metric Ordering Injection (`buildQuery.ts`)**:
+  - Implemented explicit `orderby` injection into `QueryObject` based on `fd.order_desc !== false` and `sortMetric` (`fd.timeseries_limit_metric` or primary resolved metric).
+  - Enables true Top-N query generation (e.g. `ORDER BY [Metric] DESC` with `row_limit: 10`) instead of default unordered or arbitrary table sampling.
+- **Horizontal Bar Top-to-Bottom Inverted Y-Axis (`echartsUtils.ts`)**:
+  - Added `inverse: !isVertical` to `getCategoryAxisConfig` on category axes.
+  - Ensures Top 1 categories rank naturally at the top of horizontal bar charts, flowing downwards to rank N, eliminating inverted display orders.
+- **ECharts Series-Bar Label Position Fix (`renderers2D.ts`)**:
+  - Replaced unsupported callback function in `label.position` with standard string position (`position: valuePosition === 'inside' || stacking !== 'none' ? 'inside' : (isVertical ? 'top' : 'right')`).
+  - Completely fixes label collapse / overlap at the origin/base of the bars, rendering values cleanly to the right of horizontal bars with proper padding (`distance: 8`) and high-contrast text stroke.
+
 ## [0.3.12] - 2026-09-29
 
 ### Fixed

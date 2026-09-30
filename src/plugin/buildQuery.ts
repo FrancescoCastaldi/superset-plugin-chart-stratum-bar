@@ -91,6 +91,11 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     const extraAdhoc = ensureIsArray(fd.extra_form_data?.adhoc_filters);
     const mergedAdhoc = [...baseAdhoc, ...extraAdhoc];
 
+    // Ordering logic: ensure SQL query orders by metric descending/ascending for top-N ranking
+    const isOrderDesc = fd.order_desc !== false;
+    const sortMetric = fd.timeseries_limit_metric || (resolvedMetrics.length > 0 ? resolvedMetrics[0] : null);
+    const orderby = sortMetric ? [[sortMetric, !isOrderDesc]] : (baseQueryObject.orderby || []);
+
     return [
       {
         ...baseQueryObject,
@@ -98,6 +103,7 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
         groupby: columns,
         series_columns: rawBreakdown,
         metrics: resolvedMetrics,
+        orderby,
         filters: mergedFilters,
         adhoc_filters: mergedAdhoc,
       },
