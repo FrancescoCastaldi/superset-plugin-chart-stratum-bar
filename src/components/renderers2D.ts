@@ -309,7 +309,8 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
           if (realVal === null || realVal === undefined) return '';
           if (typeof realVal === 'number') {
             // In stacked mode suppress near-zero labels (< 1.5% of max) to avoid clutter
-            if (stacking !== 'none' && effectiveMaxVal > 0 && Math.abs(realVal) / effectiveMaxVal < 0.015) return '';
+            const max = effectiveMaxVal || 1;
+            if (stacking !== 'none' && max > 0 && Math.abs(realVal) / max < 0.015) return '';
             let formatted = '';
             try {
               if (numberFormat) {
@@ -327,6 +328,31 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
       },
       z: 2,
     };
+
+    if (props.showSmartAnnotations) {
+      seriesItem.markPoint = {
+        symbol: 'pin',
+        symbolSize: 40,
+        label: {
+          show: true,
+          color: '#fff',
+          fontWeight: 'bold',
+          formatter: (params: any) => params.type === 'max' ? '🏆' : '📉',
+          fontSize: 14,
+        },
+        itemStyle: {
+          color: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
+          borderColor: baseColor,
+          borderWidth: 2,
+          shadowBlur: 6,
+          shadowColor: 'rgba(0,0,0,0.2)',
+        },
+        data: [
+          { type: 'max', name: 'Max' },
+          { type: 'min', name: 'Min' },
+        ],
+      };
+    }
 
     // Mark lines (Benchmark line & Axis Break cutoff line) on the first primary series
     if (idx === 0) {

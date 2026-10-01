@@ -1,7 +1,7 @@
 {
   "name": "superset-plugin-chart-stratum-bar",
-  "version": "0.3.15",
-  "description": "StratumBar — 3D Isometric & Advanced Bar Chart Plugin for Apache Superset with Benchmark, Delta % and Modern Controls",
+  "version": "0.3.16",
+  "description": "StratumBar — 3D Isometric & Advanced Bar Chart Plugin for Apache Superset with Benchmark, Smart Annotations, Delta % and Modern Controls",
   "homepage": "https://github.com/FrancescoCastaldi/superset-plugin-chart-stratum-bar",
   "repository": {
     "type": "git",

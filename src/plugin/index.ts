@@ -36,7 +36,7 @@ export default class StratumBarChartPlugin extends ChartPlugin {
     super({
       buildQuery: buildQuery as any,
       controlPanel,
-      loadChart: () => import('../components/StratumBarChart'),
+      loadChart: () => import('../components/StratumBarChart') as any,
       metadata,
       transformProps: transformProps as any,
     });

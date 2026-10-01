@@ -52,6 +52,7 @@ export interface StratumBarFormData extends QueryFormData {
     barBorderRadius?: number;
     showTrackBackground?: boolean;
     showBenchmark?: boolean;
+    show_smart_annotations?: boolean;
     benchmarkType?: BenchmarkType;
     benchmarkValue?: number;
     showDeltaBadge?: boolean;
@@ -102,6 +103,7 @@ export interface StratumBarTransformedProps {
     barBorderRadius: number;
     showTrackBackground: boolean;
     showBenchmark: boolean;
+    showSmartAnnotations: boolean;
     showDeltaBadge: boolean;
     deltaPolarity: DeltaPolarity;
     showValue: boolean;

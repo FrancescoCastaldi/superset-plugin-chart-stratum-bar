@@ -14,9 +14,30 @@ export function buildSeriesRepresentation(options) {
         }
     });
     const rawCategories = Array.from(categoriesSet);
-    const repCategories = sortBy === 'category'
-        ? sortCategories(rawCategories, isOrderDesc)
-        : rawCategories;
+    let repCategories;
+    if (sortBy === 'category') {
+        repCategories = sortCategories(rawCategories, isOrderDesc);
+    }
+    else {
+        const catTotals = new Map();
+        rawCategories.forEach(cat => catTotals.set(cat, 0));
+        data.forEach(row => {
+            const catVal = String(row[actualXKey] ?? row[resolvedXAxis] ?? Object.values(row)[0]);
+            const key = combineFlag && actualBreakdownKey && row[actualBreakdownKey] !== undefined && row[actualBreakdownKey] !== null
+                ? `${catVal} · ${row[actualBreakdownKey]}`
+                : catVal;
+            const rawVal = row[actualMetricKey];
+            const numVal = typeof rawVal === 'number' ? rawVal : (rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : 0);
+            if (catTotals.has(key)) {
+                catTotals.set(key, (catTotals.get(key) || 0) + numVal);
+            }
+        });
+        repCategories = [...rawCategories].sort((a, b) => {
+            const totA = catTotals.get(a) || 0;
+            const totB = catTotals.get(b) || 0;
+            return isOrderDesc ? totB - totA : totA - totB;
+        });
+    }
     const repSeries = [];
     if (isPivoted) {
         potentialPivotedKeys.forEach((sName, sIdx) => {

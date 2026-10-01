@@ -6,7 +6,7 @@ export default function transformProps(chartProps) {
     const { width, height, formData, queriesData, hooks } = chartProps;
     const fd = (formData || {});
     const data = (queriesData?.[0]?.data || []);
-    const { x_axis, x_axis_group, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', secondary_area_gradient = true, secondary_line_width = 3, secondary_line_color = '#ea580c', theme_mode = 'light', enable_a11y_decal = false, combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, toolbar_show_view_mode = true, toolbar_show_orientation = true, toolbar_show_stacking = true, toolbar_show_dual_axis = true, toolbar_show_breakdown_toggle = true, toolbar_show_benchmark = true, toolbar_show_export = true, enable_axis_break = false, axis_break_mode = 'auto', axis_break_threshold, toolbar_show_axis_break = true, x_axis_title, y_axis_title, } = fd;
+    const { x_axis, x_axis_group, groupby = [], metrics = [], target_metric, secondary_metrics, secondary_series_type = 'line', y_axis_2_title, y_axis_2_format = ',.2f', secondary_area_gradient = true, secondary_line_width = 3, secondary_line_color = '#ea580c', theme_mode = 'light', enable_a11y_decal = false, combine_category_breakdown = false, viewMode = '3d', orientation = 'vertical', stacking = 'none', barShape3D = 'prism', depth3D = 20, tilt3D = 25, shadow3D = true, barBorderRadius = 6, showTrackBackground = false, show_smart_annotations = false, showBenchmark = false, benchmarkType = 'fixed_value', benchmarkValue = 100, showDeltaBadge = true, deltaPolarity = 'normal', showValue = true, valuePosition = 'top', numberFormat = ',.0f', color_scheme, show_legend = true, legendOrientation = 'top', emit_filter = true, enableToolbar = true, toolbar_show_view_mode = true, toolbar_show_orientation = true, toolbar_show_stacking = true, toolbar_show_dual_axis = true, toolbar_show_breakdown_toggle = true, toolbar_show_benchmark = true, toolbar_show_export = true, enable_axis_break = false, axis_break_mode = 'auto', axis_break_threshold, toolbar_show_axis_break = true, x_axis_title, y_axis_title, } = fd;
     const rawFd = (chartProps.rawFormData || {});
     const filterState = chartProps.filterState || {};
     const selectedValues = ensureIsArray(filterState.selectedValues || filterState.value);
@@ -140,6 +140,7 @@ export default function transformProps(chartProps) {
         barBorderRadius,
         showTrackBackground,
         showBenchmark,
+        showSmartAnnotations: show_smart_annotations,
         showDeltaBadge,
         deltaPolarity,
         showValue,

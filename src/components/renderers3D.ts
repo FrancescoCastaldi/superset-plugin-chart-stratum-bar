@@ -562,8 +562,9 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
                 fill: isVertical ? {
                   type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
                   colorStops: [
-                    { offset: 0, color: baseColor },
-                    { offset: 1, color: adjustColorBrightness(baseColor, -10) },
+                    { offset: 0, color: adjustColorBrightness(baseColor, 20) }, // Luce speculare sinistra
+                    { offset: 0.25, color: baseColor }, // Colore base pieno
+                    { offset: 1, color: adjustColorBrightness(baseColor, -15) }, // Ombra verso destra
                   ],
                 } : baseColor,
                 stroke: adjustColorBrightness(baseColor, -35),
@@ -836,6 +837,31 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
     }
 
     // Handle Secondary / Line Series overlaid on 3D view
+    if (props.showSmartAnnotations) {
+      customSeries.markPoint = {
+        symbol: 'pin',
+        symbolSize: 45,
+        label: {
+          show: true,
+          color: '#fff',
+          fontWeight: 'bold',
+          formatter: (params: any) => params.type === 'max' ? '🏆' : '📉',
+          fontSize: 16,
+        },
+        itemStyle: {
+          color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          borderColor: baseColor,
+          borderWidth: 2,
+          shadowBlur: 8,
+          shadowColor: 'rgba(0,0,0,0.3)',
+        },
+        data: [
+          { type: 'max', name: 'Max' },
+          { type: 'min', name: 'Min' },
+        ],
+      };
+    }
+    
     if (s.seriesType === 'line') {
       const lineSeriesItem: any = {
         name: s.name,

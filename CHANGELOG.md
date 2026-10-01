@@ -4,6 +4,17 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.16] - 2026-10-02
+
+### Added
+- **Smart Annotations (Max/Min Highlight)**: Added automatic dynamic annotations (`🏆` for Max, `📉` for Min) to ECharts series using `markPoint`, both in 2D and 3D mode.
+
+### Changed
+- **Control Panel Simplification**: Completely revamped the `controlPanel.tsx` UI. Removed confusing and overly technical configurations (`custom_colors_json`, `renderer`, `x_axis_group`, `combine_category_breakdown`).
+- **Benchmark Discovery**: Surfaced the pre-existing Target/Benchmark configuration from the hidden legacy sections to a prominent "Analisi Avanzata (Target & Annotazioni)" tab.
+- **3D Render Optimization (`renderers3D.ts`)**: Upgraded the material rendering on 3D prisms. The front face now uses a linear gradient (`adjustColorBrightness`) to simulate a specular highlight and glossy volume (glass/metal effect).
+- **2D Aesthetics**: Adjusted corner radii in 2D mode for a cleaner, modern look.
+
 ## [0.3.15] - 2026-09-30
 
 ### Added

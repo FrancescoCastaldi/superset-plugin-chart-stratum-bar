@@ -27,19 +27,6 @@ const config: ControlPanelConfig = {
         ],
         [
           {
-            name: 'x_axis_group',
-            config: {
-              ...sharedControls.groupby,
-              label: t('X-Axis Group Dimension (Raggruppamento Ascisse)'),
-              description: t('Dimensione opzionale per raggruppare le ascisse (es. Canale di Prenotazione raggruppato con Regime)'),
-              multi: false,
-              clearable: true,
-              validators: [],
-            },
-          },
-        ],
-        [
-          {
             name: 'groupby',
             config: {
               ...sharedControls.groupby,
@@ -48,18 +35,6 @@ const config: ControlPanelConfig = {
               multi: true,
               clearable: true,
               validators: [],
-            },
-          },
-        ],
-        [
-          {
-            name: 'combine_category_breakdown',
-            config: {
-              type: 'CheckboxControl',
-              label: t('Etichette Raggruppate su Ascisse (Compound Labels)'),
-              description: t('Concatena le dimensioni direttamente sulle etichette dell\'asse X (es. Canale · Regime: App · SSN, Call center · Convenzioni)'),
-              default: false,
-              renderTrigger: true,
             },
           },
         ],
@@ -161,37 +136,7 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-        [
-          {
-            name: 'custom_colors_json',
-            config: {
-              type: 'TextAreaControl',
-              language: 'json',
-              label: t('Mappa Colori Personalizzata (JSON)'),
-              description: t(
-                'Mappa manuale dei colori in formato JSON (es. {"SSN": "#3a6a9b", "Convenzioni": "#1c3d5e", "Solventi": "#bcd5ea"}). Ha massima priorità su palette e dashboard.',
-              ),
-              default: '',
-              renderTrigger: true,
-            },
-          },
-        ],
-        [
-          {
-            name: 'renderer',
-            config: {
-              type: 'SelectControl',
-              label: t('Rendering Engine'),
-              description: t('Canvas (consigliato per 3D ad alte prestazioni) oppure SVG (permette stilizzazione diretta da CSS di dashboard)'),
-              choices: [
-                ['canvas', t('Canvas (Default - Prestazioni 60fps)')],
-                ['svg', t('SVG (Vettoriale - Stilizzabile via CSS)')],
-              ],
-              default: 'canvas',
-              renderTrigger: true,
-            },
-          },
-        ],
+
         // 3D Specific Controls (Only visible when viewMode === '3d')
         [
           {
@@ -483,16 +428,28 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Benchmark Target & Delta %'),
-      expanded: false,
+      label: t('Analisi Avanzata (Target & Annotazioni)'),
+      expanded: true,
       controlSetRows: [
+        [
+          {
+            name: 'show_smart_annotations',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Smart Annotations (Max/Min Highlight)'),
+              description: t('Evidenzia automaticamente i picchi massimi e minimi nel grafico con etichette dinamiche (🏆/📉).'),
+              default: false,
+              renderTrigger: true,
+            },
+          },
+        ],
         [
           {
             name: 'showBenchmark',
             config: {
               type: 'CheckboxControl',
-              label: t('Enable Benchmark Reference Line'),
-              description: t('Draw a highlighted reference benchmark line across the chart'),
+              label: t('Mostra Linea di Soglia (Target)'),
+              description: t('Disegna una reference line trasversale per confrontare i valori.'),
               default: false,
               renderTrigger: true,
             },
@@ -501,8 +458,8 @@ const config: ControlPanelConfig = {
             name: 'benchmarkType',
             config: {
               type: 'SelectControl',
-              label: t('Benchmark Calculation Type'),
-              description: t('How the benchmark target is computed: fixed number, mean average, median, or target metric'),
+              label: t('Tipo di Calcolo Target'),
+              description: t('Come calcolare la soglia: valore fisso manuale, media, mediana o metrica dinamica.'),
               choices: [
                 ['fixed_value', t('Valore Fisso (Fixed Value)')],
                 ['average', t('Media dei Valori (Average)')],
