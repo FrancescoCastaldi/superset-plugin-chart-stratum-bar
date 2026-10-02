@@ -4,6 +4,15 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.17] - 2026-10-02
+
+### Changed
+- **Query Configuration Ergonomics & UI Cleanup (`controlPanel.tsx`)**:
+  - Resi obbligatori i campi essenziali `x_axis` (*X-Axis / Categoria Principale*) e `metrics` (*Metrica Principale*) con validatore `validateNonEmpty` e disattivazione di `clearable` per prevenire query vuote accidentali.
+  - Rimossa definitivamente ogni ambiguità tra `x_axis_group` e `groupby`: la scomposizione delle barre in serie colorate è ora affidata esclusivamente a `groupby` (*Serie / Breakdown per Colore*).
+  - Reso condizionale e contestuale il controllo `combine_category_breakdown` (*Etichette Composte su Ascisse*), visibile solo se è presente almeno una dimensione in Breakdown.
+  - Impostato `sort_by` con opzione predefinita `'original'` (*Ordine Originale / Query*) per preservare rigorosamente l'ordinamento nativo dei dataset e delle query SQL, consentendo l'ordinamento naturale/cronologico su richiesta esplicita.
+
 ## [0.3.16] - 2026-10-02
 
 ### Added

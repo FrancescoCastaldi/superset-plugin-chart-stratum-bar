@@ -22,7 +22,7 @@ export interface BuildRepresentationOptions {
     combineFlag: boolean;
     sampleRow: any;
     potentialPivotedKeys: string[];
-    sortBy?: 'category' | 'metric';
+    sortBy?: 'original' | 'category' | 'metric';
     isOrderDesc?: boolean;
 }
 export declare function buildSeriesRepresentation(options: BuildRepresentationOptions): {

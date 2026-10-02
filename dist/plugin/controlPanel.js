@@ -1,4 +1,5 @@
 import { sharedControls, } from '@superset-ui/chart-controls';
+import { validateNonEmpty } from '@superset-ui/core';
 const t = (str) => str;
 const config = {
     controlPanelSections: [
@@ -11,11 +12,11 @@ const config = {
                         name: 'x_axis',
                         config: {
                             ...sharedControls.groupby,
-                            label: t('X-Axis / Category Dimension'),
-                            description: t('Primary category dimension (e.g., Canale di Prenotazione, Reparto, Mese)'),
+                            label: t('X-Axis / Categoria Principale'),
+                            description: t('Dimensione primaria obbligatoria per le categorie dell\'asse X (es. Mese, Reparto, Canale)'),
                             multi: false,
-                            clearable: true,
-                            validators: [],
+                            clearable: false,
+                            validators: [validateNonEmpty],
                         },
                     },
                 ],
@@ -24,8 +25,8 @@ const config = {
                         name: 'groupby',
                         config: {
                             ...sharedControls.groupby,
-                            label: t('Breakdown Dimension (Series / Colori)'),
-                            description: t('Optional secondary dimension to break bars into series (e.g., Regime: Privato / SSN)'),
+                            label: t('Serie / Breakdown per Colore'),
+                            description: t('Dimensione opzionale per suddividere le barre in serie colorate distinte (es. Regime: Privato / SSN)'),
                             multi: true,
                             clearable: true,
                             validators: [],
@@ -34,13 +35,26 @@ const config = {
                 ],
                 [
                     {
+                        name: 'combine_category_breakdown',
+                        config: {
+                            type: 'CheckboxControl',
+                            label: t('Etichette Composte su Ascisse (Compound Labels)'),
+                            description: t('Mostra Categoria e Serie insieme sull\'asse X invece di barre affiancate'),
+                            default: false,
+                            renderTrigger: true,
+                            visibility: ({ controls }) => Boolean(controls?.groupby?.value && controls.groupby.value.length > 0),
+                        },
+                    },
+                ],
+                [
+                    {
                         name: 'metrics',
                         config: {
                             ...sharedControls.metrics,
-                            label: t('Primary Metrics (Left Axis)'),
-                            description: t('Metrics to measure primary bar height (e.g., Numero Richieste, Fatturato)'),
-                            clearable: true,
-                            validators: [],
+                            label: t('Metrica Principale (Valore Barre)'),
+                            description: t('Metrica numerica obbligatoria che determina l\'altezza delle barre (es. Numero Richieste, Fatturato)'),
+                            clearable: false,
+                            validators: [validateNonEmpty],
                         },
                     },
                 ],
@@ -52,10 +66,11 @@ const config = {
                             label: t('Criterio di Ordinamento (Sort By)'),
                             description: t('Scegli se ordinare per Categoria/Dimensione (es. Giorni Lun-Dom, Mesi cronologici) o per Valore Metrica (es. Classifiche Top N)'),
                             choices: [
+                                ['original', t('Ordine Originale / Query')],
                                 ['category', t('Categoria / Dimensione (es. Lun-Dom, Mesi, A-Z)')],
                                 ['metric', t('Valore Metrica (es. Top N, Volume Richieste)')],
                             ],
-                            default: 'category',
+                            default: 'original',
                             renderTrigger: false,
                         },
                     },

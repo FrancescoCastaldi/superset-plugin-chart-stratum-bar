@@ -82,7 +82,7 @@ export default function transformProps(chartProps) {
     const secFormatter = getNumberFormatter(y_axis_2_format);
     const secPalette = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4'];
     // Sorting configuration
-    const sortBy = fd.sort_by || (fd.timeseries_limit_metric ? 'metric' : 'category');
+    const sortBy = fd.sort_by || (fd.timeseries_limit_metric ? 'metric' : 'original');
     const isOrderDesc = fd.order_desc === true;
     // Helper to build categories and series for either separated or combined representation
     const buildRepresentation = (combineFlag) => {

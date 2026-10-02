@@ -6,7 +6,7 @@ export type BarShape3D = 'prism' | 'cylinder';
 export type BenchmarkType = 'fixed_value' | 'average' | 'median' | 'target_metric';
 export type DeltaPolarity = 'normal' | 'inverted';
 export type ValuePosition = 'inside' | 'top' | 'outside' | 'slanted';
-export type SortByMode = 'category' | 'metric';
+export type SortByMode = 'original' | 'category' | 'metric';
 export interface StratumBarSeriesItem {
     category: string;
     value: number | null;

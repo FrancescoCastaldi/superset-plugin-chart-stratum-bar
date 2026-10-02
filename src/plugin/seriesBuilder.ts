@@ -24,7 +24,7 @@ export interface BuildRepresentationOptions {
   combineFlag: boolean;
   sampleRow: any;
   potentialPivotedKeys: string[];
-  sortBy?: 'category' | 'metric';
+  sortBy?: 'original' | 'category' | 'metric';
   isOrderDesc?: boolean;
 }
 
@@ -35,7 +35,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     getColor, palette, formatter, resolvedXAxis, secFormatter,
     secondary_line_color, secondary_series_type, secPalette,
     combineFlag, sampleRow, potentialPivotedKeys,
-    sortBy = 'category', isOrderDesc = false,
+    sortBy = 'original', isOrderDesc = false,
   } = options;
 
   const categoriesSet = new Set<string>();
@@ -53,7 +53,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
   let repCategories: string[];
   if (sortBy === 'category') {
     repCategories = sortCategories(rawCategories, isOrderDesc);
-  } else {
+  } else if (sortBy === 'metric') {
     const catTotals = new Map<string, number>();
     rawCategories.forEach(cat => catTotals.set(cat, 0));
     data.forEach(row => {
@@ -73,6 +73,8 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       const totB = catTotals.get(b) || 0;
       return isOrderDesc ? totB - totA : totA - totB;
     });
+  } else {
+    repCategories = rawCategories;
   }
 
   const repSeries: StratumBarSeries[] = [];

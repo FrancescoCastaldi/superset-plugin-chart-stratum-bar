@@ -1,6 +1,6 @@
 import { sortCategories } from '../utils/sortingUtils';
 export function buildSeriesRepresentation(options) {
-    const { data, isPivoted, actualXKey, actualBreakdownKey, actualMetricKey, targetMetricKey, primaryMetric, metricList, secondaryMetricList, getColor, palette, formatter, resolvedXAxis, secFormatter, secondary_line_color, secondary_series_type, secPalette, combineFlag, sampleRow, potentialPivotedKeys, sortBy = 'category', isOrderDesc = false, } = options;
+    const { data, isPivoted, actualXKey, actualBreakdownKey, actualMetricKey, targetMetricKey, primaryMetric, metricList, secondaryMetricList, getColor, palette, formatter, resolvedXAxis, secFormatter, secondary_line_color, secondary_series_type, secPalette, combineFlag, sampleRow, potentialPivotedKeys, sortBy = 'original', isOrderDesc = false, } = options;
     const categoriesSet = new Set();
     data.forEach(row => {
         const val = row[actualXKey] ?? row[resolvedXAxis] ?? Object.values(row)[0];
@@ -18,7 +18,7 @@ export function buildSeriesRepresentation(options) {
     if (sortBy === 'category') {
         repCategories = sortCategories(rawCategories, isOrderDesc);
     }
-    else {
+    else if (sortBy === 'metric') {
         const catTotals = new Map();
         rawCategories.forEach(cat => catTotals.set(cat, 0));
         data.forEach(row => {
@@ -37,6 +37,9 @@ export function buildSeriesRepresentation(options) {
             const totB = catTotals.get(b) || 0;
             return isOrderDesc ? totB - totA : totA - totB;
         });
+    }
+    else {
+        repCategories = rawCategories;
     }
     const repSeries = [];
     if (isPivoted) {
