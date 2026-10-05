@@ -4,6 +4,15 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.18] - 2026-10-05
+
+### Fixed
+- **Risoluzione Elastica e Resiliente delle Dimensioni (`transformPropsUtils.ts`)**:
+  - Implementata estrazione esaustiva dei candidati di identificazione per le colonne selezionate (`column_name`, `sqlExpression`, `label`, `name`, `verbose_name`), risolvendo alla radice il disallineamento quando Explore espone label con spazi (es. `Regime di Erogazione`) ma la query SQL restituisce identificatori fisici camelCase o privi di spazi (es. `RegimeErogazione`).
+  - Introdotto matching multi-fase in `findRowKey`: corrispondenza esatta, case-insensitive e normalizzazione alfanumerica senza separatori.
+  - Aggiunto fallback dinamico categorico per `actualBreakdownKey` che assegna automaticamente la colonna qualitativa residua presente in riga qualora il nome configurato non combaci letteralmente.
+  - Implementata deduplica automatica tra asse primario (`x_axis`) e serie (`groupby`): se la medesima dimensione viene inserita sia come asse che come breakdown, viene automaticamente esclusa dal breakdown per prevenire serie ridondanti.
+
 ## [0.3.17] - 2026-10-02
 
 ### Changed

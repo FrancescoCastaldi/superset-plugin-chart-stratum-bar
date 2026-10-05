@@ -296,4 +296,60 @@ describe('StratumBar transformProps', () => {
       }),
     );
   });
+
+  it('should resolve breakdown dimension when formData uses verbose label with spaces but data has physical column', () => {
+    const testData = [
+      { Presidio: 'S. Carlo', RegimeErogazione: 'SSN', num_prestazioni: 120 },
+      { Presidio: 'S. Carlo', RegimeErogazione: 'Privato', num_prestazioni: 45 },
+      { Presidio: 'Villa Paola', RegimeErogazione: 'SSN', num_prestazioni: 80 },
+      { Presidio: 'Villa Paola', RegimeErogazione: 'Privato', num_prestazioni: 25 },
+    ];
+
+    const chartProps: Partial<ChartProps> = {
+      width: 800,
+      height: 500,
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '28__table',
+        x_axis: 'Presidio',
+        groupby: ['Regime di Erogazione'],
+        metrics: ['num_prestazioni'],
+        orientation: 'horizontal',
+        stacking: 'stack',
+      },
+      queriesData: [{ data: testData }],
+    };
+
+    const transformed = transformProps(chartProps as ChartProps);
+    expect(transformed.categories).toEqual(['S. Carlo', 'Villa Paola']);
+    expect(transformed.series.length).toBe(2);
+    expect(transformed.series.map(s => s.name)).toEqual(['SSN', 'Privato']);
+    expect(transformed.series[0].data).toEqual([120, 80]);
+    expect(transformed.series[1].data).toEqual([45, 25]);
+  });
+
+  it('should automatically deduplicate x_axis if also present in groupby without creating duplicate series', () => {
+    const testData = [
+      { Presidio: 'S. Carlo', RegimeErogazione: 'SSN', num_prestazioni: 120 },
+      { Presidio: 'S. Carlo', RegimeErogazione: 'Privato', num_prestazioni: 45 },
+    ];
+
+    const chartProps: Partial<ChartProps> = {
+      width: 800,
+      height: 500,
+      formData: {
+        viz_type: 'stratum_bar',
+        datasource: '28__table',
+        x_axis: 'Presidio',
+        groupby: ['Presidio', 'RegimeErogazione'],
+        metrics: ['num_prestazioni'],
+      },
+      queriesData: [{ data: testData }],
+    };
+
+    const transformed = transformProps(chartProps as ChartProps);
+    expect(transformed.categories).toEqual(['S. Carlo']);
+    expect(transformed.series.length).toBe(2);
+    expect(transformed.series.map(s => s.name)).toEqual(['SSN', 'Privato']);
+  });
 });

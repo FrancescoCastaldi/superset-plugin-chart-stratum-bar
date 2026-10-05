@@ -63,59 +63,140 @@ export function resolveColors(fd, rawFd, scaleInstance) {
     return { combinedLabelColors, palette, getColor };
 }
 export function resolveDimensions(fd, sampleRow) {
-    const getColName = (col) => {
+    const rowKeys = Object.keys(sampleRow || {});
+    // Extract all candidate string identifiers for a given column config
+    const getColCandidates = (col) => {
+        if (!col)
+            return [];
+        if (typeof col === 'string')
+            return [col];
+        if (typeof col === 'object' && col !== null) {
+            return [
+                col.column_name,
+                col.sqlExpression,
+                col.label,
+                col.name,
+                col.verbose_name,
+                String(col),
+            ].filter(Boolean);
+        }
+        return [String(col)];
+    };
+    const getPrimaryColName = (col) => {
         if (!col)
             return '';
         if (typeof col === 'string')
             return col;
-        if (typeof col === 'object') {
-            return col.label || col.sqlExpression || col.column_name || col.name || String(col);
+        if (typeof col === 'object' && col !== null) {
+            return col.label || col.verbose_name || col.column_name || col.sqlExpression || col.name || String(col);
         }
         return String(col);
     };
-    const rawXAxisList = ensureIsArray(fd.x_axis).map(getColName).filter(Boolean);
-    const rawXGroup = getColName(fd.x_axis_group);
-    const rawGroupbyList = ensureIsArray(fd.groupby).map(getColName).filter(Boolean);
+    const rawXAxisItems = ensureIsArray(fd.x_axis).filter(Boolean);
+    const rawXGroupItem = fd.x_axis_group;
+    const rawGroupbyItems = ensureIsArray(fd.groupby).filter(Boolean);
+    const rawXAxisList = rawXAxisItems.map(getPrimaryColName).filter(Boolean);
+    const rawXGroup = getPrimaryColName(rawXGroupItem);
+    const rawGroupbyList = rawGroupbyItems.map(getPrimaryColName).filter(Boolean);
+    // Helper to compare two dimension names normalized (ignoring spaces, dashes, underscores)
+    const isSameDim = (a, b) => {
+        if (!a || !b)
+            return false;
+        const normA = a.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const normB = b.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return normA === normB || (normA.length > 3 && normB.length > 3 && (normA.includes(normB) || normB.includes(normA)));
+    };
     let primaryDimName = '';
     let secondaryDimName = undefined;
+    let primaryCandidates = [];
+    let secondaryCandidates = [];
     if (rawXGroup) {
         primaryDimName = rawXGroup;
-        secondaryDimName =
-            rawXAxisList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase()) ||
-                rawGroupbyList.find(c => c.toLowerCase() !== rawXGroup.toLowerCase());
+        primaryCandidates = getColCandidates(rawXGroupItem);
+        const secItem = rawXAxisItems.find(c => !isSameDim(getPrimaryColName(c), rawXGroup)) ||
+            rawGroupbyItems.find(c => !isSameDim(getPrimaryColName(c), rawXGroup));
+        if (secItem) {
+            secondaryDimName = getPrimaryColName(secItem);
+            secondaryCandidates = getColCandidates(secItem);
+        }
     }
     else if (rawXAxisList.length >= 2) {
         primaryDimName = rawXAxisList[0];
+        primaryCandidates = getColCandidates(rawXAxisItems[0]);
         secondaryDimName = rawXAxisList[1];
-    }
-    else if (rawXAxisList.length === 1 && rawGroupbyList.length > 0) {
-        primaryDimName = rawXAxisList[0];
-        secondaryDimName = rawGroupbyList.find(c => c.toLowerCase() !== primaryDimName.toLowerCase());
+        secondaryCandidates = getColCandidates(rawXAxisItems[1]);
     }
     else if (rawXAxisList.length === 1) {
         primaryDimName = rawXAxisList[0];
+        primaryCandidates = getColCandidates(rawXAxisItems[0]);
+        // Filter out primary from groupby if accidentally duplicated in both
+        const secItem = rawGroupbyItems.find(c => !isSameDim(getPrimaryColName(c), primaryDimName));
+        if (secItem) {
+            secondaryDimName = getPrimaryColName(secItem);
+            secondaryCandidates = getColCandidates(secItem);
+        }
     }
     else if (rawGroupbyList.length > 0) {
         primaryDimName = rawGroupbyList[0];
-        secondaryDimName = rawGroupbyList[1];
+        primaryCandidates = getColCandidates(rawGroupbyItems[0]);
+        if (rawGroupbyList.length > 1) {
+            secondaryDimName = rawGroupbyList[1];
+            secondaryCandidates = getColCandidates(rawGroupbyItems[1]);
+        }
     }
     else {
         primaryDimName = 'category';
     }
-    const rowKeys = Object.keys(sampleRow);
-    const findRowKey = (name) => {
-        if (!name)
+    // Enhanced row key finder matching exact, lower, and normalized
+    const findRowKey = (name, candidates = []) => {
+        if (rowKeys.length === 0)
             return undefined;
-        return rowKeys.find(k => k.toLowerCase() === name.toLowerCase());
+        const allSearch = [name, ...candidates].filter(Boolean);
+        // 1. Exact match in rowKeys
+        for (const cand of allSearch) {
+            const exact = rowKeys.find(k => k === cand);
+            if (exact)
+                return exact;
+        }
+        // 2. Case-insensitive match in rowKeys
+        for (const cand of allSearch) {
+            const lower = cand.toLowerCase();
+            const match = rowKeys.find(k => k.toLowerCase() === lower);
+            if (match)
+                return match;
+        }
+        // 3. Normalized alphanumeric match (removes spaces, underscores, dashes)
+        for (const cand of allSearch) {
+            const normCand = cand.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!normCand)
+                continue;
+            const match = rowKeys.find(k => {
+                const normK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                return normK === normCand || (normCand.length > 3 && normK.length > 3 && (normK.includes(normCand) || normCand.includes(normK)));
+            });
+            if (match)
+                return match;
+        }
+        return undefined;
     };
     const resolvedXAxis = primaryDimName;
-    let actualXKey = findRowKey(primaryDimName) || primaryDimName;
-    const actualBreakdownKey = findRowKey(secondaryDimName);
-    // Fallback: se actualXKey non è presente nelle chiavi di sampleRow, individua la prima colonna non-numerica
+    let actualXKey = findRowKey(primaryDimName, primaryCandidates) || primaryDimName;
+    let actualBreakdownKey = findRowKey(secondaryDimName, secondaryCandidates);
+    // Fallback 1: se actualXKey non è presente nelle chiavi di sampleRow, individua la prima colonna non-numerica
     if (!(actualXKey in sampleRow) && rowKeys.length > 0) {
         const candidate = rowKeys.find(k => k !== '__timestamp' && !k.startsWith('__') && typeof sampleRow[k] === 'string');
         if (candidate)
             actualXKey = candidate;
+    }
+    // Fallback 2: se secondaryDimName è specificato ma actualBreakdownKey non è presente in sampleRow,
+    // individua la colonna categorica diversa da actualXKey
+    if (secondaryDimName && (!actualBreakdownKey || !(actualBreakdownKey in sampleRow)) && rowKeys.length > 0) {
+        const candidate = rowKeys.find(k => k !== actualXKey &&
+            k !== '__timestamp' &&
+            !k.startsWith('__') &&
+            typeof sampleRow[k] === 'string');
+        if (candidate)
+            actualBreakdownKey = candidate;
     }
     return { resolvedXAxis, actualXKey, actualBreakdownKey, secondaryDimName };
 }
