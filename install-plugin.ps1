@@ -67,9 +67,17 @@ function Write-Banner {
 Write-Banner
 
 # 1. Resolve Plugin Path
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ResolvedPluginPath = if ($PluginPath) { (Resolve-Path $PluginPath).Path } else { $ScriptDir }
-Write-Color "[INFO] Percorso Plugin: $ResolvedPluginPath" "Green"
+if (-not $PluginPath) {
+    if (Test-Path (Join-Path (Get-Location).Path "package.json")) {
+        $PluginPath = (Get-Location).Path
+    } elseif ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot "package.json"))) {
+        $PluginPath = $PSScriptRoot
+    } else {
+        $PluginPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+    }
+}
+$ResolvedPluginPath = (Resolve-Path $PluginPath).Path
+Write-Color "[INFO] Percorso Plugin (sorgente): $ResolvedPluginPath" "Green"
 
 # 2. Pre-flight & Build Plugin
 $DistDir = Join-Path $ResolvedPluginPath "dist"
@@ -115,11 +123,15 @@ Write-Color "`n=== FASE 2: Rilevamento Directory Apache Superset ===" "Cyan"
 $CandidatePaths = @(
     $SupersetPath,
     $env:SUPERSET_HOME,
+    "C:\Superset",
+    "D:\Sviluppo\superset-6.1.0",
     "D:\Sviluppo\superset",
     "C:\Users\admmaps\superset_6_1_0\superset",
     "C:\Users\$env:USERNAME\superset",
-    "..\..\superset",
-    "..\superset"
+    (Join-Path $ResolvedPluginPath "..\superset-6.1.0"),
+    (Join-Path $ResolvedPluginPath "..\superset"),
+    (Join-Path $ResolvedPluginPath "..\apache-superset"),
+    (Join-Path $ResolvedPluginPath "..\..\superset")
 )
 
 $ResolvedSupersetPath = $null
