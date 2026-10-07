@@ -10,6 +10,8 @@
     5. Safely updates MainPreset.ts with backup (MainPreset.ts.bak) and idempotency:
        - import { StratumBarChartPlugin } from '../../../plugins/superset-plugin-chart-stratum-bar/src';
        - new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),
+       Legacy registration variants (`.register()` lines, odd indentation, duplicates)
+       are normalized to the canonical form instead of adding new lines.
     6. Cleans stale Webpack cache.
     7. Optionally prompts or rebuilds frontend and restarts Docker containers.
 .PARAMETER SupersetPath
@@ -206,61 +208,72 @@ $MainPresetPath = Join-Path $SupersetFrontend "src\visualizations\presets\MainPr
 if (-not (Test-Path $MainPresetPath)) {
     Write-Color "[WARN] MainPreset.ts non trovato in: $MainPresetPath" "Yellow"
 } else {
-    $MainPresetContent = Get-Content -Path $MainPresetPath -Raw -Encoding UTF8
+    $RawContent = [System.IO.File]::ReadAllText($MainPresetPath, [System.Text.Encoding]::UTF8)
 
     # Create backup if not already present
     $BackupPath = "$MainPresetPath.bak"
     if (-not (Test-Path $BackupPath)) {
         Copy-Item -Path $MainPresetPath -Destination $BackupPath -Force
         Write-Color "[OK] Backup creato: $BackupPath" "DarkGray"
-    }
-
-    $ImportStatement = "import { StratumBarChartPlugin } from '../../../plugins/superset-plugin-chart-stratum-bar/src';"
-    $RegistrationCode = "          new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),"
-
-    # 1. Clean all existing or duplicate StratumBarChartPlugin lines to guarantee clean state
-    $RawLines = $MainPresetContent -split "`r?`n"
-    $CleanLines = @()
-    foreach ($Line in $RawLines) {
-        if ($Line -notmatch "StratumBarChartPlugin" -and $Line -notmatch "key:\s*'stratum_bar'") {
-            $CleanLines += $Line
-        }
-    }
-
-    # 2. Find last import statement
-    $LastImportIdx = -1
-    for ($i = 0; $i -lt $CleanLines.Count; $i++) {
-        if ($CleanLines[$i] -match "^import\s+") {
-            $LastImportIdx = $i
-        }
-    }
-
-    $WithImportLines = @()
-    if ($LastImportIdx -ge 0) {
-        for ($i = 0; $i -lt $CleanLines.Count; $i++) {
-            $WithImportLines += $CleanLines[$i]
-            if ($i -eq $LastImportIdx) {
-                $WithImportLines += $ImportStatement
-            }
-        }
     } else {
-        $WithImportLines = @($ImportStatement) + $CleanLines
+        Write-Color "[INFO] Backup preesistente mantenuto: $BackupPath" "DarkGray"
     }
 
-    # 3. Insert registration in plugins: [
-    $FinalLines = @()
-    $InsertedReg = $false
-    foreach ($Line in $WithImportLines) {
-        $FinalLines += $Line
-        if (-not $InsertedReg -and $Line -match "plugins:\s*\[") {
-            $FinalLines += $RegistrationCode
-            $InsertedReg = $true
+    $NL = if ($RawContent.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $TargetImport = "import { StratumBarChartPlugin } from '../../../plugins/superset-plugin-chart-stratum-bar/src';"
+    $TargetRegister = "        new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),"
+    $ImportRegex = "from\s*['`"][^'`"]*superset-plugin-chart-stratum-bar"
+    $RegisterRegex = 'new\s+StratumBarChartPlugin'
+
+    $PresetLineList = [System.Collections.Generic.List[string]]($RawContent -split "\r?\n")
+
+    # Verifica se il file e' gia' configurato NELLA FORMA CANONICA (riga-esatta):
+    # le varianti legacy (riga con `.register()`, indentazioni anomale, duplicati)
+    # non contano come configurazione valida e vengono normalizzate dal ramo else.
+    $hasExactImport = ($PresetLineList -contains $TargetImport)
+    $hasExactRegister = ($PresetLineList -contains $TargetRegister)
+    $importCount = @($PresetLineList | Where-Object { $_ -match $ImportRegex }).Count
+    $registerCount = @($PresetLineList | Where-Object { $_ -match $RegisterRegex }).Count
+
+    if (-not $CleanReinstall -and $hasExactImport -and $hasExactRegister -and ($importCount -eq 1) -and ($registerCount -eq 1)) {
+        Write-Color "[OK] MainPreset.ts e' gia' registrato correttamente (idempotente - nessuna modifica necessaria)." "Green"
+    } else {
+        Write-Color "[INFO] Normalizzazione import e registrazione in corso..." "Yellow"
+
+        # Step A: rimozione import obsoleti o duplicati e reinserimento forma canonica
+        $filteredLines = [System.Collections.Generic.List[string]]::new()
+        $lastImportIdx = -1
+        for ($i = 0; $i -lt $PresetLineList.Count; $i++) {
+            $line = $PresetLineList[$i]
+            if ($line -match $ImportRegex) { continue }
+            if ($line.Trim().StartsWith("import ")) { $lastImportIdx = $filteredLines.Count }
+            $filteredLines.Add($line)
         }
-    }
+        if ($lastImportIdx -ge 0) {
+            $filteredLines.Insert($lastImportIdx + 1, $TargetImport)
+        } else {
+            $filteredLines.Insert(0, $TargetImport)
+        }
 
-    $FinalContent = $FinalLines -join "`r`n"
-    [System.IO.File]::WriteAllText($MainPresetPath, $FinalContent, [System.Text.Encoding]::UTF8)
-    Write-Color "[OK] MainPreset.ts aggiornato e deduplicato con successo." "Green"
+        # Step B: rimozione registrazioni legacy/duplicate e inserimento forma canonica in plugins: [
+        $finalLines = [System.Collections.Generic.List[string]]::new()
+        $pluginsIdx = -1
+        for ($i = 0; $i -lt $filteredLines.Count; $i++) {
+            $line = $filteredLines[$i]
+            if ($line -match $RegisterRegex) { continue }
+            $finalLines.Add($line)
+            if ($line -match 'plugins\s*:\s*\[') { $pluginsIdx = $finalLines.Count }
+        }
+        if ($pluginsIdx -ge 0) {
+            $finalLines.Insert($pluginsIdx, $TargetRegister)
+        } else {
+            $finalLines.Add($TargetRegister)
+        }
+
+        $NewContent = $finalLines -join $NL
+        [System.IO.File]::WriteAllText($MainPresetPath, $NewContent, [System.Text.UTF8Encoding]::new($false))
+        Write-Color "[OK] MainPreset.ts aggiornato, deduplicato e normalizzato con successo." "Green"
+    }
 }
 
 # 6. Clean Webpack Cache

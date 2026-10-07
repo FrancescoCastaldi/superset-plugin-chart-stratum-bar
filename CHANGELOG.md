@@ -4,6 +4,14 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.19] - 2026-10-07
+
+### Fixed
+- **Idempotenza Rigida della Registrazione in `MainPreset.ts`**: Riscritta la fase di patch di `install-plugin.ps1` allineandola agli standard della suite: verifica riga-esatta della forma canonica `new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),` (indentazione standard a 8 spazi), normalizzazione delle varianti legacy (righe `.register()`, indentazioni anomale, duplicati) invece della duplicazione, preservazione dei fine riga originali del file e scrittura UTF-8 senza BOM.
+
+### Changed
+- **Coerenza `dist/` e `package-lock.json`**: Rigenerato `dist/` tramite `npm run build` verificando la coincidenza byte a byte con gli artefatti committati (`git status` pulito su `dist/**`) e sincronizzato `package-lock.json` con le devDependencies correnti di `package.json`.
+
 ## [0.3.18] - 2026-10-05
 
 ### Fixed
