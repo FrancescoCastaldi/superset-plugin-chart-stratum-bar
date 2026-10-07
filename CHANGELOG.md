@@ -4,6 +4,20 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.20] - 2026-10-08
+
+### Changed
+- **Renderer Decomposition (no visual change)**: `get3DBarOption` (`renderers3D.ts`) and `get2DBarOption` (`renderers2D.ts`) were split into pure, individually tested modules:
+  - `utils/isometricGeometry.ts`: isometric depth offsets, ellipse sampling, stacked/grouped bar sizing and group offsets, 3D bar rectangle with minimum-length enforcement, pedestal / zero-footprint / prism-face points, cylinder body and cap points, axis-break cut-mark anchor and 3D value-label placement.
+  - `utils/barLayout.ts`: 3D stack bases and axis ceiling, 2D value extent, signed bar border radius.
+  - `utils/seriesScaffolding.ts`: building blocks shared by both series loops (selection/opacity, benchmark and axis-break mark lines, smart-annotation pins, secondary line series, axis arrangement).
+  - `components/isometricShapes.ts`: theme-aware ECharts graphic elements of the 3D bars (pedestal, prism, cylinder, labels, cut mark).
+- Public exports, control panel and `transformProps` output are unchanged.
+
+### Added
+- **Renderer Characterization Suite** (`test/rendererCharacterization.test.ts`): 17 representative 2D/3D inputs whose serialized ECharts options (including `renderItem` output on mock coordinate systems and formatter output) were frozen against v0.3.19 in `test/__fixtures__/rendererOptions.fixture.json`; the refactored renderers reproduce the fixture byte for byte.
+- Unit tests for the extracted geometry, layout and scaffolding modules and for `plugin/seriesBuilder.ts` (single/multi metric, breakdown, combined labels, pivoted data, secondary metrics, sorting).
+
 ## [0.3.19] - 2026-10-07
 
 ### Fixed

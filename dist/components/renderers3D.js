@@ -1,79 +1,43 @@
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 import { calculateAxisBreak, transformValueForAxisBreak } from '../utils/axisBreakUtils';
-import { adjustColorBrightness, hexToRgba } from '../utils/colors';
-function getEllipsePoints(cx, cy, rx, ry, count = 24) {
-    const pts = [];
-    for (let i = 0; i < count; i++) {
-        const angle = (i / count) * 2 * Math.PI;
-        pts.push([cx + rx * Math.cos(angle), cy + ry * Math.sin(angle)]);
-    }
-    return pts;
+import { compute3DAxisMax, compute3DStackLayout } from '../utils/barLayout';
+import { computeBarRect3D, compute3DLabelPlacement, getCapOffsets, getIsometricOffsets, isTinySegment, } from '../utils/isometricGeometry';
+import { SMART_ANNOTATION_STYLE_3D, arrangeAxes, buildLineSeries, getBenchmarkLabel, getBenchmarkLineStyle, getItemOpacity, getSmartAnnotationMarkPoint, isItemSelected, } from '../utils/seriesScaffolding';
+import { buildAxisBreakMarkElement, buildCylinderElements, buildPedestalElements, buildPrismElements, buildValueLabelElement, buildZeroFootprintElement, getBarPalette, } from './isometricShapes';
+function isAboveCutoff(rawVal, axisBreak) {
+    return axisBreak.enabled && typeof rawVal === 'number' && rawVal > axisBreak.effectiveCutoff;
+}
+/** Label of a 3D bar: always the original (uncompressed) value, prefixed with "//" when capped. */
+function format3DValueLabel(rawVal, visualVal, axisBreak) {
+    const displayVal = rawVal !== undefined && rawVal !== null ? rawVal : visualVal;
+    const formattedVal = typeof displayVal === 'number'
+        ? displayVal.toLocaleString('it-IT')
+        : String(displayVal);
+    return isAboveCutoff(rawVal, axisBreak) ? `// ${formattedVal}` : formattedVal;
 }
 export function get3DBarOption(props) {
     const { categories, series, benchmark, orientation, barShape3D, depth3D = 20, tilt3D = 25, shadow3D = true, showBenchmark, showValue, valuePosition = 'top', colorScheme, showLegend, legendOrientation, xAxisTitle, yAxisTitle, hasDualYAxis, yAxis2Title, yAxis2Format, secondaryAreaGradient = true, secondaryLineWidth = 3, secondaryLineColor = '#ea580c', themeMode = 'light', enableA11yDecal = false, enableAxisBreak = false, axisBreakMode = 'auto', axisBreakThreshold, } = props;
     const isDark = themeMode === 'dark';
     const isVertical = orientation === 'vertical';
-    const tiltRad = (tilt3D * Math.PI) / 180;
-    const offsetX = Math.round(depth3D * Math.cos(tiltRad));
-    const offsetY = Math.round(depth3D * Math.sin(tiltRad));
+    const offsets = getIsometricOffsets(depth3D, tilt3D);
     const numSeries = series.length || 1;
     const isStacked = props.stacking !== 'none';
-    // Calculate Axis Break / Outlier Pinning
     const axisBreak = calculateAxisBreak(series, isStacked, categories.length, {
         enabled: enableAxisBreak,
         mode: axisBreakMode,
         threshold: axisBreakThreshold,
     });
-    // Precompute accumulated bottoms for stacked mode, topmost series per category, and max values for scaling
-    const stackBottoms = series.map(() => categories.map(() => 0));
-    const topSeriesIdxPerCat = categories.map(() => -1);
-    let maxStackedSum = 0;
-    let maxSingleVal = 0;
-    for (let c = 0; c < categories.length; c++) {
-        let accum = 0;
-        for (let s = 0; s < series.length; s++) {
-            if (series[s].yAxisIndex === 1)
-                continue;
-            const rawV = series[s].data[c];
-            if (typeof rawV === 'number' && !isNaN(rawV)) {
-                // Visual value under axis break
-                const visualV = axisBreak.enabled
-                    ? (transformValueForAxisBreak(rawV, axisBreak).visualVal ?? rawV)
-                    : rawV;
-                if (visualV > maxSingleVal)
-                    maxSingleVal = visualV;
-                if (isStacked) {
-                    stackBottoms[s][c] = accum;
-                    accum += visualV;
-                    if (visualV > 0) {
-                        topSeriesIdxPerCat[c] = s;
-                    }
-                }
-            }
-        }
-        if (accum > maxStackedSum)
-            maxStackedSum = accum;
-    }
-    // Value Axis (Primary) - custom series in ECharts needs explicit axisMax for headroom and proper scaling
-    let ceilingVal = axisBreak.enabled
-        ? axisBreak.displayMax
-        : (isStacked ? maxStackedSum : maxSingleVal);
-    if (showBenchmark && benchmark && typeof benchmark.value === 'number' && benchmark.value > ceilingVal) {
-        ceilingVal = benchmark.value;
-    }
-    const headroomMultiplier = valuePosition === 'slanted' ? 1.25 : 1.15;
-    const axisMax = ceilingVal > 0 ? Math.ceil(ceilingVal * headroomMultiplier) : undefined;
+    const layout = compute3DStackLayout(series, categories.length, isStacked, axisBreak);
+    const { stackBottoms, topSeriesIdxPerCat } = layout;
+    const axisMax = compute3DAxisMax({ layout, axisBreak, isStacked, showBenchmark, benchmark, valuePosition });
     const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisMax);
-    // Category Axis
     const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
-    // Secondary Value Axis (Right Y-Axis - Color-coded)
     const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
+    const { topCapOffset, rightCapOffset } = getCapOffsets(barShape3D, offsets);
     const echartsSeries = [];
-    // Render 3D Isometric Bar using ECharts Custom Series (renderItem)
     series.forEach((s, seriesIdx) => {
         const baseColor = colorScheme[seriesIdx % colorScheme.length] || '#0284c7';
-        const topColor = adjustColorBrightness(baseColor, 35);
-        const rightColor = adjustColorBrightness(baseColor, -25);
+        const palette = getBarPalette(baseColor);
         const customSeries = {
             name: s.name,
             type: 'custom',
@@ -82,638 +46,59 @@ export function get3DBarOption(props) {
                 const val = isVertical ? api.value(1) : api.value(0);
                 if (val === null || val === undefined || isNaN(val))
                     return null;
-                let yBase;
-                let yTop;
-                let x0;
-                let x1;
                 const catName = categories[categoryIndex] || '';
-                const hasSelection = Boolean(props.selectedValues && props.selectedValues.length > 0);
-                const isSelected = !hasSelection ||
-                    props.selectedValues.includes(catName) ||
-                    props.selectedValues.includes(s.name) ||
-                    props.selectedValues.includes(`${catName} · ${s.name}`);
-                const itemOpacity = isSelected ? 1.0 : 0.28;
-                if (isVertical) {
-                    // Vertical 3D Column / Prism
-                    const bandWidth = Math.abs(api.size([1, 0])[0]);
-                    if (isStacked) {
-                        const barWidth = Math.min(Math.max(bandWidth * 0.45, 14), 48);
-                        const startPoint = api.coord([categoryIndex, 0]);
-                        const baseVal = stackBottoms[seriesIdx]?.[categoryIndex] || 0;
-                        const topVal = baseVal + val;
-                        const ptBase = api.coord([categoryIndex, baseVal]);
-                        const ptTop = api.coord([categoryIndex, topVal]);
-                        x0 = startPoint[0] - barWidth / 2;
-                        x1 = startPoint[0] + barWidth / 2;
-                        yBase = ptBase[1];
-                        yTop = ptTop[1];
-                    }
-                    else {
-                        // Grouped side-by-side with dynamic offset
-                        const maxGroupWidth = Math.min(bandWidth * 0.75, 140);
-                        const barWidth = Math.min(Math.max(maxGroupWidth / numSeries - 3, 6), 40);
-                        const gap = numSeries > 1 ? 2 : 0;
-                        const groupOffset = (seriesIdx - (numSeries - 1) / 2) * (barWidth + gap);
-                        const pt = api.coord([categoryIndex, val]);
-                        const ptBase = api.coord([categoryIndex, 0]);
-                        x0 = pt[0] + groupOffset - barWidth / 2;
-                        x1 = pt[0] + groupOffset + barWidth / 2;
-                        yTop = pt[1];
-                        yBase = ptBase[1];
-                    }
-                    // Enforce minimum visual height for non-zero values so miniature bars are never flat wafers
-                    const minBarHeight = 6;
-                    if (val > 0 && yBase - yTop < minBarHeight) {
-                        yTop = yBase - minBarHeight;
-                    }
-                    else if (val < 0 && yTop - yBase < minBarHeight) {
-                        yTop = yBase + minBarHeight;
-                    }
-                }
-                else {
-                    // Horizontal 3D Bar
-                    const bandHeight = Math.abs(api.size([0, 1])[1]);
-                    if (isStacked) {
-                        const barHeight = Math.min(Math.max(bandHeight * 0.45, 14), 48);
-                        const startPoint = api.coord([0, categoryIndex]);
-                        const baseVal = stackBottoms[seriesIdx]?.[categoryIndex] || 0;
-                        const topVal = baseVal + val;
-                        const ptBase = api.coord([baseVal, categoryIndex]);
-                        const ptEnd = api.coord([topVal, categoryIndex]);
-                        yTop = startPoint[1] - barHeight / 2;
-                        yBase = startPoint[1] + barHeight / 2;
-                        x0 = ptBase[0];
-                        x1 = ptEnd[0];
-                    }
-                    else {
-                        const maxGroupHeight = Math.min(bandHeight * 0.75, 140);
-                        const barHeight = Math.min(Math.max(maxGroupHeight / numSeries - 3, 6), 40);
-                        const gap = numSeries > 1 ? 2 : 0;
-                        const groupOffset = (seriesIdx - (numSeries - 1) / 2) * (barHeight + gap);
-                        const pt = api.coord([val, categoryIndex]);
-                        const ptBase = api.coord([0, categoryIndex]);
-                        yTop = pt[1] + groupOffset - barHeight / 2;
-                        yBase = pt[1] + groupOffset + barHeight / 2;
-                        x0 = ptBase[0];
-                        x1 = pt[0];
-                    }
-                    // Enforce minimum visual width for non-zero values
-                    const minBarWidth = 6;
-                    if (val > 0 && x1 - x0 < minBarWidth) {
-                        x1 = x0 + minBarWidth;
-                    }
-                    else if (val < 0 && x0 - x1 < minBarWidth) {
-                        x1 = x0 - minBarWidth;
-                    }
-                }
+                const itemOpacity = getItemOpacity(isItemSelected(props.selectedValues, catName, s.name));
+                const bandSize = isVertical ? Math.abs(api.size([1, 0])[0]) : Math.abs(api.size([0, 1])[1]);
+                const rect = computeBarRect3D({
+                    isVertical,
+                    isStacked,
+                    categoryIndex,
+                    val,
+                    baseVal: isStacked ? (stackBottoms[seriesIdx]?.[categoryIndex] || 0) : 0,
+                    seriesIdx,
+                    numSeries,
+                    bandSize,
+                    coord: (point) => api.coord(point),
+                });
                 const children = [];
-                // 0. Render Architectural 3D Base Pedestal under this category (rendered once by the first series)
                 if (seriesIdx === 0) {
-                    if (isVertical) {
-                        const startPt = api.coord([categoryIndex, 0]);
-                        const baseBandW = Math.abs(api.size([1, 0])[0]);
-                        const pedW = isStacked
-                            ? Math.min(Math.max(baseBandW * 0.55, 28), 70)
-                            : Math.min(Math.max(baseBandW * 0.85, 40), 160);
-                        const pedX0 = startPt[0] - pedW / 2;
-                        const pedX1 = startPt[0] + pedW / 2;
-                        const pedYBase = startPt[1];
-                        const plinthH = 5;
-                        // Pedestal Top Face (Piano d'appoggio 3D)
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: [
-                                    [pedX0, pedYBase],
-                                    [pedX1, pedYBase],
-                                    [pedX1 + offsetX, pedYBase - offsetY],
-                                    [pedX0 + offsetX, pedYBase - offsetY],
-                                ],
-                            },
-                            style: {
-                                fill: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.95)',
-                                stroke: isDark ? '#334155' : '#cbd5e1',
-                                lineWidth: 1,
-                            },
-                            silent: true,
-                            z2: 0,
-                        });
-                        // Pedestal Front Bevel (Bordo frontale ribassato)
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: [
-                                    [pedX0, pedYBase],
-                                    [pedX1, pedYBase],
-                                    [pedX1, pedYBase + plinthH],
-                                    [pedX0, pedYBase + plinthH],
-                                ],
-                            },
-                            style: {
-                                fill: isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(226, 232, 240, 0.98)',
-                                stroke: isDark ? '#1e293b' : '#94a3b8',
-                                lineWidth: 1,
-                            },
-                            silent: true,
-                            z2: 0,
-                        });
-                        // Pedestal Right Bevel (Profondità laterale)
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: [
-                                    [pedX1, pedYBase],
-                                    [pedX1 + offsetX, pedYBase - offsetY],
-                                    [pedX1 + offsetX, pedYBase - offsetY + plinthH],
-                                    [pedX1, pedYBase + plinthH],
-                                ],
-                            },
-                            style: {
-                                fill: isDark ? 'rgba(15, 23, 42, 0.98)' : 'rgba(203, 213, 225, 0.98)',
-                                stroke: isDark ? '#1e293b' : '#94a3b8',
-                                lineWidth: 1,
-                            },
-                            silent: true,
-                            z2: 0,
-                        });
-                    }
-                    else {
-                        const startPt = api.coord([0, categoryIndex]);
-                        const baseBandH = Math.abs(api.size([0, 1])[1]);
-                        const pedH = isStacked
-                            ? Math.min(Math.max(baseBandH * 0.55, 28), 70)
-                            : Math.min(Math.max(baseBandH * 0.85, 40), 160);
-                        const pedY0 = startPt[1] - pedH / 2;
-                        const pedY1 = startPt[1] + pedH / 2;
-                        const pedXBase = startPt[0];
-                        const plinthW = 5;
-                        // Backing plinth
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: [
-                                    [pedXBase - plinthW, pedY0],
-                                    [pedXBase, pedY0],
-                                    [pedXBase, pedY1],
-                                    [pedXBase - plinthW, pedY1],
-                                ],
-                            },
-                            style: {
-                                fill: isDark ? 'rgba(15, 23, 42, 0.92)' : 'rgba(226, 232, 240, 0.98)',
-                                stroke: isDark ? '#1e293b' : '#cbd5e1',
-                                lineWidth: 1,
-                            },
-                            silent: true,
-                            z2: 0,
-                        });
-                        // Top facet
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: [
-                                    [pedXBase - plinthW, pedY0],
-                                    [pedXBase, pedY0],
-                                    [pedXBase + offsetX, pedY0 - offsetY],
-                                    [pedXBase - plinthW + offsetX, pedY0 - offsetY],
-                                ],
-                            },
-                            style: {
-                                fill: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.95)',
-                                stroke: isDark ? '#334155' : '#cbd5e1',
-                                lineWidth: 1,
-                            },
-                            silent: true,
-                            z2: 0,
-                        });
-                    }
+                    children.push(...buildPedestalElements({
+                        isVertical,
+                        isStacked,
+                        isDark,
+                        startPt: api.coord(isVertical ? [categoryIndex, 0] : [0, categoryIndex]),
+                        bandSize,
+                        offsets,
+                    }));
                 }
-                // Zero-value handling: render subtle footprint slot and skip drawing deformed 0-height bars
+                // Zero values get a footprint slot instead of a deformed 0-height bar; selection dimming is not applied to them.
                 if (val === 0) {
                     if (!isStacked) {
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: isVertical ? [
-                                    [x0, yBase],
-                                    [x1, yBase],
-                                    [x1 + offsetX * 0.5, yBase - offsetY * 0.5],
-                                    [x0 + offsetX * 0.5, yBase - offsetY * 0.5],
-                                ] : [
-                                    [x0, yTop],
-                                    [x0 + offsetX * 0.5, yTop - offsetY * 0.5],
-                                    [x0 + offsetX * 0.5, yBase - offsetY * 0.5],
-                                    [x0, yBase],
-                                ],
-                            },
-                            style: {
-                                fill: isDark ? 'rgba(51, 65, 85, 0.25)' : 'rgba(203, 213, 225, 0.4)',
-                                stroke: isDark ? 'rgba(100, 116, 139, 0.4)' : 'rgba(148, 163, 184, 0.5)',
-                                lineWidth: 0.75,
-                                lineDash: [2, 2],
-                            },
-                            silent: true,
-                            z2: 1,
-                        });
+                        children.push(buildZeroFootprintElement(rect, isVertical, isDark, offsets));
                     }
                     return {
                         type: 'group',
                         children,
                     };
                 }
-                const isCylinder = barShape3D === 'cylinder';
-                if (isCylinder) {
-                    if (isVertical) {
-                        const barWidth = Math.abs(x1 - x0);
-                        const cx = (x0 + x1) / 2;
-                        const rx = barWidth / 2;
-                        const ry = Math.max(offsetY * 0.7, 5);
-                        // 1. Base Shadow on ground
-                        if (shadow3D) {
-                            children.push({
-                                type: 'polygon',
-                                shape: {
-                                    points: getEllipsePoints(cx + offsetX * 0.35, yBase, rx * 1.05, ry * 0.8),
-                                },
-                                style: { fill: 'rgba(0, 0, 0, 0.14)' },
-                                silent: true,
-                                z2: 0,
-                            });
-                        }
-                        // 2. Cylindrical Curved Body with bottom rim curve
-                        const bodyPoints = [
-                            [x0, yTop],
-                            [x1, yTop],
-                            [x1, yBase],
-                        ];
-                        for (let step = 0; step <= 12; step++) {
-                            const a = (step / 12) * Math.PI;
-                            bodyPoints.push([cx + rx * Math.cos(a), yBase + ry * Math.sin(a)]);
-                        }
-                        bodyPoints.push([x0, yTop]);
-                        children.push({
-                            type: 'polygon',
-                            shape: { points: bodyPoints },
-                            style: {
-                                fill: {
-                                    type: 'linear',
-                                    x: 0, y: 0, x2: 1, y2: 0,
-                                    colorStops: [
-                                        { offset: 0, color: adjustColorBrightness(baseColor, -25) },
-                                        { offset: 0.28, color: adjustColorBrightness(baseColor, 35) },
-                                        { offset: 0.65, color: baseColor },
-                                        { offset: 1, color: adjustColorBrightness(baseColor, -35) },
-                                    ],
-                                },
-                                stroke: adjustColorBrightness(baseColor, -30),
-                                lineWidth: 0.5,
-                            },
-                            z2: 2,
-                        });
-                        // 3. Top Elliptical Cap
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: getEllipsePoints(cx, yTop, rx, ry),
-                            },
-                            style: {
-                                fill: {
-                                    type: 'linear',
-                                    x: 0, y: 0, x2: 1, y2: 1,
-                                    colorStops: [
-                                        { offset: 0, color: adjustColorBrightness(topColor, 25) },
-                                        { offset: 1, color: adjustColorBrightness(topColor, -5) },
-                                    ],
-                                },
-                                stroke: adjustColorBrightness(topColor, -20),
-                                lineWidth: 0.75,
-                            },
-                            z2: 4,
-                        });
-                    }
-                    else {
-                        // Horizontal Cylinder
-                        const barHeight = Math.abs(yBase - yTop);
-                        const cy = (yTop + yBase) / 2;
-                        const ry = barHeight / 2;
-                        const rx = Math.max(offsetX * 0.7, 5);
-                        // 1. Base Shadow
-                        if (shadow3D) {
-                            children.push({
-                                type: 'polygon',
-                                shape: {
-                                    points: [
-                                        [x0, yBase],
-                                        [x1, yBase],
-                                        [x1 + 6, yBase + 4],
-                                        [x0 + 6, yBase + 4],
-                                    ],
-                                },
-                                style: { fill: 'rgba(0, 0, 0, 0.12)' },
-                                silent: true,
-                                z2: 0,
-                            });
-                        }
-                        // 2. Cylindrical Horizontal Body with right rim curve
-                        const bodyPoints = [
-                            [x0, yTop],
-                            [x1, yTop],
-                        ];
-                        for (let step = 0; step <= 12; step++) {
-                            const a = -Math.PI / 2 + (step / 12) * Math.PI;
-                            bodyPoints.push([x1 + rx * Math.cos(a), cy + ry * Math.sin(a)]);
-                        }
-                        bodyPoints.push([x0, yBase]);
-                        bodyPoints.push([x0, yTop]);
-                        children.push({
-                            type: 'polygon',
-                            shape: { points: bodyPoints },
-                            style: {
-                                fill: {
-                                    type: 'linear',
-                                    x: 0, y: 0, x2: 0, y2: 1,
-                                    colorStops: [
-                                        { offset: 0, color: adjustColorBrightness(baseColor, -20) },
-                                        { offset: 0.28, color: adjustColorBrightness(baseColor, 35) },
-                                        { offset: 0.65, color: baseColor },
-                                        { offset: 1, color: adjustColorBrightness(baseColor, -35) },
-                                    ],
-                                },
-                                stroke: adjustColorBrightness(baseColor, -30),
-                                lineWidth: 0.5,
-                            },
-                            z2: 2,
-                        });
-                        // 3. Right Elliptical Cap
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: getEllipsePoints(x1, cy, rx, ry),
-                            },
-                            style: {
-                                fill: {
-                                    type: 'linear',
-                                    x: 0, y: 0, x2: 1, y2: 1,
-                                    colorStops: [
-                                        { offset: 0, color: adjustColorBrightness(rightColor, 15) },
-                                        { offset: 1, color: adjustColorBrightness(rightColor, -15) },
-                                    ],
-                                },
-                                stroke: adjustColorBrightness(rightColor, -35),
-                                lineWidth: 0.75,
-                            },
-                            z2: 4,
-                        });
-                    }
-                }
-                else {
-                    // Rectangular Prism
-                    // 1. Base Shadow on ground (cast onto pedestal surface)
-                    if (shadow3D) {
-                        children.push({
-                            type: 'polygon',
-                            shape: {
-                                points: [
-                                    [x0 + 1, yBase + 1],
-                                    [x1 + 1, yBase + 1],
-                                    [x1 + offsetX * 0.7, yBase - offsetY * 0.35 + 1],
-                                    [x0 + offsetX * 0.7, yBase - offsetY * 0.35 + 1],
-                                ],
-                            },
-                            style: {
-                                fill: isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.12)',
-                            },
-                            silent: true,
-                            z2: 1,
-                        });
-                    }
-                    // 2. Front Face
-                    children.push({
-                        type: 'polygon',
-                        shape: {
-                            points: [
-                                [x0, yTop],
-                                [x1, yTop],
-                                [x1, yBase],
-                                [x0, yBase],
-                            ],
-                        },
-                        style: {
-                            fill: isVertical ? {
-                                type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
-                                colorStops: [
-                                    { offset: 0, color: adjustColorBrightness(baseColor, 20) }, // Luce speculare sinistra
-                                    { offset: 0.25, color: baseColor }, // Colore base pieno
-                                    { offset: 1, color: adjustColorBrightness(baseColor, -15) }, // Ombra verso destra
-                                ],
-                            } : baseColor,
-                            stroke: adjustColorBrightness(baseColor, -35),
-                            lineWidth: 0.5,
-                        },
-                        z2: 2,
+                const shapeOptions = { rect, isVertical, isDark, shadow3D, offsets, palette };
+                children.push(...(barShape3D === 'cylinder'
+                    ? buildCylinderElements(shapeOptions)
+                    : buildPrismElements(shapeOptions)));
+                if (showValue && (!isStacked || !isTinySegment(rect, isVertical))) {
+                    const placement = compute3DLabelPlacement({
+                        valuePosition,
+                        isVertical,
+                        isTopSegment: !isStacked || (seriesIdx === topSeriesIdxPerCat[categoryIndex]),
+                        rect,
+                        offsets,
+                        topCapOffset,
+                        rightCapOffset,
                     });
-                    // 3. Right / Side Face (Depth extrusion)
-                    children.push({
-                        type: 'polygon',
-                        shape: {
-                            points: [
-                                [x1, yTop],
-                                [x1 + offsetX, yTop - offsetY],
-                                [x1 + offsetX, yBase - offsetY],
-                                [x1, yBase],
-                            ],
-                        },
-                        style: {
-                            fill: isVertical ? {
-                                type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [
-                                    { offset: 0, color: rightColor },
-                                    { offset: 1, color: adjustColorBrightness(rightColor, -20) },
-                                ],
-                            } : rightColor,
-                            stroke: adjustColorBrightness(rightColor, -40),
-                            lineWidth: 0.5,
-                        },
-                        z2: 1,
-                    });
-                    // 4. Top Face (Cap)
-                    children.push({
-                        type: 'polygon',
-                        shape: {
-                            points: [
-                                [x0, yTop],
-                                [x1, yTop],
-                                [x1 + offsetX, yTop - offsetY],
-                                [x0 + offsetX, yTop - offsetY],
-                            ],
-                        },
-                        style: {
-                            fill: isVertical ? {
-                                type: 'linear', x: 0, y: 0, x2: 1, y2: 1,
-                                colorStops: [
-                                    { offset: 0, color: adjustColorBrightness(topColor, 20) },
-                                    { offset: 1, color: topColor },
-                                ],
-                            } : topColor,
-                            stroke: adjustColorBrightness(topColor, -20),
-                            lineWidth: 0.5,
-                        },
-                        z2: 3,
-                    });
+                    children.push(buildValueLabelElement(format3DValueLabel(s.data[categoryIndex], val, axisBreak), placement, isDark));
                 }
-                // 5. Value Label (rendered only for non-zero values)
-                if (showValue && val !== 0) {
-                    const segmentHeight = Math.abs(yBase - yTop);
-                    const segmentWidth = Math.abs(x1 - x0);
-                    const isTiny = isVertical ? segmentHeight < 14 : segmentWidth < 20;
-                    // In stacked mode, only render if segment has enough space
-                    if (!isStacked || !isTiny) {
-                        const isTopSegment = !isStacked || (seriesIdx === topSeriesIdxPerCat[categoryIndex]);
-                        const topCapOffset = barShape3D === 'cylinder' ? Math.max(offsetY * 0.7, 5) : offsetY;
-                        const rightCapOffset = barShape3D === 'cylinder' ? Math.max(offsetX * 0.7, 5) : offsetX;
-                        let labelX;
-                        let labelY;
-                        let textAlign = 'center';
-                        let textVerticalAlign = 'middle';
-                        let rotation = 0;
-                        let isLightText = false;
-                        if (valuePosition === 'inside') {
-                            // DENTRO: Tutti i blocchi hanno i valori al loro centro interno
-                            labelX = (x0 + x1) / 2;
-                            labelY = (yTop + yBase) / 2;
-                            textAlign = 'center';
-                            textVerticalAlign = 'middle';
-                            isLightText = true;
-                        }
-                        else if (valuePosition === 'slanted') {
-                            // DI TRAVERSO: Inclinato a 45°
-                            if (isTopSegment) {
-                                // Cima della colonna: posizionato SOPRA inclinato a 45°
-                                if (isVertical) {
-                                    labelX = (x0 + x1 + offsetX) / 2;
-                                    labelY = yTop - topCapOffset - 6;
-                                    textAlign = 'left';
-                                    textVerticalAlign = 'middle';
-                                    rotation = Math.PI / 4;
-                                }
-                                else {
-                                    labelX = x1 + rightCapOffset + 6;
-                                    labelY = (yTop + yBase - offsetY) / 2;
-                                    textAlign = 'left';
-                                    textVerticalAlign = 'middle';
-                                    rotation = -35 * Math.PI / 180;
-                                }
-                                isLightText = false;
-                            }
-                            else {
-                                // Blocco inferiore impilato: centrato dentro inclinato a 45°
-                                labelX = (x0 + x1) / 2;
-                                labelY = (yTop + yBase) / 2;
-                                textAlign = 'center';
-                                textVerticalAlign = 'middle';
-                                rotation = Math.PI / 4;
-                                isLightText = true;
-                            }
-                        }
-                        else {
-                            // SOPRA (Top / Outside):
-                            if (isTopSegment) {
-                                // Cima della colonna (o non impilato): TASSATIVAMENTE SOPRA LA CALOTTA!
-                                if (isVertical) {
-                                    labelX = (x0 + x1 + offsetX) / 2;
-                                    labelY = yTop - topCapOffset - 8;
-                                    textAlign = 'center';
-                                    textVerticalAlign = 'bottom';
-                                    rotation = 0;
-                                }
-                                else {
-                                    labelX = x1 + rightCapOffset + 8;
-                                    labelY = (yTop + yBase - offsetY) / 2;
-                                    textAlign = 'left';
-                                    textVerticalAlign = 'middle';
-                                    rotation = 0;
-                                }
-                                isLightText = false;
-                            }
-                            else {
-                                // Blocco inferiore impilato: centrato dentro il proprio blocco in bianco ad alto contrasto
-                                labelX = (x0 + x1) / 2;
-                                labelY = (yTop + yBase) / 2;
-                                textAlign = 'center';
-                                textVerticalAlign = 'middle';
-                                rotation = 0;
-                                isLightText = true;
-                            }
-                        }
-                        const rawVal = s.data[categoryIndex];
-                        const isCapped = axisBreak.enabled && typeof rawVal === 'number' && rawVal > axisBreak.effectiveCutoff;
-                        const displayVal = rawVal !== undefined && rawVal !== null ? rawVal : val;
-                        const formattedVal = typeof displayVal === 'number'
-                            ? displayVal.toLocaleString('it-IT')
-                            : String(displayVal);
-                        const labelText = isCapped ? `// ${formattedVal}` : formattedVal;
-                        const textElement = {
-                            type: 'text',
-                            style: {
-                                text: labelText,
-                                x: labelX,
-                                y: labelY,
-                                textAlign,
-                                textVerticalAlign,
-                                font: 'bold 11px sans-serif',
-                                fill: isLightText ? '#ffffff' : (isDark ? '#f8fafc' : '#1f2937'),
-                                stroke: isLightText ? 'rgba(0, 0, 0, 0.75)' : (isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'),
-                                lineWidth: isLightText ? 2.5 : 1.5,
-                            },
-                            z2: 5,
-                        };
-                        if (rotation !== 0) {
-                            textElement.rotation = rotation;
-                            textElement.originX = labelX;
-                            textElement.originY = labelY;
-                        }
-                        children.push(textElement);
-                    }
-                }
-                // 6. Draw visual Axis Break mark ("//") across the column if capped
-                const rawItemVal = s.data[categoryIndex];
-                if (axisBreak.enabled && typeof rawItemVal === 'number' && rawItemVal > axisBreak.effectiveCutoff) {
-                    const cutY = (yTop + yBase) / 2;
-                    const cutX = (x0 + x1) / 2;
-                    if (isVertical) {
-                        const breakWidth = Math.abs(x1 - x0) * 0.7;
-                        children.push({
-                            type: 'text',
-                            style: {
-                                text: '//',
-                                x: cutX,
-                                y: yTop + 8,
-                                textAlign: 'center',
-                                textVerticalAlign: 'middle',
-                                font: 'bold 14px monospace',
-                                fill: isDark ? '#ffffff' : '#ffffff',
-                                stroke: 'rgba(0, 0, 0, 0.8)',
-                                lineWidth: 2,
-                            },
-                            z2: 6,
-                        });
-                    }
-                    else {
-                        children.push({
-                            type: 'text',
-                            style: {
-                                text: '//',
-                                x: x1 - 8,
-                                y: cutY,
-                                textAlign: 'center',
-                                textVerticalAlign: 'middle',
-                                font: 'bold 14px monospace',
-                                fill: '#ffffff',
-                                stroke: 'rgba(0, 0, 0, 0.8)',
-                                lineWidth: 2,
-                            },
-                            z2: 6,
-                        });
-                    }
+                if (isAboveCutoff(s.data[categoryIndex], axisBreak)) {
+                    children.push(buildAxisBreakMarkElement(rect, isVertical));
                 }
                 children.forEach((c) => {
                     if (c.style)
@@ -741,131 +126,45 @@ export function get3DBarOption(props) {
             },
             z: 2 + seriesIdx,
         };
-        // Benchmark line
         if (seriesIdx === 0 && showBenchmark && benchmark && typeof benchmark.value === 'number') {
             customSeries.markLine = {
                 symbol: ['none', 'none'],
                 silent: false,
-                lineStyle: {
-                    color: '#ef4444',
-                    type: 'dashed',
-                    width: 2,
-                },
-                label: {
-                    position: isVertical ? 'end' : 'start',
-                    formatter: `${benchmark.label}: ${benchmark.value.toLocaleString('it-IT')}`,
-                    color: '#dc2626',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    backgroundColor: 'rgba(254, 242, 242, 0.92)',
-                    borderColor: '#fca5a5',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    padding: [3, 6],
-                },
+                lineStyle: getBenchmarkLineStyle(),
+                label: getBenchmarkLabel(benchmark, isVertical ? 'end' : 'start'),
                 data: [
                     isVertical ? { yAxis: benchmark.value } : { xAxis: benchmark.value },
                 ],
             };
         }
-        // Handle Secondary / Line Series overlaid on 3D view
         if (props.showSmartAnnotations) {
-            customSeries.markPoint = {
-                symbol: 'pin',
-                symbolSize: 45,
-                label: {
-                    show: true,
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    formatter: (params) => params.type === 'max' ? '🏆' : '📉',
-                    fontSize: 16,
-                },
-                itemStyle: {
-                    color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                    borderColor: baseColor,
-                    borderWidth: 2,
-                    shadowBlur: 8,
-                    shadowColor: 'rgba(0,0,0,0.3)',
-                },
-                data: [
-                    { type: 'max', name: 'Max' },
-                    { type: 'min', name: 'Min' },
-                ],
-            };
+            customSeries.markPoint = getSmartAnnotationMarkPoint(baseColor, isDark, SMART_ANNOTATION_STYLE_3D);
         }
         if (s.seriesType === 'line') {
-            const lineSeriesItem = {
+            echartsSeries.push(buildLineSeries({
                 name: s.name,
-                type: 'line',
-                smooth: true,
-                symbol: 'circle',
-                symbolSize: 8,
-                yAxisIndex: isVertical ? (s.yAxisIndex ?? 0) : 0,
-                xAxisIndex: !isVertical ? (s.yAxisIndex ?? 0) : 0,
                 data: !isVertical ? s.data.map((v, i) => [v, i]) : s.data,
-                lineStyle: {
-                    width: secondaryLineWidth,
-                    color: baseColor,
-                    shadowColor: hexToRgba(baseColor, 0.4),
-                    shadowBlur: 8,
-                    shadowOffsetY: 3,
-                },
-                itemStyle: {
-                    color: baseColor,
-                    borderColor: isDark ? '#111827' : '#ffffff',
-                    borderWidth: 2.5,
-                },
-                emphasis: {
-                    scale: true,
-                    itemStyle: {
-                        borderWidth: 3,
-                        shadowBlur: 10,
-                        shadowColor: hexToRgba(baseColor, 0.6),
-                    },
-                },
-                label: {
-                    show: showValue,
-                    position: 'top',
-                    color: baseColor,
-                    fontWeight: 700,
-                    fontSize: 11,
-                    formatter: (params) => {
-                        const val = params.value;
-                        if (val === null || val === undefined)
-                            return '';
-                        if (yAxis2Format === '.2%') {
-                            return `${(Number(val) * 100).toFixed(1)}%`;
-                        }
-                        return typeof val === 'number' ? val.toLocaleString('it-IT') : String(val);
-                    },
-                },
+                baseColor,
+                isVertical,
+                yAxisIndex: s.yAxisIndex,
+                isDark,
+                showValue,
+                yAxis2Format,
+                lineWidth: secondaryLineWidth,
+                areaGradient: secondaryAreaGradient,
+                shadowAlpha: 0.4,
+                areaAlpha: 0.22,
                 z: 25 + seriesIdx,
-            };
-            if (secondaryAreaGradient) {
-                lineSeriesItem.areaStyle = {
-                    color: {
-                        type: 'linear',
-                        x: 0,
-                        y: 0,
-                        x2: 0,
-                        y2: 1,
-                        colorStops: [
-                            { offset: 0, color: hexToRgba(baseColor, 0.22) },
-                            { offset: 1, color: hexToRgba(baseColor, 0.0) },
-                        ],
-                    },
-                };
-            }
-            echartsSeries.push(lineSeriesItem);
+            }));
             return;
         }
         echartsSeries.push(customSeries);
     });
-    // Tooltip
     const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true, isVertical);
     const tooltip = getTooltipConfig(isDark, tooltipFormatter);
     // Legend with explicit per-series colors so swatches match bars
     const legend = getLegendConfig(series, colorScheme, showLegend || false, legendOrientation || 'top', isDark);
+    const { xAxis, yAxis } = arrangeAxes(isVertical, hasDualYAxis, categoryAxis, valueAxis, secondaryValueAxis);
     return {
         backgroundColor: 'transparent',
         animationDuration: 750,
@@ -874,8 +173,8 @@ export function get3DBarOption(props) {
         grid: getGridConfig(isVertical, hasDualYAxis || false, legendOrientation || 'top'),
         tooltip,
         legend,
-        xAxis: isVertical ? categoryAxis : hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis,
-        yAxis: isVertical ? (hasDualYAxis ? [valueAxis, secondaryValueAxis] : valueAxis) : categoryAxis,
+        xAxis,
+        yAxis,
         series: echartsSeries,
     };
 }

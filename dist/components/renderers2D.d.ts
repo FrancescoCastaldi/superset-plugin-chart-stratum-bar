@@ -1,4 +1,36 @@
-import { StratumBarTransformedProps } from '../types';
+import { StackingMode, StratumBarTransformedProps, ValuePosition } from '../types';
+/**
+ * Formats a 2D bar label from the original (pre axis-break) value. In stacked
+ * mode near-zero segments (< 1.5% of the axis max) are hidden to avoid clutter.
+ */
+export declare function format2DBarLabel(params: any, options: {
+    stacking: StackingMode;
+    effectiveMaxVal?: number;
+    numberFormat?: string;
+}): string;
+/** ECharts label config of 2D bars for the given value position (stacked bars always label inside). */
+export declare function get2DBarLabelConfig(options: {
+    showValue: boolean;
+    valuePosition: ValuePosition;
+    stacking: StackingMode;
+    isVertical: boolean;
+    isDark: boolean;
+    formatter: (params: any) => string;
+}): {
+    show: boolean;
+    position: string;
+    rotate: number;
+    align: string;
+    verticalAlign: string;
+    distance: number;
+    color: string;
+    textBorderColor: string;
+    textBorderWidth: number;
+    fontWeight: number;
+    fontSize: number;
+    minMargin: number;
+    formatter: (params: any) => string;
+};
 export declare function get2DBarOption(props: StratumBarTransformedProps): {
     backgroundColor: string;
     animationDuration: number;
