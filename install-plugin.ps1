@@ -9,7 +9,7 @@
     4. Copies plugin files into superset-frontend/plugins/superset-plugin-chart-stratum-bar.
     5. Safely updates MainPreset.ts with backup (MainPreset.ts.bak) and idempotency:
        - import { StratumBarChartPlugin } from '../../../plugins/superset-plugin-chart-stratum-bar/src';
-       - new StratumBarChartPlugin().configure({ key: 'stratum_bar' }).register(),
+       - new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),
     6. Cleans stale Webpack cache.
     7. Optionally prompts or rebuilds frontend and restarts Docker containers.
 .PARAMETER SupersetPath
@@ -216,7 +216,7 @@ if (-not (Test-Path $MainPresetPath)) {
     }
 
     $ImportStatement = "import { StratumBarChartPlugin } from '../../../plugins/superset-plugin-chart-stratum-bar/src';"
-    $RegistrationCode = "          new StratumBarChartPlugin().configure({ key: 'stratum_bar' }).register(),"
+    $RegistrationCode = "          new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),"
 
     # 1. Clean all existing or duplicate StratumBarChartPlugin lines to guarantee clean state
     $RawLines = $MainPresetContent -split "`r?`n"
