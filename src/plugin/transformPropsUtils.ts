@@ -1,6 +1,6 @@
-import { CategoricalColorNamespace, DataRecord, ensureIsArray } from '@superset-ui/core';
+import { ensureIsArray } from '@superset-ui/core';
 import { DEFAULT_COLORS } from '../utils/colors';
-import { StratumBarSeries, StratumBarSeriesItem, BenchmarkConfig, StratumBarFormData } from '../types';
+import { StratumBarSeries, BenchmarkConfig, StratumBarFormData } from '../types';
 
 export function resolveColors(
   fd: StratumBarFormData,

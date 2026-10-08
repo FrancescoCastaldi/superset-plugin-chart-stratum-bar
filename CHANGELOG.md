@@ -4,6 +4,19 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Changed
+- **Single Minified ESM Bundle via esbuild**: New `scripts/build.mjs` (`npm run build:esm`) bundles `src/index.ts` into `dist/index.esm.js` (ES2020 target, minified, linked source map without embedded sources since `src/` ships with the package). React, `@superset-ui/core`, `@superset-ui/chart-controls` and the modular `echarts/*` paths stay external so the host Superset build provides them. `StratumBarChart.css` is minified and injected at runtime so the bundle is self-contained, while the gallery PNGs stay external (`../src/images/*`) instead of being inlined as ~530 KB data URLs.
+- **Build Chain**: `npm run build` keeps the `tsc || node ./node_modules/typescript/lib/tsc.js || npx tsc` fallback chain (grouped so it also works under `cmd.exe`), now emits declarations only and then runs `build:esm`. `main` and `module` both point to the bundle; the per-file JS and source maps are gone from `dist/`, which drops from 374,423 B to about 228 KB. `esbuild` ^0.25 added to `devDependencies`.
+- **Modular ECharts Imports**: `StratumBarChart.tsx` imports `echarts/core` and registers only what the chart uses (`BarChart`, `CustomChart` for the isometric 3D bars, `LineChart` for secondary series, grid, tooltip, legend, mark line, mark point and aria components, Canvas and SVG renderers) instead of the full `echarts` package, so the host build can tree-shake the rest of ECharts.
+- **Package Metadata**: `sideEffects` set to `["*.css"]` so bundlers can tree-shake every JS module while keeping the stylesheet import that Superset compiles from `src/`.
+- **Stricter TypeScript**: `noUnusedLocals` and `noUnusedParameters` enabled; unused imports, unused form data destructuring and the dead `getColName`/`findRowKey` helpers in `transformProps.ts` were removed with no behavior change.
+
+### Removed
+- **Dead Type Packages `@types/lodash` and `@types/d3-format`**: neither `lodash` nor `d3-format` is imported anywhere in `src/` or `test/`.
+- **One-off Codemod Scripts `refactor.js` and `refactor_transform.js`**: vestigial top-level scripts from an earlier refactor, not referenced by any npm script or installer.
+
 ## [0.3.20] - 2026-10-08
 
 ### Changed

@@ -1,10 +1,36 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import * as echarts from 'echarts';
+import * as echarts from 'echarts/core';
+import { BarChart, CustomChart, LineChart } from 'echarts/charts';
+import {
+  AriaComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  MarkPointComponent,
+  TooltipComponent,
+} from 'echarts/components';
+import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries, BarShape3D, ValuePosition } from '../types';
 import { get2DBarOption } from './renderers2D';
 import { get3DBarOption } from './renderers3D';
 import './StratumBarChart.css';
+
+// 2D bars, isometric 3D bars (custom series), secondary line series, benchmark/axis-break
+// mark lines, smart-annotation pins and decal aria; both renderers are selectable at runtime.
+echarts.use([
+  BarChart,
+  CustomChart,
+  LineChart,
+  AriaComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  MarkPointComponent,
+  TooltipComponent,
+  CanvasRenderer,
+  SVGRenderer,
+]);
 
 const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
   const {

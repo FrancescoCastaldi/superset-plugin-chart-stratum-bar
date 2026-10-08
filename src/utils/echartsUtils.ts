@@ -21,7 +21,7 @@ export function getCategoryAxisConfig(categories: string[], isVertical: boolean,
 }
 
 export function getValueAxisConfig(
-  isVertical: boolean,
+  _isVertical: boolean,
   isDark: boolean,
   axisTitle?: string,
   maxVal?: number,

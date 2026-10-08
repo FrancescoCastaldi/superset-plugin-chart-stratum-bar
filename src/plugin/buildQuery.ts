@@ -15,7 +15,6 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     x_axis,
     x_axis_group,
     groupby = [],
-    metrics = [],
     target_metric,
     secondary_metrics,
   } = fd;

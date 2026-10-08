@@ -104,7 +104,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
     const customSeries: any = {
       name: s.name,
       type: 'custom',
-      renderItem: (params: any, api: any) => {
+      renderItem: (_params: any, api: any) => {
         const categoryIndex = isVertical ? api.value(0) : api.value(1);
         const val = isVertical ? api.value(1) : api.value(0);
         if (val === null || val === undefined || isNaN(val)) return null;

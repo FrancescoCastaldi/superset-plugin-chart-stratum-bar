@@ -27,7 +27,7 @@ export declare function getCategoryAxisConfig(categories: string[], isVertical: 
         padding: number[];
     };
 };
-export declare function getValueAxisConfig(isVertical: boolean, isDark: boolean, axisTitle?: string, maxVal?: number, minVal?: number): {
+export declare function getValueAxisConfig(_isVertical: boolean, isDark: boolean, axisTitle?: string, maxVal?: number, minVal?: number): {
     type: "value";
     max: number | undefined;
     min: number | undefined;

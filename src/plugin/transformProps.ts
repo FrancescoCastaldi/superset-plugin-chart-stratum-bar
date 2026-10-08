@@ -12,9 +12,6 @@ import {
   StratumBarChartProps,
   StratumBarFormData,
   StratumBarTransformedProps,
-  StratumBarSeries,
-  StratumBarSeriesItem,
-  BenchmarkConfig,
 } from '../types';
 
 
@@ -25,10 +22,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const data = (queriesData?.[0]?.data || []) as DataRecord[];
 
   const {
-    x_axis,
-    x_axis_group,
-    groupby = [],
-    metrics = [],
     target_metric,
     secondary_metrics,
     secondary_series_type = 'line',
@@ -58,7 +51,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     showValue = true,
     valuePosition = 'top',
     numberFormat = ',.0f',
-    color_scheme,
     show_legend = true,
     legendOrientation = 'top',
     emit_filter = true,
@@ -82,26 +74,10 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const filterState = (chartProps as any).filterState || {};
   const selectedValues: string[] = ensureIsArray(filterState.selectedValues || filterState.value);
 
-  // Helper to extract string column name from string, Column object, or adhoc column
-  const getColName = (col: any): string => {
-    if (!col) return '';
-    if (typeof col === 'string') return col;
-    if (typeof col === 'object') {
-      return col.label || col.sqlExpression || col.column_name || col.name || String(col);
-    }
-    return String(col);
-  };
-
   const sampleRow = data[0] || {};
-  const rowKeys = Object.keys(sampleRow);
-  const findRowKey = (name?: string) => {
-    if (!name) return undefined;
-    return rowKeys.find(k => k.toLowerCase() === name.toLowerCase());
-  };
 
   // Extract dimension candidates
-  const { resolvedXAxis, actualXKey, actualBreakdownKey, secondaryDimName } = resolveDimensions(fd, sampleRow);
-  const breakdownCol = secondaryDimName;
+  const { resolvedXAxis, actualXKey, actualBreakdownKey } = resolveDimensions(fd, sampleRow);
 
   // Resolve metrics
   const rawMetrics = fd.metrics && (Array.isArray(fd.metrics) ? fd.metrics.length > 0 : true)

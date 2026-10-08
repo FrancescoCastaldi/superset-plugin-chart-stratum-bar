@@ -1,22 +1,26 @@
 {
   "name": "superset-plugin-chart-stratum-bar",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "description": "StratumBar — 3D Isometric & Advanced Bar Chart Plugin for Apache Superset with Benchmark, Smart Annotations, Delta % and Modern Controls",
   "homepage": "https://github.com/FrancescoCastaldi/superset-plugin-chart-stratum-bar",
   "repository": {
     "type": "git",
     "url": "https://github.com/FrancescoCastaldi/superset-plugin-chart-stratum-bar.git"
   },
-  "main": "dist/index.js",
+  "main": "dist/index.esm.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "sideEffects": [
+    "*.css"
+  ],
   "files": [
     "dist",
     "src",
     "assets"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.json || node ./node_modules/typescript/lib/tsc.js --project tsconfig.json || npx tsc --project tsconfig.json",
+    "build:esm": "node scripts/build.mjs",
+    "build": "(tsc --emitDeclarationOnly --project tsconfig.json || node ./node_modules/typescript/lib/tsc.js --emitDeclarationOnly --project tsconfig.json || npx tsc --emitDeclarationOnly --project tsconfig.json) && npm run build:esm",
     "clean": "rimraf dist",
     "test": "jest",
     "install:plugin": "powershell -ExecutionPolicy Bypass -File ./install-plugin.ps1"
@@ -46,16 +50,14 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
-  "dependencies": {},
   "devDependencies": {
     "@superset-ui/chart-controls": "^0.20.3",
     "@superset-ui/core": "^0.20.4",
-    "@types/d3-format": "^3.0.4",
     "@types/jest": "^29.5.12",
-    "@types/lodash": "^4.14.202",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "echarts": "^5.5.0",
+    "esbuild": "^0.25.12",
     "jest": "^29.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
