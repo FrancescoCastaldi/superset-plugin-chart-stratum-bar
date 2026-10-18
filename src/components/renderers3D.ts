@@ -203,7 +203,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
         symbol: ['none', 'none'],
         silent: false,
         lineStyle: getBenchmarkLineStyle(),
-        label: getBenchmarkLabel(benchmark, isVertical ? 'end' : 'start'),
+        label: getBenchmarkLabel(benchmark, isVertical ? 'end' : 'start', isDark),
         data: [
           isVertical ? { yAxis: benchmark.value } : { xAxis: benchmark.value },
         ],

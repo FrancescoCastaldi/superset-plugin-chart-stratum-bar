@@ -17,8 +17,9 @@ export declare function getBenchmarkLineStyle(): {
     type: string;
     width: number;
 };
-export declare function getBenchmarkLabel(benchmark: BenchmarkConfig, position: 'start' | 'end'): {
-    position: "end" | "start";
+export declare function getBenchmarkLabel(benchmark: BenchmarkConfig, position: 'start' | 'end', isDark?: boolean): {
+    position: "insideEndTop" | "insideStartTop";
+    distance: number;
     formatter: string;
     color: string;
     fontSize: number;

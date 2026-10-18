@@ -244,10 +244,10 @@ export function buildValueLabelElement(text: string, placement: LabelPlacement3D
       y: labelY,
       textAlign,
       textVerticalAlign,
-      font: 'bold 11px sans-serif',
+      font: '600 11px Inter, system-ui, -apple-system, sans-serif',
       fill: isLightText ? '#ffffff' : (isDark ? '#f8fafc' : '#1f2937'),
-      stroke: isLightText ? 'rgba(0, 0, 0, 0.75)' : (isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'),
-      lineWidth: isLightText ? 2.5 : 1.5,
+      stroke: isLightText ? 'rgba(0, 0, 0, 0.80)' : (isDark ? 'rgba(15, 23, 42, 0.90)' : 'rgba(255, 255, 255, 0.95)'),
+      lineWidth: isLightText ? 2.5 : 2,
     },
     z2: 5,
   };

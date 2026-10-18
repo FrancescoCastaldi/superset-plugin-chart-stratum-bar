@@ -15,8 +15,14 @@ export function getCategoryAxisConfig(categories: string[], isVertical: boolean,
     axisLine: { lineStyle: { color: isDark ? '#334155' : '#cbd5e1', width: 1 } },
     axisTick: { show: false },
     name: axisTitle,
-    nameLocation: 'end' as const,
-    nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 0, 0, 8] },
+    nameLocation: 'middle' as const,
+    nameGap: isVertical ? 38 : 42,
+    nameTextStyle: {
+      color: isDark ? '#94a3b8' : '#6b7280',
+      fontSize: 12,
+      fontWeight: 600,
+      padding: isVertical ? [12, 0, 0, 0] : [0, 0, 12, 0],
+    },
   };
 }
 
@@ -42,7 +48,7 @@ export function getValueAxisConfig(
     },
     splitLine: { lineStyle: { color: isDark ? '#1e293b' : '#e5e7eb', type: 'dashed' as const } },
     name: axisTitle,
-    nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, padding: [0, 8, 0, 0] },
+    nameTextStyle: { color: isDark ? '#94a3b8' : '#6b7280', fontSize: 12, fontWeight: 600, padding: [0, 8, 0, 0] },
   };
 }
 
@@ -184,12 +190,12 @@ export function getTooltipConfig(isDark: boolean, formatterFn: (params: any) => 
 
 export function getGridConfig(isVertical: boolean, hasDualYAxis: boolean, legendOrientation: string) {
   const rightPadding = !isVertical
-    ? (hasDualYAxis ? 90 : 60)
-    : (hasDualYAxis ? 70 : 48);
+    ? (hasDualYAxis ? 96 : 60)
+    : (hasDualYAxis ? 92 : 50);
 
   return {
-    top: legendOrientation === 'top' ? 48 : 36,
-    bottom: legendOrientation === 'bottom' ? 48 : 40,
+    top: legendOrientation === 'top' ? 56 : 40,
+    bottom: legendOrientation === 'bottom' ? 56 : 48,
     left: isVertical ? 65 : 110,
     right: rightPadding,
     containLabel: true,

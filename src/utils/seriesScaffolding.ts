@@ -37,18 +37,20 @@ export function getBenchmarkLineStyle() {
   };
 }
 
-export function getBenchmarkLabel(benchmark: BenchmarkConfig, position: 'start' | 'end') {
+export function getBenchmarkLabel(benchmark: BenchmarkConfig, position: 'start' | 'end', isDark: boolean = false) {
+  const isEnd = position === 'end';
   return {
-    position,
+    position: isEnd ? ('insideEndTop' as const) : ('insideStartTop' as const),
+    distance: 6,
     formatter: formatBenchmarkLabel(benchmark),
-    color: '#dc2626',
+    color: isDark ? '#fecaca' : '#dc2626',
     fontSize: 11,
     fontWeight: 700,
-    backgroundColor: 'rgba(254, 242, 242, 0.92)',
-    borderColor: '#fca5a5',
+    backgroundColor: isDark ? 'rgba(69, 10, 10, 0.90)' : 'rgba(254, 242, 242, 0.95)',
+    borderColor: isDark ? '#991b1b' : '#fca5a5',
     borderWidth: 1,
     borderRadius: 4,
-    padding: [3, 6],
+    padding: [3, 8],
   };
 }
 
@@ -167,7 +169,7 @@ export function buildLineSeries(options: LineSeriesOptions) {
   const lineSeriesItem: any = {
     name,
     type: 'line',
-    smooth: true,
+    smooth: 0.35,
     symbol: 'circle',
     symbolSize: 8,
     yAxisIndex: isVertical ? (yAxisIndex ?? 0) : 0,
@@ -181,13 +183,15 @@ export function buildLineSeries(options: LineSeriesOptions) {
       shadowOffsetY: 3,
     },
     itemStyle: {
-      color: baseColor,
-      borderColor: isDark ? '#111827' : '#ffffff',
+      color: isDark ? '#111827' : '#ffffff',
+      borderColor: baseColor,
       borderWidth: 2.5,
     },
     emphasis: {
       scale: true,
       itemStyle: {
+        color: baseColor,
+        borderColor: isDark ? '#111827' : '#ffffff',
         borderWidth: 3,
         shadowBlur: 10,
         shadowColor: hexToRgba(baseColor, 0.6),
@@ -213,7 +217,7 @@ export function buildLineSeries(options: LineSeriesOptions) {
         x2: 0,
         y2: 1,
         colorStops: [
-          { offset: 0, color: hexToRgba(baseColor, areaAlpha) },
+          { offset: 0, color: hexToRgba(baseColor, Math.min(areaAlpha, 0.15)) },
           { offset: 1, color: hexToRgba(baseColor, 0.0) },
         ],
       },

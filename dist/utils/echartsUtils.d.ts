@@ -20,10 +20,12 @@ export declare function getCategoryAxisConfig(categories: string[], isVertical: 
         show: boolean;
     };
     name: string | undefined;
-    nameLocation: "end";
+    nameLocation: "middle";
+    nameGap: number;
     nameTextStyle: {
         color: string;
         fontSize: number;
+        fontWeight: number;
         padding: number[];
     };
 };
@@ -46,6 +48,7 @@ export declare function getValueAxisConfig(_isVertical: boolean, isDark: boolean
     nameTextStyle: {
         color: string;
         fontSize: number;
+        fontWeight: number;
         padding: number[];
     };
 };

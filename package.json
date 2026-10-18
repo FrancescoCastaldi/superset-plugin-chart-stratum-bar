@@ -1,7 +1,7 @@
 {
   "name": "superset-plugin-chart-stratum-bar",
-  "version": "0.3.21",
-  "description": "StratumBar — 3D Isometric & Advanced Bar Chart Plugin for Apache Superset with Benchmark, Smart Annotations, Delta % and Modern Controls",
+  "version": "0.4.0",
+  "description": "StratumBar: 3D Isometric and Advanced Bar Chart Plugin for Apache Superset with Benchmark, Smart Annotations, Delta % and Modern Controls",
   "homepage": "https://github.com/FrancescoCastaldi/superset-plugin-chart-stratum-bar",
   "repository": {
     "type": "git",
@@ -19,10 +19,12 @@
     "assets"
   ],
   "scripts": {
+    "dev": "npm --prefix dev-studio run dev",
+    "dev:build": "npm --prefix dev-studio run build",
     "build:esm": "node scripts/build.mjs",
     "build": "(tsc --emitDeclarationOnly --project tsconfig.json || node ./node_modules/typescript/lib/tsc.js --emitDeclarationOnly --project tsconfig.json || npx tsc --emitDeclarationOnly --project tsconfig.json) && npm run build:esm",
     "clean": "rimraf dist",
-    "test": "jest",
+    "test": "node ./node_modules/jest/bin/jest.js",
     "install:plugin": "powershell -ExecutionPolicy Bypass -File ./install-plugin.ps1"
   },
   "keywords": [

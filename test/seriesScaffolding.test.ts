@@ -46,7 +46,7 @@ describe('benchmark and axis-break mark lines', () => {
 
   it('formats the benchmark label in Italian locale', () => {
     expect(formatBenchmarkLabel(benchmark)).toBe('Target: 1234,5');
-    expect(getBenchmarkLabel(benchmark, 'end')).toMatchObject({ position: 'end', formatter: 'Target: 1234,5', padding: [3, 6] });
+    expect(getBenchmarkLabel(benchmark, 'end')).toMatchObject({ position: 'insideEndTop', formatter: 'Target: 1234,5', padding: [3, 8] });
   });
 
   it('builds the cutoff line on the value axis of the orientation', () => {
@@ -114,7 +114,7 @@ describe('line series scaffolding', () => {
   it('applies glow and optional area gradient alphas', () => {
     const l = buildLineSeries({ ...base, isVertical: true, areaGradient: true });
     expect(l.lineStyle.shadowColor).toBe('rgba(255, 0, 0, 0.35)');
-    expect(l.areaStyle.color.colorStops[0].color).toBe('rgba(255, 0, 0, 0.25)');
+    expect(l.areaStyle.color.colorStops[0].color).toBe('rgba(255, 0, 0, 0.15)');
     expect(l.label.formatter({ value: 0.5 })).toBe('0,5');
     expect(l.z).toBe(10);
   });
@@ -149,7 +149,7 @@ describe('2D bar labels', () => {
   it('positions labels by value position and stacking', () => {
     const formatter = () => '';
     const top = get2DBarLabelConfig({ showValue: true, valuePosition: 'top', stacking: 'none', isVertical: false, isDark: false, formatter });
-    expect(top).toMatchObject({ position: 'right', align: 'left', verticalAlign: 'middle', color: '#1f2937', textBorderWidth: 1.5 });
+    expect(top).toMatchObject({ position: 'right', align: 'left', verticalAlign: 'middle', color: '#1f2937', textBorderWidth: 2 });
     const stacked = get2DBarLabelConfig({ showValue: true, valuePosition: 'top', stacking: 'stack', isVertical: true, isDark: true, formatter });
     expect(stacked).toMatchObject({ position: 'inside', color: '#ffffff', textBorderWidth: 2.5 });
     const slanted = get2DBarLabelConfig({ showValue: true, valuePosition: 'slanted', stacking: 'none', isVertical: false, isDark: false, formatter });

@@ -22,7 +22,7 @@ export const MIN_BAR_LENGTH_3D = 6;
 export const PEDESTAL_PLINTH_SIZE = 5;
 
 /** Number of segments used to approximate the half-ellipse rim of cylinder bodies. */
-const CYLINDER_RIM_STEPS = 12;
+const CYLINDER_RIM_STEPS = 32;
 
 /** Depth extrusion vector of the isometric projection, rounded to whole pixels. */
 export function getIsometricOffsets(depth3D: number, tilt3D: number): IsometricOffsets {
@@ -33,7 +33,7 @@ export function getIsometricOffsets(depth3D: number, tilt3D: number): IsometricO
   };
 }
 
-export function getEllipsePoints(cx: number, cy: number, rx: number, ry: number, count = 24): Point[] {
+export function getEllipsePoints(cx: number, cy: number, rx: number, ry: number, count = 32): Point[] {
   const pts: Point[] = [];
   for (let i = 0; i < count; i++) {
     const angle = (i / count) * 2 * Math.PI;

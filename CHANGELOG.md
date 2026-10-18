@@ -6,7 +6,21 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-19
+
+### Added
+- **Interactive Dev Studio Workbench**: Standalone Vite 6 and React 18 development workbench in `dev-studio/` with instant sub-50ms HMR on `http://localhost:5174/`. Includes realistic hospital benchmarks (IDI IRCCS Slice 430), regional commercial benchmarks, extreme axis-break test beds, live Explore controls sidebar, diagnostics drawer, and ECharts options modal.
+- **Curated Executive BI Color Palettes**: Added `EXECUTIVE_PALETTE`, `HEALTHCARE_PALETTE`, and `SLATE_DARK_PALETTE` in `src/utils/colors.ts` with dedicated theme selector in Dev Studio.
+- **Double-Click Dev Launcher**: Added `dev.bat` for Windows developers.
+
 ### Changed
+- **Aesthetic Overhaul & Anti-Clipping**:
+  - Expanded right grid margin in dual Y-axis mode to 92px/96px, completely eliminating clipping of secondary axis ticks, units, and benchmark line labels.
+  - Centered category axis titles (`nameLocation: 'middle'`, `nameGap: 38/42`), resolving corner collisions with the secondary value axis zero.
+  - Refined benchmark line badge with anti-clipping pill styling (`insideEndTop` alignment, high-contrast borders, background padding).
+  - Polished secondary spline curvature (`smooth: 0.35`), added pearl-white center bullet points with colored borders, and softened area gradient opacity to 15% to maintain visibility of 3D bars underneath.
+  - Enhanced 3D cylinder geometry from 12 rim segments to 32 points, achieving silky-smooth curved surfaces without faceted edges.
+  - Upgraded value labels typography to Inter font family with enhanced high-contrast text border strokes.
 - **Single Minified ESM Bundle via esbuild**: New `scripts/build.mjs` (`npm run build:esm`) bundles `src/index.ts` into `dist/index.esm.js` (ES2020 target, minified, linked source map without embedded sources since `src/` ships with the package). React, `@superset-ui/core`, `@superset-ui/chart-controls` and the modular `echarts/*` paths stay external so the host Superset build provides them. `StratumBarChart.css` is minified and injected at runtime so the bundle is self-contained, while the gallery PNGs stay external (`../src/images/*`) instead of being inlined as ~530 KB data URLs.
 - **Build Chain**: `npm run build` keeps the `tsc || node ./node_modules/typescript/lib/tsc.js || npx tsc` fallback chain (grouped so it also works under `cmd.exe`), now emits declarations only and then runs `build:esm`. `main` and `module` both point to the bundle; the per-file JS and source maps are gone from `dist/`, which drops from 374,423 B to about 228 KB. `esbuild` ^0.25 added to `devDependencies`.
 - **Modular ECharts Imports**: `StratumBarChart.tsx` imports `echarts/core` and registers only what the chart uses (`BarChart`, `CustomChart` for the isometric 3D bars, `LineChart` for secondary series, grid, tooltip, legend, mark line, mark point and aria components, Canvas and SVG renderers) instead of the full `echarts` package, so the host build can tree-shake the rest of ECharts.

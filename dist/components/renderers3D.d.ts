@@ -75,10 +75,12 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
-        nameLocation: "end";
+        nameLocation: "middle";
+        nameGap: number;
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {
@@ -100,6 +102,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | ({
@@ -121,6 +124,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {
@@ -164,10 +168,12 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
-        nameLocation: "end";
+        nameLocation: "middle";
+        nameGap: number;
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {
@@ -189,6 +195,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | ({
@@ -210,6 +217,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {

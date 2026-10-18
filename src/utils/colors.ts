@@ -31,3 +31,33 @@ export const DEFAULT_COLORS = [
   '#f97316', // Orange
   '#6366f1', // Indigo
 ];
+
+export const EXECUTIVE_PALETTE = [
+  '#0284c7', // Sky Blue
+  '#0d9488', // Teal
+  '#6366f1', // Indigo
+  '#f59e0b', // Amber
+  '#ec4899', // Rose Pink
+  '#8b5cf6', // Purple
+  '#10b981', // Emerald
+  '#f97316', // Orange
+];
+
+export const HEALTHCARE_PALETTE = [
+  '#0284c7', // Primary IRCCS Sky
+  '#10b981', // Emerald Health
+  '#8b5cf6', // Amethyst Care
+  '#f59e0b', // Clinical Amber
+  '#06b6d4', // Medical Cyan
+  '#ec4899', // Diagnostics Rose
+];
+
+export const SLATE_DARK_PALETTE = [
+  '#38bdf8', // Light Sky
+  '#34d399', // Mint Emerald
+  '#a78bfa', // Lavender Violet
+  '#fbbf24', // Sun Amber
+  '#f472b6', // Coral Pink
+  '#22d3ee', // Electric Cyan
+];
+

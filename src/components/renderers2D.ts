@@ -95,9 +95,10 @@ export function get2DBarLabelConfig(options: {
       : (isDark ? '#f8fafc' : '#1f2937'),
     textBorderColor: isInsideStyle
       ? 'rgba(0, 0, 0, 0.75)'
-      : (isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)'),
-    textBorderWidth: isInsideStyle ? 2.5 : 1.5,
+      : (isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)'),
+    textBorderWidth: isInsideStyle ? 2.5 : 2,
     fontWeight: 600,
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
     fontSize: 11,
     minMargin: 4,
     formatter,
@@ -275,7 +276,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
         markLineData.push({
           ...(isVertical ? { yAxis: benchmark.value } : { xAxis: benchmark.value }),
           lineStyle: getBenchmarkLineStyle(),
-          label: getBenchmarkLabel(benchmark, isVertical ? 'end' : 'start'),
+          label: getBenchmarkLabel(benchmark, isVertical ? 'end' : 'start', isDark),
         });
       }
 

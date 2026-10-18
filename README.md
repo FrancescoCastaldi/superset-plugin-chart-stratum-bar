@@ -1,6 +1,7 @@
 # StratumBar - 3D Isometric & Advanced Bar Chart Plugin for Apache Superset
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Version](https://img.shields.io/badge/Version-v0.4.0-blue.svg)](#)
 [![Apache Superset](https://img.shields.io/badge/Apache%20Superset-3.x%20%7C%204.x%20%7C%206.x-green.svg)](https://superset.apache.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg)](https://www.typescriptlang.org/)
 [![Apache ECharts](https://img.shields.io/badge/Apache%20ECharts-5.5.0-red.svg)](https://echarts.apache.org/)
@@ -14,7 +15,7 @@
 
 ![StratumBar 3D Isometric & Dual Y-Axis Showcase](./assets/stratumbar_preview.jpg)
 
-*Figure 1: StratumBar v0.2.3 running inside Apache Superset — Volumetric 3D Isometric columns, secondary Y-axis with glowing area gradient trend line, reference benchmark line, dynamic breakdown dimension toggling, and interactive runtime toolbar.*
+*Figure 1: StratumBar running inside Apache Superset: Volumetric 3D Isometric columns, secondary Y-axis with glowing area gradient trend line, reference benchmark line, dynamic breakdown dimension toggling, and interactive runtime toolbar.*
 
 ---
 
@@ -40,7 +41,7 @@
 
 ### 4. 🎛️ Universal Runtime Toolbar & Granular Backend Controls
 Dashboard viewers can dynamically interact with the chart without entering Superset's Explore edit mode, while chart creators maintain full backend control:
-- **Universal Agnostic Architecture**: Zero hardcoding — dynamically inspects and extracts breakdown dimension names (`breakdownDimName`, e.g. `Combina Regime`, `Combina Canale`) dynamically adapting button text and grouping logic.
+- **Universal Agnostic Architecture**: Zero hardcoding: dynamically inspects and extracts breakdown dimension names (`breakdownDimName`, e.g. `Combina Regime`, `Combina Canale`) dynamically adapting button text and grouping logic.
 - **Explore Control Panel ("k-end")**: Granular toggles to enable or disable individual toolbar buttons (`toolbar_show_view_mode`, `toolbar_show_orientation`, `toolbar_show_stacking`, `toolbar_show_dual_axis`, `toolbar_show_breakdown_toggle`, `toolbar_show_benchmark`, `toolbar_show_export`).
 - **One-Click Export**: Instant high-resolution **PNG** rasterization and **CSV** data extraction.
 
@@ -165,10 +166,10 @@ Open `http://localhost:8088`, create a new chart, and select **StratumBar**!
 
 | Section | Control (`name`) | UI Label | Type | Default | Description |
 |:---|:---|:---|:---|:---|:---|
-| **Query Configuration** | `x_axis` | X-Axis / Category Dimension | Select | — | Primary category dimension (e.g., `Department`, `Channel`, `Month`). |
-| | `groupby` | Breakdown Dimension (Series) | Multi-Select | — | Secondary dimension to break bars into series (e.g., `Regime`, `Tier`). |
-| | `metrics` | Metrics | Metrics | — | Quantitative metrics to measure bar height. |
-| | `target_metric` | Target / Benchmark Metric | Metric | — | Dynamic metric providing individual target benchmark values per category. |
+| **Query Configuration** | `x_axis` | X-Axis / Category Dimension | Select | N/A | Primary category dimension (e.g., `Department`, `Channel`, `Month`). |
+| | `groupby` | Breakdown Dimension (Series) | Multi-Select | N/A | Secondary dimension to break bars into series (e.g., `Regime`, `Tier`). |
+| | `metrics` | Metrics | Metrics | N/A | Quantitative metrics to measure bar height. |
+| | `target_metric` | Target / Benchmark Metric | Metric | N/A | Dynamic metric providing individual target benchmark values per category. |
 | **3D Isometric Options** | `viewMode` | Default View Mode | Select | `3d` | Initial mode: `3d` (Isometric Volumetric) or `2d` (Modern Curved). |
 | | `barShape3D` | 3D Bar Shape | Select | `prism` | Geometry: `prism` (Rectangular Prism) or `cylinder` (Cylindrical). |
 | | `depth3D` | 3D Depth (px) | Slider | `20` | Isometric extrusion depth in pixels (range: 5px – 50px). |
@@ -193,6 +194,22 @@ Open `http://localhost:8088`, create a new chart, and select **StratumBar**!
 | | `show_legend` | Show Legend | Checkbox | `true` | Displays series legend. |
 | | `legendOrientation` | Legend Position | Select | `top` | Legend placement: `top`, `bottom`, or `right`. |
 | | `emit_filter` | Enable Cross-Filtering | Checkbox | `true` | Emits native `setDataMask` filter events across companion dashboard charts. |
+
+---
+
+## 💻 Interactive Dev Studio (Workbench)
+
+StratumBar includes a standalone Vite 6 and React 18 development workbench with sub-50ms Hot Module Replacement (HMR) for testing and previewing charts locally without needing a running Superset instance:
+
+```bash
+# Start Dev Studio workbench
+npm run dev
+
+# Or double-click dev.bat on Windows
+./dev.bat
+```
+
+Open `http://localhost:5174/` in your browser to inspect realistic enterprise datasets (Hospital IRCCS Booking Channels, Regional Sales Benchmarks, Axis Break Extreme Outliers), adjust visual styles in real time, monitor cross-filtering events, and copy generated ECharts options.
 
 ---
 

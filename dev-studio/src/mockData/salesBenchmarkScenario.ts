@@ -1,0 +1,52 @@
+export const salesBenchmarkData = [
+  { macroarea: 'Nord Ovest', canale_vendita: 'B2B Enterprise', fatturato_k_euro: 1420, target_k_euro: 1200 },
+  { macroarea: 'Nord Ovest', canale_vendita: 'Retail Store', fatturato_k_euro: 980, target_k_euro: 900 },
+  { macroarea: 'Nord Ovest', canale_vendita: 'E-Commerce Direct', fatturato_k_euro: 760, target_k_euro: 650 },
+
+  { macroarea: 'Nord Est', canale_vendita: 'B2B Enterprise', fatturato_k_euro: 1250, target_k_euro: 1200 },
+  { macroarea: 'Nord Est', canale_vendita: 'Retail Store', fatturato_k_euro: 890, target_k_euro: 900 },
+  { macroarea: 'Nord Est', canale_vendita: 'E-Commerce Direct', fatturato_k_euro: 680, target_k_euro: 650 },
+
+  { macroarea: 'Centro', canale_vendita: 'B2B Enterprise', fatturato_k_euro: 1050, target_k_euro: 1200 },
+  { macroarea: 'Centro', canale_vendita: 'Retail Store', fatturato_k_euro: 1120, target_k_euro: 900 },
+  { macroarea: 'Centro', canale_vendita: 'E-Commerce Direct', fatturato_k_euro: 840, target_k_euro: 650 },
+
+  { macroarea: 'Sud', canale_vendita: 'B2B Enterprise', fatturato_k_euro: 720, target_k_euro: 1200 },
+  { macroarea: 'Sud', canale_vendita: 'Retail Store', fatturato_k_euro: 790, target_k_euro: 900 },
+  { macroarea: 'Sud', canale_vendita: 'E-Commerce Direct', fatturato_k_euro: 590, target_k_euro: 650 },
+
+  { macroarea: 'Isole', canale_vendita: 'B2B Enterprise', fatturato_k_euro: 480, target_k_euro: 1200 },
+  { macroarea: 'Isole', canale_vendita: 'Retail Store', fatturato_k_euro: 530, target_k_euro: 900 },
+  { macroarea: 'Isole', canale_vendita: 'E-Commerce Direct', fatturato_k_euro: 420, target_k_euro: 650 },
+];
+
+export const salesBenchmarkFormData = {
+  datasource: '102__table',
+  viz_type: 'stratum_bar',
+  slice_id: 102,
+  x_axis: 'macroarea',
+  groupby: ['canale_vendita'],
+  metrics: ['fatturato_k_euro'],
+  viewMode: '3d',
+  orientation: 'vertical',
+  stacking: 'stack',
+  barShape3D: 'cylinder',
+  depth3D: 25,
+  tilt3D: 30,
+  shadow3D: true,
+  showBenchmark: true,
+  benchmarkType: 'fixed_value',
+  benchmarkValue: 1200,
+  showDeltaBadge: true,
+  deltaPolarity: 'normal',
+  showValue: true,
+  valuePosition: 'inside',
+  numberFormat: '$,.0f',
+  show_legend: true,
+  legendOrientation: 'top',
+  emit_filter: true,
+  enableToolbar: true,
+  y_axis_title: 'Fatturato Complessivo (k€)',
+  x_axis_title: 'Macroarea Commerciale',
+  sort_by: 'original',
+};

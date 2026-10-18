@@ -41,7 +41,7 @@ describe('isometric projection', () => {
     expect(pts[1][0]).toBeCloseTo(0, 10);
     expect(pts[1][1]).toBeCloseTo(5, 10);
     expect(pts[2][0]).toBeCloseTo(-10, 10);
-    expect(getEllipsePoints(1, 2, 3, 4)).toHaveLength(24);
+    expect(getEllipsePoints(1, 2, 3, 4)).toHaveLength(32);
   });
 });
 
@@ -170,22 +170,23 @@ describe('cylinder caps', () => {
     expect(cyl.rightCapOffset).toBeCloseTo(12.6);
   });
 
-  it('vertical cylinder: body closes on itself with a 13-point bottom rim and a cap on top', () => {
+  it('vertical cylinder: body closes on itself with a 33-point bottom rim and a cap on top', () => {
     const g = getVerticalCylinderGeometry(rect, offsets);
-    expect(g.body).toHaveLength(3 + 13 + 1);
+    expect(g.body).toHaveLength(3 + 33 + 1);
     expect(g.body[0]).toEqual(g.body[g.body.length - 1]);
     expect(g.body[3]).toEqual([30, 200]);
-    expect(g.cap).toHaveLength(24);
+    expect(g.cap).toHaveLength(32);
     expect(g.cap[0]).toEqual([30, 100]);
     expect(g.shadow[0][0]).toBeCloseTo(20 + 18 * 0.35 + 10 * 1.05);
   });
 
   it('horizontal cylinder: rim at the bar end and a flat ground shadow', () => {
     const g = getHorizontalCylinderGeometry(rect, offsets);
-    expect(g.body).toHaveLength(2 + 13 + 2);
+    expect(g.body).toHaveLength(2 + 33 + 2);
     expect(g.body[2][0]).toBeCloseTo(30);
     expect(g.body[2][1]).toBeCloseTo(100);
     expect(g.shadow).toEqual([[10, 200], [30, 200], [36, 204], [16, 204]]);
+    expect(g.cap).toHaveLength(32);
     expect(g.cap[0][0]).toBeCloseTo(30 + 12.6);
     expect(g.cap[0][1]).toBe(150);
   });

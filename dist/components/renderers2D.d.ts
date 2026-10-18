@@ -27,6 +27,7 @@ export declare function get2DBarLabelConfig(options: {
     textBorderColor: string;
     textBorderWidth: number;
     fontWeight: number;
+    fontFamily: string;
     fontSize: number;
     minMargin: number;
     formatter: (params: any) => string;
@@ -106,10 +107,12 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
-        nameLocation: "end";
+        nameLocation: "middle";
+        nameGap: number;
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {
@@ -131,6 +134,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | ({
@@ -152,6 +156,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {
@@ -195,10 +200,12 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             show: boolean;
         };
         name: string | undefined;
-        nameLocation: "end";
+        nameLocation: "middle";
+        nameGap: number;
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {
@@ -220,6 +227,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | ({
@@ -241,6 +249,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         nameTextStyle: {
             color: string;
             fontSize: number;
+            fontWeight: number;
             padding: number[];
         };
     } | {
