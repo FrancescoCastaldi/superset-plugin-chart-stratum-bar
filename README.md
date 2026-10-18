@@ -9,13 +9,17 @@
 
 **StratumBar** is an enterprise-grade visualization plugin for **Apache Superset** that expands the analytical and aesthetic capabilities of the standard bar chart (`echarts_timeseries_bar`). It introduces a **dual rendering engine (Modern 2D Curved & Volumetric 3D Isometric)**, reference **Benchmark Target Lines**, automated **Percentage Variance Badges (Delta %)**, an **Interactive Runtime Control Toolbar**, and native **Dashboard Cross-Filtering (`setDataMask`)**.
 
+![StratumBar Dev Studio Live Demo](docs/images/dev_studio_demo.gif)
+
+*Live Dev Studio: Interactive workbench featuring real-time Explore control panel synchronization, volumetric 3D cylinders and prisms, dual Y-axis spline overlay, benchmark pill badges, and sub-50ms Hot Module Reloading.*
+
 ---
 
 ## 📸 Visual Preview
 
 ![StratumBar 3D Isometric & Dual Y-Axis Showcase](./assets/stratumbar_preview.jpg)
 
-*Figure 1: StratumBar running inside Apache Superset: Volumetric 3D Isometric columns, secondary Y-axis with glowing area gradient trend line, reference benchmark line, dynamic breakdown dimension toggling, and interactive runtime toolbar.*
+*Figure 1: StratumBar v0.4.0 Live Dev Studio Showcase: Healthcare IRCCS ADS with 3D smooth cylinders, secondary wait time spline line, anti-clipping benchmark pill badge, and live diagnostics.*
 
 ---
 
