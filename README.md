@@ -21,6 +21,12 @@
 
 *Figure 1: StratumBar v0.4.0 Live Dev Studio Showcase: Healthcare IRCCS ADS with 3D smooth cylinders, secondary wait time spline line, anti-clipping benchmark pill badge, and live diagnostics.*
 
+### 🖥️ Live Production Dashboard Showcase
+
+![StratumBar Live Dashboard Showcase](docs/images/live_dashboard_showcase.png)
+
+*Figure 2: StratumBar v0.4.0 live production rendering on Apache Superset with monthly hospital activity trend, 3D cylindrical volumetric bars, interactive runtime toolbar controls, and baseline ground shadows.*
+
 ---
 
 ## 🌟 Key Features
