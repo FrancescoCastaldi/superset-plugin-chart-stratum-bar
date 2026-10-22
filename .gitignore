@@ -5,3 +5,10 @@ node_modules/
 coverage/
 AGENTS.md
 dev-studio/dist/
+
+# Local suite batch scripts
+*-tutti-i-chart*.bat
+aggiorna-tutti-i-chart.bat
+metti-tutti-i-chart-privati.bat
+metti-tutti-i-chart-pubblici.bat
+pull-tutti-i-chart.bat
