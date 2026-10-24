@@ -39,4 +39,20 @@ describe('StratumBar buildQuery', () => {
     expect(filterCols).toContain('ANNO_CORRENTE');
     expect(filterCols).toContain('SEDE');
   });
+
+  it('should forward dashboard time_compare to query.time_offsets', () => {
+    const formData: any = {
+      viz_type: 'stratum_bar',
+      datasource: '70__table',
+      x_axis: 'CANALE',
+      metrics: ['richieste'],
+      extra_form_data: {
+        time_compare: ['2026-08-01 : 2026-08-31'],
+      },
+    };
+
+    const queryContext = buildQuery(formData);
+    const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
+    expect(q.time_offsets).toEqual(['2026-08-01 : 2026-08-31']);
+  });
 });

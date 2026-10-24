@@ -115,17 +115,26 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       orderby = baseQueryObject.orderby;
     }
 
-    return [
-      {
-        ...baseQueryObject,
-        columns,
-        groupby: columns,
-        series_columns: rawBreakdown,
-        metrics: resolvedMetrics,
-        orderby,
-        filters: mergedFilters,
-        adhoc_filters: mergedAdhoc,
-      },
-    ];
+    const dashboardTimeCompare = ensureIsArray(
+      fd.extra_form_data?.time_compare ||
+      baseQueryObject.extra_form_data?.time_compare,
+    ).filter(Boolean);
+
+    const query: any = {
+      ...baseQueryObject,
+      columns,
+      groupby: columns,
+      series_columns: rawBreakdown,
+      metrics: resolvedMetrics,
+      orderby,
+      filters: mergedFilters,
+      adhoc_filters: mergedAdhoc,
+    };
+
+    if (dashboardTimeCompare.length > 0) {
+      query.time_offsets = dashboardTimeCompare;
+    }
+
+    return [query];
   });
 }

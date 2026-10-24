@@ -6,6 +6,11 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-24
+
+### Added
+- **Supporto Nativo per Filtro Dashboard PeriodCompare**: Integrato l'aggancio a `extra_form_data.time_compare`. Quando sulla dashboard e attivo un filtro di confronto temporale nativo, la configurazione della query imposta automaticamente i `time_offsets` permettendo a Superset di estrarre le serie del periodo a confronto senza moltiplicazione di righe su database.
+
 ## [0.4.0] - 2026-10-19
 
 ### Added
