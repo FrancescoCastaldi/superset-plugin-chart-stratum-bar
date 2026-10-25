@@ -8,13 +8,17 @@ export type BenchmarkType = 'fixed_value' | 'average' | 'median' | 'target_metri
 export type DeltaPolarity = 'normal' | 'inverted';
 export type ValuePosition = 'inside' | 'top' | 'outside' | 'slanted';
 export type SortByMode = 'original' | 'category' | 'metric';
+export type TimeComparisonMode = 'none' | 'dual_metric' | 'time_offsets';
 
 export interface StratumBarSeriesItem {
   category: string;
   value: number | null;
   formattedValue?: string;
   targetValue?: number | null;
+  comparisonValue?: number | null;
+  delta?: number | null;
   deltaPercent?: number | null;
+  isNewBaseline?: boolean;
   rawData?: DataRecord;
 }
 
@@ -92,6 +96,13 @@ export interface StratumBarFormData extends QueryFormData {
   axis_break_mode?: 'auto' | 'p90' | 'p95' | 'manual';
   axis_break_threshold?: number;
   toolbar_show_axis_break?: boolean;
+  // Time Comparison Controls
+  time_comparison_mode?: TimeComparisonMode;
+  comparison_metric?: any;
+  time1_label?: string;
+  time2_label?: string;
+  show_comparison_delta?: boolean;
+  comparison_delta_polarity?: DeltaPolarity;
 }
 
 export interface StratumBarTransformedProps {
@@ -152,6 +163,11 @@ export interface StratumBarTransformedProps {
     showAxisBreak: boolean;
     showExport: boolean;
   };
+  timeComparisonMode?: TimeComparisonMode;
+  time1Label?: string;
+  time2Label?: string;
+  showComparisonDelta?: boolean;
+  comparisonDeltaPolarity?: DeltaPolarity;
   formData: StratumBarFormData;
   selectedValues?: string[];
   labelColors?: Record<string, string>;

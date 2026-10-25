@@ -1,7 +1,7 @@
 # StratumBar - 3D Isometric & Advanced Bar Chart Plugin for Apache Superset
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-v0.4.0-blue.svg)](#)
+[![Version](https://img.shields.io/badge/Version-v0.4.3-blue.svg)](#)
 [![Apache Superset](https://img.shields.io/badge/Apache%20Superset-3.x%20%7C%204.x%20%7C%206.x-green.svg)](https://superset.apache.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6.svg)](https://www.typescriptlang.org/)
 [![Apache ECharts](https://img.shields.io/badge/Apache%20ECharts-5.5.0-red.svg)](https://echarts.apache.org/)
@@ -19,13 +19,13 @@
 
 ![StratumBar 3D Isometric & Dual Y-Axis Showcase](./assets/stratumbar_preview.jpg)
 
-*Figure 1: StratumBar v0.4.0 Live Dev Studio Showcase: Healthcare IRCCS ADS with 3D smooth cylinders, secondary wait time spline line, anti-clipping benchmark pill badge, and live diagnostics.*
+*Figure 1: StratumBar v0.4.3 Live Dev Studio Showcase: Healthcare IRCCS ADS with 3D smooth cylinders, secondary wait time spline line, anti-clipping benchmark pill badge, and live diagnostics.*
 
 ### 🖥️ Live Production Dashboard Showcase
 
 ![StratumBar Live Dashboard Showcase](docs/images/live_dashboard_showcase.png)
 
-*Figure 2: StratumBar v0.4.0 live production rendering on Apache Superset with monthly hospital activity trend, 3D cylindrical volumetric bars, interactive runtime toolbar controls, and baseline ground shadows.*
+*Figure 2: StratumBar v0.4.3 live production rendering on Apache Superset with monthly hospital activity trend, 3D cylindrical volumetric bars, interactive runtime toolbar controls, and baseline ground shadows.*
 
 ---
 

@@ -168,6 +168,44 @@ export function getTooltipFormatter(
       }
     });
 
+    const isComparativePair = items.length >= 2 && (
+      items.some(it => it.seriesName?.includes('Tempo') || it.seriesName?.includes('Periodo') || it.seriesName?.includes('Confronto') || it.seriesName?.includes('Anno Precedente')) ||
+      (items[0]?.color === '#0A224E' && items[1]?.color === '#E12B72')
+    );
+
+    if (isComparativePair) {
+      let val1Raw = items[0].value;
+      if (Array.isArray(val1Raw)) {
+        val1Raw = is3D ? (isVertical ? val1Raw[1] : val1Raw[0]) : (val1Raw[1] ?? val1Raw[0]);
+      }
+      let val2Raw = items[1].value;
+      if (Array.isArray(val2Raw)) {
+        val2Raw = is3D ? (isVertical ? val2Raw[1] : val2Raw[0]) : (val2Raw[1] ?? val2Raw[0]);
+      }
+      const val1 = typeof val1Raw === 'number' ? val1Raw : Number(val1Raw) || 0;
+      const val2 = typeof val2Raw === 'number' ? val2Raw : Number(val2Raw) || 0;
+
+      const delta = val1 - val2;
+      const isNew = val2 === 0 && val1 > 0;
+      const deltaPct = val2 !== 0 ? ((val1 - val2) / Math.abs(val2)) * 100 : 0;
+      const isPositive = delta >= 0;
+
+      const badgeBg = isNew ? '#64748B' : isPositive ? '#2E7D32' : '#D32F2F';
+      const badgeSign = isPositive ? '+' : '';
+      const deltaText = isNew
+        ? 'Nuovo'
+        : `${badgeSign}${deltaPct.toFixed(1)}% (${badgeSign}${delta.toLocaleString('it-IT')})`;
+
+      html += `
+        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; font-weight: 600;">Scostamento (T1 vs T2):</span>
+          <span style="background: ${badgeBg}; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700;">
+            ${deltaText}
+          </span>
+        </div>
+      `;
+    }
+
     return html;
   };
 }

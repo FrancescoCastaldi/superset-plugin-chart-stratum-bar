@@ -6,6 +6,12 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-26
+### Added
+- **Decodifica dinamica degli alias di comparazione temporale**: Riconoscimento ed etichettatura automatica in legenda per serie Tempo 1 vs Tempo 2 senza duplicazione cartesiana delle righe.
+- **Allineamento trend secondario su doppio asse Y**: Preservazione della mappatura colore e compatibilità con il motore di rendering 3D isometrico.
+
+
 ## [0.4.2] - 2026-10-25
 
 ### Fixed

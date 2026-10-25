@@ -1,5 +1,5 @@
 import { DataRecord } from '@superset-ui/core';
-import { StratumBarSeries } from '../types';
+import { StratumBarSeries, TimeComparisonMode } from '../types';
 export interface BuildRepresentationOptions {
     data: DataRecord[];
     isPivoted: boolean;
@@ -24,6 +24,10 @@ export interface BuildRepresentationOptions {
     potentialPivotedKeys: string[];
     sortBy?: 'original' | 'category' | 'metric';
     isOrderDesc?: boolean;
+    timeComparisonMode?: TimeComparisonMode;
+    comparisonMetric?: any;
+    time1Label?: string;
+    time2Label?: string;
 }
 export declare function buildSeriesRepresentation(options: BuildRepresentationOptions): {
     categories: string[];

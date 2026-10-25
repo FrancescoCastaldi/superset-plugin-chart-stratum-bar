@@ -1,5 +1,5 @@
 import { DataRecord } from '@superset-ui/core';
-import { StratumBarSeries, StratumBarSeriesItem } from '../types';
+import { StratumBarSeries, StratumBarSeriesItem, TimeComparisonMode } from '../types';
 import { sortCategories } from '../utils/sortingUtils';
 
 export interface BuildRepresentationOptions {
@@ -26,6 +26,10 @@ export interface BuildRepresentationOptions {
   potentialPivotedKeys: string[];
   sortBy?: 'original' | 'category' | 'metric';
   isOrderDesc?: boolean;
+  timeComparisonMode?: TimeComparisonMode;
+  comparisonMetric?: any;
+  time1Label?: string;
+  time2Label?: string;
 }
 
 export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
@@ -36,6 +40,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     secondary_line_color, secondary_series_type, secPalette,
     combineFlag, sampleRow, potentialPivotedKeys,
     sortBy = 'original', isOrderDesc = false,
+    timeComparisonMode, comparisonMetric, time1Label, time2Label,
   } = options;
 
   const categoriesSet = new Set<string>();
@@ -79,7 +84,95 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
   const repSeries: StratumBarSeries[] = [];
 
-  if (isPivoted) {
+  const isDualComparison =
+    timeComparisonMode === 'dual_metric' ||
+    Boolean(comparisonMetric && (metricList.length >= 1 || (sampleRow && String(comparisonMetric) in sampleRow)));
+
+  if (isDualComparison) {
+    const t1Key = metricList[0] || actualMetricKey;
+    const t2Key = (typeof comparisonMetric === 'object' && comparisonMetric !== null
+      ? comparisonMetric.label || comparisonMetric.metric_name
+      : String(comparisonMetric || (metricList.length > 1 ? metricList[1] : '')));
+
+    const t1Display = time1Label || 'Tempo 1 (Riferimento)';
+    const t2Display = time2Label || 'Tempo 2 (Confronto)';
+
+    const t1Data: (number | null)[] = [];
+    const t2Data: (number | null)[] = [];
+    const t1Items: StratumBarSeriesItem[] = [];
+    const t2Items: StratumBarSeriesItem[] = [];
+
+    repCategories.forEach(cat => {
+      const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
+      const v1Raw = row ? row[t1Key] : null;
+      const v2Raw = row && t2Key ? row[t2Key] : null;
+
+      const v1 = typeof v1Raw === 'number' ? v1Raw : v1Raw !== null && !isNaN(Number(v1Raw)) ? Number(v1Raw) : null;
+      const v2 = typeof v2Raw === 'number' ? v2Raw : v2Raw !== null && !isNaN(Number(v2Raw)) ? Number(v2Raw) : null;
+
+      t1Data.push(v1);
+      t2Data.push(v2);
+
+      let delta: number | null = null;
+      let deltaPct: number | null = null;
+      let isNewBaseline = false;
+
+      if (v1 !== null && v2 !== null) {
+        delta = v1 - v2;
+        if (v2 !== 0) {
+          deltaPct = ((v1 - v2) / Math.abs(v2)) * 100;
+        } else if (v1 > 0) {
+          isNewBaseline = true;
+          deltaPct = null;
+        } else {
+          deltaPct = 0;
+        }
+      }
+
+      t1Items.push({
+        category: cat,
+        value: v1,
+        formattedValue: v1 !== null ? formatter(v1) : undefined,
+        comparisonValue: v2,
+        delta,
+        deltaPercent: deltaPct,
+        isNewBaseline,
+        rawData: row,
+      });
+
+      t2Items.push({
+        category: cat,
+        value: v2,
+        formattedValue: v2 !== null ? formatter(v2) : undefined,
+        comparisonValue: v1,
+        delta: delta !== null ? -delta : null,
+        deltaPercent: deltaPct !== null ? -deltaPct : null,
+        rawData: row,
+      });
+    });
+
+    // Series 0: Time 1 Reference in Navy (#0A224E)
+    repSeries.push({
+      name: t1Display,
+      key: t1Key,
+      color: '#0A224E',
+      data: t1Data,
+      items: t1Items,
+      yAxisIndex: 0,
+      seriesType: 'bar',
+    });
+
+    // Series 1: Time 2 Comparison in Magenta (#E12B72)
+    repSeries.push({
+      name: t2Display,
+      key: t2Key,
+      color: '#E12B72',
+      data: t2Data,
+      items: t2Items,
+      yAxisIndex: 0,
+      seriesType: 'bar',
+    });
+  } else if (isPivoted) {
     potentialPivotedKeys.forEach((sName, sIdx) => {
       const seriesData: (number | null)[] = [];
       const seriesItems: StratumBarSeriesItem[] = [];
@@ -100,10 +193,49 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         });
       });
 
+      let displayName = sName;
+      let seriesColor = getColor(sName, sIdx);
+      const isOffsetKey = sName.includes('__');
+      const hasAnyOffset = potentialPivotedKeys.some(k => k.includes('__'));
+
+      if (isOffsetKey) {
+        seriesColor = '#E12B72';
+        if (time2Label && time2Label !== 'Tempo 2 (Confronto)') {
+          displayName = time2Label;
+        } else {
+          const rowConfLabel = sampleRow?.MESE_CONFRONTO_ETICHETTA || sampleRow?.DATA_RIFERIMENTO || sampleRow?.PERIODO_CONFRONTO;
+          if (rowConfLabel) {
+            displayName = String(rowConfLabel);
+          } else {
+            const parts = sName.split('__');
+            const offsetToken = parts[1] || 'confronto';
+            if (offsetToken.includes('year') || offsetToken.includes('anno')) {
+              displayName = 'Anno Precedente';
+            } else if (offsetToken.includes('month') || offsetToken.includes('mese')) {
+              displayName = 'Mese Precedente';
+            } else {
+              displayName = `Confronto (${offsetToken.replace(/_/g, ' ')})`;
+            }
+          }
+        }
+      } else if (hasAnyOffset) {
+        seriesColor = '#0A224E';
+        if (time1Label && time1Label !== 'Tempo 1 (Riferimento)') {
+          displayName = time1Label;
+        } else {
+          const rowCorrLabel = sampleRow?.MESE_CORRENTE_ETICHETTA || sampleRow?.DATA_CORRENTE || sampleRow?.PERIODO_CORRENTE;
+          if (rowCorrLabel) {
+            displayName = String(rowCorrLabel);
+          } else {
+            displayName = 'Periodo Corrente';
+          }
+        }
+      }
+
       repSeries.push({
-        name: sName,
+        name: displayName,
         key: sName,
-        color: getColor(sName, sIdx),
+        color: seriesColor,
         data: seriesData,
         items: seriesItems,
         yAxisIndex: 0,
@@ -293,7 +425,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       repCategories.forEach(cat => {
         const matchingRows = data.filter(r => {
           if (combineFlag && actualBreakdownKey && r[actualBreakdownKey]) {
-            return `${r[actualXKey]} · ${r[actualBreakdownKey]}` === cat;
+            return `${r[actualXKey]} [${r[actualBreakdownKey]}]` === cat;
           }
           return String(r[actualXKey]) === cat;
         });

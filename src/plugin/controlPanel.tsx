@@ -97,6 +97,98 @@ const config: ControlPanelConfig = {
       ],
     },
     {
+      label: t('Confronto Temporale (Tempo 1 vs Tempo 2)'),
+      expanded: true,
+      controlSetRows: [
+        [
+          {
+            name: 'time_comparison_mode',
+            config: {
+              type: 'SelectControl',
+              label: t('Modalita Confronto Temporale'),
+              description: t('Scegli come alimentare il confronto: Metriche Accoppiate (anti-cartesiano IDI) o Time Offsets nativi Superset'),
+              choices: [
+                ['none', t('Disattivato (Singolo Periodo)')],
+                ['dual_metric', t('Metriche Accoppiate (es. richieste_corr vs richieste_conf)')],
+                ['time_offsets', t('Time Offsets Nativi Superset (__1 year ago)')],
+              ],
+              default: 'none',
+              renderTrigger: false,
+            },
+          },
+        ],
+        [
+          {
+            name: 'comparison_metric',
+            config: {
+              ...sharedControls.metric,
+              label: t('Metrica Periodo Confronto (Tempo 2)'),
+              description: t('Seleziona la metrica del secondo periodo per creare la coppia comparativa con la Metrica Principale'),
+              clearable: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.time_comparison_mode?.value === 'dual_metric',
+            },
+          },
+        ],
+        [
+          {
+            name: 'time1_label',
+            config: {
+              type: 'TextControl',
+              label: t('Etichetta Tempo 1 (Riferimento)'),
+              description: t('Nome visualizzato per il periodo principale. Supporta token dinamici o nome esplicito (es. Ottobre 2026, Corrente)'),
+              default: 'Tempo 1 (Riferimento)',
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.time_comparison_mode?.value !== 'none',
+            },
+          },
+          {
+            name: 'time2_label',
+            config: {
+              type: 'TextControl',
+              label: t('Etichetta Tempo 2 (Confronto)'),
+              description: t('Nome visualizzato per il periodo di confronto (es. Ottobre 2025, Anno Precedente)'),
+              default: 'Tempo 2 (Confronto)',
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.time_comparison_mode?.value !== 'none',
+            },
+          },
+        ],
+        [
+          {
+            name: 'show_comparison_delta',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Mostra Delta % e Scostamenti Comparativi'),
+              description: t('Calcola e visualizza nei tooltip e sopra le barre lo scostamento percentuale e assoluto tra Tempo 1 e Tempo 2'),
+              default: true,
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.time_comparison_mode?.value !== 'none',
+            },
+          },
+          {
+            name: 'comparison_delta_polarity',
+            config: {
+              type: 'SelectControl',
+              label: t('Polarita Scostamento Comparativo'),
+              description: t('Normale: incremento verde, decremento rosso. Invertito: incremento rosso (adatto per tempi di attesa o costi).'),
+              choices: [
+                ['normal', t('Normale (Verde = Crescita, Rosso = Calo)')],
+                ['inverted', t('Invertita (Rosso = Crescita, Verde = Calo)')],
+              ],
+              default: 'normal',
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.time_comparison_mode?.value !== 'none' && Boolean(controls?.show_comparison_delta?.value),
+            },
+          },
+        ],
+      ],
+    },
+    {
       label: t('Chart Mode & Visual Engine'),
       expanded: true,
       controlSetRows: [

@@ -68,6 +68,11 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     toolbar_show_axis_break = true,
     x_axis_title,
     y_axis_title,
+    time_comparison_mode,
+    time_1_label,
+    time_2_label,
+    show_comparison_delta,
+    comparison_delta_polarity,
   } = fd;
 
   const rawFd = ((chartProps as any).rawFormData || {}) as any;
@@ -153,6 +158,10 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       secondary_line_color, secondary_series_type, secPalette,
       combineFlag, sampleRow, potentialPivotedKeys,
       sortBy, isOrderDesc,
+      timeComparisonMode: fd.time_comparison_mode,
+      comparisonMetric: fd.comparison_metric,
+      time1Label: fd.time_1_label,
+      time2Label: fd.time_2_label,
     });
   };
 
@@ -248,6 +257,11 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       showAxisBreak: toolbar_show_axis_break !== false,
       showExport: toolbar_show_export !== false,
     },
+    timeComparisonMode: time_comparison_mode,
+    time1Label: time_1_label,
+    time2Label: time_2_label,
+    showComparisonDelta: show_comparison_delta,
+    comparisonDeltaPolarity: comparison_delta_polarity,
     formData: fd,
     selectedValues,
     labelColors: combinedLabelColors,
