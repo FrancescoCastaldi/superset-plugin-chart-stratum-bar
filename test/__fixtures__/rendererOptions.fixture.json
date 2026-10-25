@@ -1916,6 +1916,13 @@
       "itemStyle": {
        "color": "#3b82f6"
       }
+     },
+     {
+      "name": "Tasso",
+      "icon": "roundRect",
+      "itemStyle": {
+       "color": "#ea580c"
+      }
      }
     ]
    },
@@ -2815,6 +2822,13 @@
       "name": "Conv",
       "itemStyle": {
        "color": "#3b82f6"
+      }
+     },
+     {
+      "name": "Media",
+      "icon": "roundRect",
+      "itemStyle": {
+       "color": "#ea580c"
       }
      }
     ]
@@ -28293,6 +28307,13 @@
       "itemStyle": {
        "color": "#3b82f6"
       }
+     },
+     {
+      "name": "Tasso",
+      "icon": "roundRect",
+      "itemStyle": {
+       "color": "#ea580c"
+      }
      }
     ]
    },
@@ -28486,30 +28507,30 @@
      ],
      "lineStyle": {
       "width": 3,
-      "color": "#10b981",
-      "shadowColor": "rgba(16, 185, 129, 0.4)",
+      "color": "#ea580c",
+      "shadowColor": "rgba(234, 88, 12, 0.4)",
       "shadowBlur": 8,
       "shadowOffsetY": 3
      },
      "itemStyle": {
       "color": "#ffffff",
-      "borderColor": "#10b981",
+      "borderColor": "#ea580c",
       "borderWidth": 2.5
      },
      "emphasis": {
       "scale": true,
       "itemStyle": {
-       "color": "#10b981",
+       "color": "#ea580c",
        "borderColor": "#ffffff",
        "borderWidth": 3,
        "shadowBlur": 10,
-       "shadowColor": "rgba(16, 185, 129, 0.6)"
+       "shadowColor": "rgba(234, 88, 12, 0.6)"
       }
      },
      "label": {
       "show": true,
       "position": "top",
-      "color": "#10b981",
+      "color": "#ea580c",
       "fontWeight": 700,
       "fontSize": 11,
       "formatter": "[Function]"
@@ -28525,11 +28546,11 @@
        "colorStops": [
         {
          "offset": 0,
-         "color": "rgba(16, 185, 129, 0.15)"
+         "color": "rgba(234, 88, 12, 0.15)"
         },
         {
          "offset": 1,
-         "color": "rgba(16, 185, 129, 0)"
+         "color": "rgba(234, 88, 12, 0)"
         }
        ]
       }
@@ -39800,6 +39821,13 @@
       "itemStyle": {
        "color": "#3b82f6"
       }
+     },
+     {
+      "name": "Media",
+      "icon": "roundRect",
+      "itemStyle": {
+       "color": "#ea580c"
+      }
      }
     ]
    },
@@ -40005,30 +40033,30 @@
      ],
      "lineStyle": {
       "width": 3,
-      "color": "#10b981",
-      "shadowColor": "rgba(16, 185, 129, 0.4)",
+      "color": "#ea580c",
+      "shadowColor": "rgba(234, 88, 12, 0.4)",
       "shadowBlur": 8,
       "shadowOffsetY": 3
      },
      "itemStyle": {
       "color": "#ffffff",
-      "borderColor": "#10b981",
+      "borderColor": "#ea580c",
       "borderWidth": 2.5
      },
      "emphasis": {
       "scale": true,
       "itemStyle": {
-       "color": "#10b981",
+       "color": "#ea580c",
        "borderColor": "#ffffff",
        "borderWidth": 3,
        "shadowBlur": 10,
-       "shadowColor": "rgba(16, 185, 129, 0.6)"
+       "shadowColor": "rgba(234, 88, 12, 0.6)"
       }
      },
      "label": {
       "show": false,
       "position": "top",
-      "color": "#10b981",
+      "color": "#ea580c",
       "fontWeight": 700,
       "fontSize": 11,
       "formatter": "[Function]"
@@ -40044,11 +40072,11 @@
        "colorStops": [
         {
          "offset": 0,
-         "color": "rgba(16, 185, 129, 0.15)"
+         "color": "rgba(234, 88, 12, 0.15)"
         },
         {
          "offset": 1,
-         "color": "rgba(16, 185, 129, 0)"
+         "color": "rgba(234, 88, 12, 0)"
         }
        ]
       }

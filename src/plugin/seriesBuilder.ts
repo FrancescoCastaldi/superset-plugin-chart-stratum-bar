@@ -293,7 +293,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       repCategories.forEach(cat => {
         const matchingRows = data.filter(r => {
           if (combineFlag && actualBreakdownKey && r[actualBreakdownKey]) {
-            return `${r[actualXKey]} [${r[actualBreakdownKey]}]` === cat;
+            return `${r[actualXKey]} · ${r[actualBreakdownKey]}` === cat;
           }
           return String(r[actualXKey]) === cat;
         });

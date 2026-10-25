@@ -81,6 +81,7 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
         };
         data: {
             name: string;
+            icon: string | undefined;
             itemStyle: {
                 color: string;
             };

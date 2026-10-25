@@ -98,7 +98,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   const echartsSeries: any[] = [];
 
   series.forEach((s, seriesIdx) => {
-    const baseColor = colorScheme[seriesIdx % colorScheme.length] || '#0284c7';
+    const baseColor = s.color || colorScheme[seriesIdx % colorScheme.length] || '#0284c7';
     const palette = getBarPalette(baseColor);
 
     const customSeries: any = {

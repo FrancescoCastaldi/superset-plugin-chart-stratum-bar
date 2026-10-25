@@ -88,9 +88,9 @@ export function getLegendConfig(
   isDark: boolean
 ) {
   const legendData = series
-    .filter(s => s.seriesType !== 'line' || series.length === 1)
     .map(s => ({
       name: s.name,
+      icon: s.seriesType === 'line' ? 'roundRect' : undefined,
       itemStyle: { color: s.color || colorScheme[series.indexOf(s) % colorScheme.length] || '#3b82f6' },
     }));
 

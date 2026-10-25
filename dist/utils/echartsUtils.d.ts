@@ -84,6 +84,7 @@ export declare function getLegendConfig(series: StratumBarSeries[], colorScheme:
     };
     data: {
         name: string;
+        icon: string | undefined;
         itemStyle: {
             color: string;
         };

@@ -6,6 +6,13 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-25
+
+### Fixed
+- **Matching Categorie Serie Secondarie (Dual Y-Axis)**: Risolto il disallineamento tra il formato delle categorie combinate (` · `) e il filtro delle righe nelle metriche secondarie, ripristinando il corretto calcolo ed ingaggio dei trend su secondo asse Y.
+- **Visibilità Serie Secondaria in Legenda**: Rimossa l'esclusione delle serie di tipo linea dalla legenda e introdotta icona dedicata `roundRect` per identificare chiaramente la metrica secondaria.
+- **Preservazione Colore Linea in 3D Isometrico**: Corretta la propagazione del colore configurato (`s.color` o `secondary_line_color`) nel motore di rendering 3D volumetrico.
+
 ## [0.4.1] - 2026-10-24
 
 ### Added

@@ -49,6 +49,7 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
         };
         data: {
             name: string;
+            icon: string | undefined;
             itemStyle: {
                 color: string;
             };
