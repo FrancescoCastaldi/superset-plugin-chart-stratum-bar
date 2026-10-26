@@ -3,7 +3,6 @@ import {
   ControlPanelsContainerProps,
   sharedControls,
 } from '@superset-ui/chart-controls';
-import { validateNonEmpty } from '@superset-ui/core';
 
 const t = (str: string) => str;
 
@@ -19,10 +18,10 @@ const config: ControlPanelConfig = {
             config: {
               ...sharedControls.groupby,
               label: t('X-Axis / Categoria Principale'),
-              description: t('Dimensione primaria obbligatoria per le categorie dell\'asse X (es. Mese, Reparto, Canale)'),
+              description: t('Dimensione primaria per le categorie dell\'asse X (es. Mese, Reparto, Canale)'),
               multi: false,
-              clearable: false,
-              validators: [validateNonEmpty],
+              clearable: true,
+              validators: [],
             },
           },
         ],
@@ -59,9 +58,9 @@ const config: ControlPanelConfig = {
             config: {
               ...sharedControls.metrics,
               label: t('Metrica Principale (Valore Barre)'),
-              description: t('Metrica numerica obbligatoria che determina l\'altezza delle barre (es. Numero Richieste, Fatturato)'),
-              clearable: false,
-              validators: [validateNonEmpty],
+              description: t('Metrica numerica che determina l\'altezza delle barre (es. Numero Richieste, Fatturato)'),
+              clearable: true,
+              validators: [],
             },
           },
         ],
@@ -125,6 +124,7 @@ const config: ControlPanelConfig = {
               label: t('Metrica Periodo Confronto (Tempo 2)'),
               description: t('Seleziona la metrica del secondo periodo per creare la coppia comparativa con la Metrica Principale'),
               clearable: true,
+              validators: [],
               visibility: ({ controls }: ControlPanelsContainerProps) =>
                 controls?.time_comparison_mode?.value === 'dual_metric',
             },

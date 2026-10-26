@@ -4,6 +4,11 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.4.5] - 2026-10-26
+
+### Changed
+- **Controlli Non Bloccanti (Zero Parametri Obbligatori)**: Rimossi tutti i vincoli `validateNonEmpty` e impostato `clearable: true` e `validators: []` per garantire piena flessibilita operativa senza blocchi nell'Explore di Superset.
+
 ## [0.4.4] - 2026-10-26
 
 ### Fixed
