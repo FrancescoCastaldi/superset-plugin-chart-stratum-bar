@@ -94,20 +94,44 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     const sortBy = fd.sort_by || (fd.timeseries_limit_metric ? 'metric' : 'category');
     let orderby: any[] = [];
 
+    const getTimeSlotOrderExpr = (col: string): string =>
+      `CASE ${col} WHEN '8\u201313' THEN 1 WHEN '8-13' THEN 1 WHEN '08\u201313' THEN 1 WHEN '08-13' THEN 1 WHEN '13\u201318' THEN 2 WHEN '13-18' THEN 2 WHEN '18\u201322' THEN 3 WHEN '18-22' THEN 3 WHEN '22\u20138' THEN 4 WHEN '22-8' THEN 4 WHEN '22\u201308' THEN 4 WHEN '22-08' THEN 4 ELSE 5 END`;
+
     if (sortBy === 'category') {
       // For category, order_desc === true means descending (Z-A / 7-1), false means ascending (A-Z / 1-7)
       const isOrderDesc = fd.order_desc === true;
       const catCol = columns.length > 0 ? columns[0] : (fd.x_axis || null);
       if (catCol) {
-        orderby = [[catCol, !isOrderDesc]];
+        const colStr = getDimKey(catCol);
+        if (colStr && colStr.toUpperCase().includes('FASCIA')) {
+          orderby = [[{
+            expressionType: 'SQL',
+            sqlExpression: getTimeSlotOrderExpr(colStr),
+            label: `ORD_${colStr}`,
+          }, !isOrderDesc]];
+        } else {
+          orderby = [[catCol, !isOrderDesc]];
+        }
       }
-    } else {
-      // sortBy === 'metric'
+    } else if (sortBy === 'metric') {
       // For metric, order_desc !== false means descending (Top N), false means ascending
       const isOrderDesc = fd.order_desc !== false;
       const sortMetric = fd.timeseries_limit_metric || (resolvedMetrics.length > 0 ? resolvedMetrics[0] : null);
       if (sortMetric) {
         orderby = [[sortMetric, !isOrderDesc]];
+      }
+    } else {
+      // sortBy === 'original'
+      const catCol = columns.length > 0 ? columns[0] : (fd.x_axis || null);
+      const colStr = catCol ? getDimKey(catCol) : '';
+      if (colStr && colStr.toUpperCase().includes('FASCIA')) {
+        orderby = [[{
+          expressionType: 'SQL',
+          sqlExpression: getTimeSlotOrderExpr(colStr),
+          label: `ORD_${colStr}`,
+        }, true]];
+      } else if (baseQueryObject.orderby) {
+        orderby = baseQueryObject.orderby;
       }
     }
 

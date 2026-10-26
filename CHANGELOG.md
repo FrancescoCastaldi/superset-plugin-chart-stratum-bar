@@ -4,7 +4,10 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
-## [Unreleased]
+## [0.4.4] - 2026-10-26
+
+### Fixed
+- **Chronological Time Slots in SQL Query**: `buildQuery.ts` now automatically applies an adhoc SQL CASE orderby for dimensions containing "FASCIA" (e.g. `8-13`, `13-18`, `18-22`, `22-8`) across both `category` and `original` sort modes, ensuring SQL Server returns slot rows in true chronological order instead of alphanumeric string collation.
 
 ## [0.4.3] - 2026-10-26
 ### Added
