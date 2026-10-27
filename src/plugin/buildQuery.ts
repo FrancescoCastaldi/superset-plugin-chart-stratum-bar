@@ -60,6 +60,9 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       ? [fd.metric]
       : [];
     const resolvedMetrics = [...rawMetrics];
+    if (fd.time_comparison_mode === 'dual_metric' && fd.comparison_metric && !resolvedMetrics.includes(fd.comparison_metric)) {
+      resolvedMetrics.push(fd.comparison_metric);
+    }
     if (target_metric && !resolvedMetrics.includes(target_metric)) {
       resolvedMetrics.push(target_metric);
     }

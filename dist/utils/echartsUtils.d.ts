@@ -1,6 +1,6 @@
 import { StratumBarSeries } from '../types';
 export declare function getCategoryAxisConfig(categories: string[], isVertical: boolean, isDark: boolean, axisTitle?: string): {
-    type: "category";
+    type: 'category';
     data: string[];
     inverse: boolean;
     axisLabel: {
@@ -20,7 +20,7 @@ export declare function getCategoryAxisConfig(categories: string[], isVertical: 
         show: boolean;
     };
     name: string | undefined;
-    nameLocation: "middle";
+    nameLocation: 'middle';
     nameGap: number;
     nameTextStyle: {
         color: string;
@@ -30,7 +30,7 @@ export declare function getCategoryAxisConfig(categories: string[], isVertical: 
     };
 };
 export declare function getValueAxisConfig(_isVertical: boolean, isDark: boolean, axisTitle?: string, maxVal?: number, minVal?: number): {
-    type: "value";
+    type: 'value';
     max: number | undefined;
     min: number | undefined;
     axisLabel: {
@@ -41,7 +41,7 @@ export declare function getValueAxisConfig(_isVertical: boolean, isDark: boolean
     splitLine: {
         lineStyle: {
             color: string;
-            type: "dashed";
+            type: 'dashed';
         };
     };
     name: string | undefined;
@@ -53,8 +53,8 @@ export declare function getValueAxisConfig(_isVertical: boolean, isDark: boolean
     };
 };
 export declare function getSecondaryValueAxisConfig(isVertical: boolean, secondaryLineColor: string, yAxis2Format?: string, yAxis2Title?: string): {
-    type: "value";
-    position: "top" | "right";
+    type: 'value';
+    position: "right" | "top";
     axisLabel: {
         color: string;
         fontWeight: number;
@@ -74,7 +74,7 @@ export declare function getSecondaryValueAxisConfig(isVertical: boolean, seconda
 };
 export declare function getLegendConfig(series: StratumBarSeries[], colorScheme: string[], showLegend: boolean, legendOrientation: string, isDark: boolean): {
     show: boolean;
-    orient: "vertical" | "horizontal";
+    orient: "horizontal" | "vertical";
     top: string | number;
     left: string | number;
     textStyle: {
@@ -92,13 +92,13 @@ export declare function getLegendConfig(series: StratumBarSeries[], colorScheme:
 };
 export declare function getTooltipFormatter(categories: string[], isDark: boolean, colorScheme: string[], showBenchmark: boolean, benchmark: any, yAxis2Title?: string, yAxis2Format?: string, secondaryLineColor?: string, is3D?: boolean, isVertical?: boolean): (params: any) => string;
 export declare function getTooltipConfig(isDark: boolean, formatterFn: (params: any) => string): {
-    trigger: "axis";
+    trigger: 'axis';
     axisPointer: {
-        type: "cross";
+        type: 'cross';
         crossStyle: {
             color: string;
             width: number;
-            type: "dashed";
+            type: 'dashed';
         };
     };
     backgroundColor: string;

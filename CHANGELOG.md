@@ -14,6 +14,12 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 ### Fixed
 - **Chronological Time Slots in SQL Query**: `buildQuery.ts` now automatically applies an adhoc SQL CASE orderby for dimensions containing "FASCIA" (e.g. `8-13`, `13-18`, `18-22`, `22-8`) across both `category` and `original` sort modes, ensuring SQL Server returns slot rows in true chronological order instead of alphanumeric string collation.
 
+### Fixed
+- **Controlli Query Flessibili e Sblocco Aggiornamento Grafico (`controlPanel.tsx`)**:
+  - Rimossa l'obbligatorietà vincolante da `x_axis` e `metrics` (`clearable: true, validators: []`), consentendo l'aggiornamento e la modifica del grafico in Explore senza blocchi o errori di validazione formali.
+  - Reso esplicitamente facoltativo `comparison_metric` (`clearable: true, validators: []`) per evitare l'ereditarietà di `validateNonEmpty` da `sharedControls.metric`.
+  - In `buildQuery.ts`, accodamento di `comparison_metric` condizionato a `time_comparison_mode === 'dual_metric'`.
+
 ## [0.4.3] - 2026-10-26
 ### Added
 - **Decodifica dinamica degli alias di comparazione temporale**: Riconoscimento ed etichettatura automatica in legenda per serie Tempo 1 vs Tempo 2 senza duplicazione cartesiana delle righe.

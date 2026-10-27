@@ -55,4 +55,34 @@ describe('StratumBar buildQuery', () => {
     const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
     expect(q.time_offsets).toEqual(['2026-08-01 : 2026-08-31']);
   });
+
+  it('should conditionally append comparison_metric when time_comparison_mode is dual_metric', () => {
+    const formData: any = {
+      viz_type: 'stratum_bar',
+      datasource: '70__table',
+      x_axis: 'CANALE',
+      metrics: ['richieste_corr'],
+      time_comparison_mode: 'dual_metric',
+      comparison_metric: 'richieste_conf',
+    };
+
+    const queryContext = buildQuery(formData);
+    const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
+    expect(q.metrics).toEqual(['richieste_corr', 'richieste_conf']);
+  });
+
+  it('should not append comparison_metric when time_comparison_mode is none', () => {
+    const formData: any = {
+      viz_type: 'stratum_bar',
+      datasource: '70__table',
+      x_axis: 'CANALE',
+      metrics: ['richieste_corr'],
+      time_comparison_mode: 'none',
+      comparison_metric: 'richieste_conf',
+    };
+
+    const queryContext = buildQuery(formData);
+    const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
+    expect(q.metrics).toEqual(['richieste_corr']);
+  });
 });

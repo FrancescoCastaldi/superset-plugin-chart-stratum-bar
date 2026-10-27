@@ -92,7 +92,7 @@ export declare function buildLineSeries(options: LineSeriesOptions): any;
  * the secondary value axis follows the primary one.
  */
 export declare function arrangeAxes<C, V, S>(isVertical: boolean, hasDualYAxis: boolean | undefined, categoryAxis: C, valueAxis: V, secondaryValueAxis: S): {
-    xAxis: C | V | (V | S)[];
-    yAxis: C | V | (V | S)[];
+    xAxis: C | V | (S | V)[];
+    yAxis: C | V | (S | V)[];
 };
 //# sourceMappingURL=seriesScaffolding.d.ts.map
