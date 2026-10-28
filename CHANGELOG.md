@@ -4,6 +4,11 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.4.6] - 2026-10-28
+
+### Fixed
+- **Filtri nativi invisibili al Jinja dei dataset (`buildQuery.ts`)**: l'oggetto query non contiene piu `adhoc_filters`. Superset converte i filtri nativi in filtri leggibili da `filter_values()` e `get_filters()` solo se `adhoc_filters` e vuoto (`convert_legacy_filters_into_adhoc`); con il campo valorizzato i dataset virtuali con query Jinja non vedevano periodo e Escludi Laboratorio e i grafici risultavano vuoti o fermi al mese corrente. I filtri del chart e di `extra_form_data` restano applicati: `buildQueryContext` li converte gia in `filters` ed `extras`.
+
 ## [0.4.5] - 2026-10-26
 
 ### Changed

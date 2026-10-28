@@ -88,10 +88,10 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       }
     });
 
-    // Merge adhoc filters from extra_form_data
-    const baseAdhoc = ensureIsArray(baseQueryObject.adhoc_filters || fd.adhoc_filters);
-    const extraAdhoc = ensureIsArray(fd.extra_form_data?.adhoc_filters);
-    const mergedAdhoc = [...baseAdhoc, ...extraAdhoc];
+    // Gli adhoc_filters (del chart e di extra_form_data) sono gia' convertiti da buildQueryContext in
+    // `filters` ed `extras.where/having`: non vanno riemessi nell'oggetto query. Il backend di Superset
+    // converte i filtri nativi in filtri leggibili da Jinja (filter_values, get_filters) solo quando
+    // l'oggetto query non contiene adhoc_filters (convert_legacy_filters_into_adhoc in utils/core.py).
 
     // Ordering logic: configurable sort by category dimension vs metric value
     const sortBy = fd.sort_by || (fd.timeseries_limit_metric ? 'metric' : 'category');
@@ -155,7 +155,6 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       metrics: resolvedMetrics,
       orderby,
       filters: mergedFilters,
-      adhoc_filters: mergedAdhoc,
     };
 
     if (dashboardTimeCompare.length > 0) {

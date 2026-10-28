@@ -40,6 +40,41 @@ describe('StratumBar buildQuery', () => {
     expect(filterCols).toContain('SEDE');
   });
 
+  it('should not emit adhoc_filters in the query object so that Jinja filter_values sees native filters', () => {
+    const formData: any = {
+      viz_type: 'stratum_bar',
+      datasource: '78__table',
+      x_axis: 'CANALE',
+      metrics: ['richieste'],
+      extra_form_data: {
+        filters: [{ col: 'ESCLUDI_LABORATORIO', op: 'IN', val: ['SI'] }],
+        adhoc_filters: [
+          {
+            clause: 'WHERE',
+            expressionType: 'SIMPLE',
+            comparator: ['Convenzioni'],
+            operator: 'IN',
+            subject: 'REGIME',
+          },
+        ],
+      },
+      adhoc_filters: [
+        {
+          clause: 'WHERE',
+          expressionType: 'SIMPLE',
+          comparator: ['Prestazioni cliniche'],
+          operator: 'IN',
+          subject: 'AREA_PRESTAZIONE',
+        },
+      ],
+    };
+
+    const queryContext = buildQuery(formData);
+    const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
+    expect(q).not.toHaveProperty('adhoc_filters');
+    expect((q.filters || []).map((f: any) => f.col)).toContain('ESCLUDI_LABORATORIO');
+  });
+
   it('should forward dashboard time_compare to query.time_offsets', () => {
     const formData: any = {
       viz_type: 'stratum_bar',
