@@ -4,6 +4,11 @@ Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo 
 
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.4.7] - 2026-10-29
+
+### Fixed
+- **Deduplicazione Metriche in buildQuery (Protezione Errore Duplicate Labels)**: introdotta la funzione getMetricKey e la deduplicazione preventiva tramite Set di chiavi/etichette su candidateMetrics in uildQuery.ts. Viene eliminata alla radice la possibilita di inviare a Superset metriche con etichette duplicate (Duplicate column/metric labels), anche nel caso in cui la metrica di confronto sia gia inclusa tra le metriche primarie o riaggiunta in Explore da sessioni browser concorrenti o cache.
+
 ## [0.4.6] - 2026-10-28
 
 ### Fixed

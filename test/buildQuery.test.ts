@@ -120,4 +120,29 @@ describe('StratumBar buildQuery', () => {
     const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
     expect(q.metrics).toEqual(['richieste_corr']);
   });
+
+  it('should deduplicate metrics when comparison_metric is already present in metrics or duplicated by label', () => {
+    const formData: any = {
+      viz_type: 'stratum_bar',
+      datasource: '78__table',
+      x_axis: 'PRESTAZIONE',
+      metrics: [
+        { label: 'Richieste (Riferimento)', expressionType: 'SQL', sqlExpression: 'COUNT(*)' },
+        { label: 'Richieste (Confronto)', expressionType: 'SQL', sqlExpression: 'COUNT(CASE WHEN ...)' },
+      ],
+      time_comparison_mode: 'dual_metric',
+      comparison_metric: {
+        label: 'Richieste (Confronto)',
+        expressionType: 'SQL',
+        sqlExpression: 'COUNT(CASE WHEN ...)',
+      },
+    };
+
+    const queryContext = buildQuery(formData);
+    const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
+    const metricLabels = q.metrics.map((m: any) => m.label || m);
+    expect(metricLabels).toEqual(['Richieste (Riferimento)', 'Richieste (Confronto)']);
+    expect(q.metrics.length).toBe(2);
+  });
+
 });

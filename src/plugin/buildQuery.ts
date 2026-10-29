@@ -53,22 +53,42 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       columns.push(rawBreakdown[0]);
     }
 
+    const getMetricKey = (m: any): string => {
+      if (!m) return '';
+      if (typeof m === 'string') return m;
+      if (typeof m === 'object' && m !== null) {
+        return m.label || m.metric_name || m.sqlExpression || String(m);
+      }
+      return String(m);
+    };
+
     // Collect all required metrics including optional target_metric and secondary_metrics
     const rawMetrics = fd.metrics && (Array.isArray(fd.metrics) ? fd.metrics.length > 0 : true)
       ? ensureIsArray(fd.metrics)
       : fd.metric
       ? [fd.metric]
       : [];
-    const resolvedMetrics = [...rawMetrics];
-    if (fd.time_comparison_mode === 'dual_metric' && fd.comparison_metric && !resolvedMetrics.includes(fd.comparison_metric)) {
-      resolvedMetrics.push(fd.comparison_metric);
+    const candidateMetrics = [...rawMetrics];
+    if (fd.time_comparison_mode === 'dual_metric' && fd.comparison_metric) {
+      candidateMetrics.push(fd.comparison_metric);
     }
-    if (target_metric && !resolvedMetrics.includes(target_metric)) {
-      resolvedMetrics.push(target_metric);
+    if (target_metric) {
+      candidateMetrics.push(target_metric);
     }
     ensureIsArray(secondary_metrics).forEach(sm => {
-      if (sm && !resolvedMetrics.includes(sm)) {
-        resolvedMetrics.push(sm);
+      if (sm) {
+        candidateMetrics.push(sm);
+      }
+    });
+
+    // Deduplicate metrics strictly by label/key to prevent duplicate column/metric labels
+    const seenMetricKeys = new Set<string>();
+    const resolvedMetrics: any[] = [];
+    candidateMetrics.forEach(m => {
+      const k = getMetricKey(m);
+      if (k && !seenMetricKeys.has(k)) {
+        seenMetricKeys.add(k);
+        resolvedMetrics.push(m);
       }
     });
 
