@@ -24,7 +24,7 @@ export function getNumberFormatter(formatterString?: string) {
     if (formatterString === '.1%') return `${(num * 100).toFixed(1)}%`;
     if (formatterString === '.2%') return `${(num * 100).toFixed(2)}%`;
     if (formatterString === '$,.2f') return `€ ${num.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    return num.toLocaleString('it-IT');
+    return num.toLocaleString('en-US');
   };
 }
 

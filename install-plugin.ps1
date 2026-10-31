@@ -61,7 +61,7 @@ function Write-Banner {
     Write-Color ""
     Write-Color "=================================================================" "Cyan"
     Write-Color "   StratumBar - 3D Isometric & Advanced Bar Chart Plugin" "Cyan"
-    Write-Color "   Apache Superset Plugin Suite (C) Maps Healthcare" "DarkCyan"
+    Write-Color "   Apache Superset Plugin Suite by FrancescoCastaldi" "DarkCyan"
     Write-Color "=================================================================" "Cyan"
     Write-Color ""
 }
@@ -84,34 +84,34 @@ Write-Color "[INFO] Percorso Plugin (sorgente): $ResolvedPluginPath" "Green"
 # 2. Pre-flight & Build Plugin
 $DistDir = Join-Path $ResolvedPluginPath "dist"
 if (Test-Path $DistDir) {
-    Write-Color "`n=== FASE 1: Bundle Pre-compilato 'dist' Rilevato ===" "Cyan"
-    Write-Color "[OK] File compilati gia' pronti in dist/. Installazione istantanea senza download dipendenze." "Green"
+    Write-Color "`n=== STEP 1: Prebuilt 'dist' bundle found ===" "Cyan"
+    Write-Color "[OK] Compiled files already in dist/. Instant install, no dependency download." "Green"
 } elseif (-not $SkipBuild) {
-    Write-Color "`n=== FASE 1: Verifica Dipendenze e Compilazione Plugin ===" "Cyan"
+    Write-Color "`n=== STEP 1: Verifying dependencies and building the plugin ===" "Cyan"
     $NpmCmd = Get-Command "npm" -ErrorAction SilentlyContinue
     if ($NpmCmd) {
         $PluginNodeModules = Join-Path $ResolvedPluginPath "node_modules"
         if (-not (Test-Path $PluginNodeModules)) {
-            Write-Color "[INFO] 'node_modules' non trovato. Esecuzione automatica 'npm install'..." "Yellow"
+            Write-Color "[INFO] 'node_modules' not found. Running 'npm install' automatically..." "Yellow"
             $OrigLoc = Get-Location
             try {
                 Set-Location $ResolvedPluginPath
                 & $NpmCmd.Source install --legacy-peer-deps
             } catch {
-                Write-Color "[WARN] Avviso durante npm install: $_" "Yellow"
+                Write-Color "[WARN] Warning during npm install: $_" "Yellow"
             } finally {
                 Set-Location $OrigLoc
             }
         }
 
-        Write-Color "[INFO] Esecuzione 'npm run build' in '$ResolvedPluginPath'..." "Yellow"
+        Write-Color "[INFO] Running 'npm run build' in '$ResolvedPluginPath'..." "Yellow"
         $OrigLoc = Get-Location
         try {
             Set-Location $ResolvedPluginPath
             & $NpmCmd.Source run build
             Write-Color "[OK] Compilazione TypeScript del plugin completata con successo." "Green"
         } catch {
-            Write-Color "[WARN] Errore durante 'npm run build': $_. Si tenta di proseguire..." "Yellow"
+            Write-Color "[WARN] Error during 'npm run build': $_. Trying to continue..." "Yellow"
         } finally {
             Set-Location $OrigLoc
         }
@@ -121,7 +121,7 @@ if (Test-Path $DistDir) {
 }
 
 # 3. Locate Apache Superset Root Directory
-Write-Color "`n=== FASE 2: Rilevamento Directory Apache Superset ===" "Cyan"
+Write-Color "`n=== STEP 2: Detecting the Apache Superset directory ===" "Cyan"
 $CandidatePaths = @(
     $SupersetPath,
     $env:SUPERSET_HOME,
@@ -149,14 +149,14 @@ foreach ($Path in $CandidatePaths) {
 
 if (-not $ResolvedSupersetPath) {
     if ($Force) {
-        Write-Error "Impossibile rilevare la directory di Apache Superset. Specificare -SupersetPath."
+        Write-Error "Cannot detect the Apache Superset directory. Specify -SupersetPath."
     }
     Write-Color "Directory di Apache Superset non rilevata automaticamente." "Yellow"
-    $UserInput = Read-Host "Inserire il percorso assoluto della root di Apache Superset"
+    $UserInput = Read-Host "Enter the absolute path of the Apache Superset root"
     if ($UserInput -and (Test-Path $UserInput)) {
         $ResolvedSupersetPath = (Resolve-Path $UserInput).Path
     } else {
-        Write-Error "Percorso non valido. Installazione interrotta."
+        Write-Error "Invalid path. Installation aborted."
     }
 }
 
@@ -166,13 +166,13 @@ $PluginsDir = Join-Path $SupersetFrontend "plugins"
 $TargetPluginDir = Join-Path $PluginsDir "superset-plugin-chart-stratum-bar"
 
 # 4. Copy Plugin Files
-Write-Color "`n=== FASE 3: Copia File Plugin in superset-frontend/plugins ===" "Cyan"
+Write-Color "`n=== STEP 3: Copy plugin files to superset-frontend/plugins ===" "Cyan"
 if (-not (Test-Path $PluginsDir)) {
     New-Item -ItemType Directory -Path $PluginsDir -Force | Out-Null
 }
 
 if (Test-Path $TargetPluginDir) {
-    Write-Color "[INFO] Aggiornamento installazione esistente in $TargetPluginDir..." "Yellow"
+    Write-Color "[INFO] Updating the existing installation in $TargetPluginDir..." "Yellow"
     if ($CleanReinstall) {
         Remove-Item -Path $TargetPluginDir -Recurse -Force
     } else {
@@ -202,7 +202,7 @@ if (Test-Path $DistSource) {
 Write-Color "[OK] File del plugin copiati con successo." "Green"
 
 # 5. Patch MainPreset.ts
-Write-Color "`n=== FASE 4: Registrazione Plugin in MainPreset.ts ===" "Cyan"
+Write-Color "`n=== STEP 4: Registering the plugin in MainPreset.ts ===" "Cyan"
 $MainPresetPath = Join-Path $SupersetFrontend "src\visualizations\presets\MainPreset.ts"
 
 if (-not (Test-Path $MainPresetPath)) {
@@ -214,9 +214,9 @@ if (-not (Test-Path $MainPresetPath)) {
     $BackupPath = "$MainPresetPath.bak"
     if (-not (Test-Path $BackupPath)) {
         Copy-Item -Path $MainPresetPath -Destination $BackupPath -Force
-        Write-Color "[OK] Backup creato: $BackupPath" "DarkGray"
+        Write-Color "[OK] Backup created: $BackupPath" "DarkGray"
     } else {
-        Write-Color "[INFO] Backup preesistente mantenuto: $BackupPath" "DarkGray"
+        Write-Color "[INFO] Existing backup kept: $BackupPath" "DarkGray"
     }
 
     $NL = if ($RawContent.Contains("`r`n")) { "`r`n" } else { "`n" }
@@ -238,7 +238,7 @@ if (-not (Test-Path $MainPresetPath)) {
     if (-not $CleanReinstall -and $hasExactImport -and $hasExactRegister -and ($importCount -eq 1) -and ($registerCount -eq 1)) {
         Write-Color "[OK] MainPreset.ts e' gia' registrato correttamente (idempotente - nessuna modifica necessaria)." "Green"
     } else {
-        Write-Color "[INFO] Normalizzazione import e registrazione in corso..." "Yellow"
+        Write-Color "[INFO] Normalizing the import and registration..." "Yellow"
 
         # Step A: rimozione import obsoleti o duplicati e reinserimento forma canonica
         $filteredLines = [System.Collections.Generic.List[string]]::new()
@@ -278,33 +278,33 @@ if (-not (Test-Path $MainPresetPath)) {
 
 # 6. Clean Webpack Cache
 if (-not $SkipCleanCache) {
-    Write-Color "`n=== FASE 5: Pulizia Cache Webpack / Babel ===" "Cyan"
+    Write-Color "`n=== STEP 5: Clearing the Webpack / Babel cache ===" "Cyan"
     $CachePath = Join-Path $SupersetFrontend "node_modules\.cache"
     if (Test-Path $CachePath) {
         try {
             Remove-Item -Path $CachePath -Recurse -Force -ErrorAction SilentlyContinue
             Write-Color "[OK] Cache Webpack eliminata con successo." "Green"
         } catch {
-            Write-Color "[WARN] Impossibile eliminare completamente la cache Webpack (file bloccati): $_" "Yellow"
+            Write-Color "[WARN] Cannot fully delete the Webpack cache (locked files): $_" "Yellow"
         }
     } else {
-        Write-Color "[OK] Nessuna cache Webpack obsoleta rilevata." "Green"
+        Write-Color "[OK] No stale Webpack cache found." "Green"
     }
 }
 
 # 7. Optional Frontend Rebuild
 if ($RebuildFrontend) {
-    Write-Color "`n=== FASE 6: Compilazione Frontend Superset ===" "Cyan"
+    Write-Color "`n=== STEP 6: Building the Superset frontend ===" "Cyan"
     $NpmCmd = Get-Command "npm" -ErrorAction SilentlyContinue
     if ($NpmCmd) {
         $OrigLoc = Get-Location
         try {
             Set-Location $SupersetFrontend
-            Write-Color "[INFO] Esecuzione 'npm run build' in superset-frontend..." "Yellow"
+            Write-Color "[INFO] Running 'npm run build' in superset-frontend..." "Yellow"
             & $NpmCmd.Source run build
             Write-Color "[OK] Frontend ricompilato con successo." "Green"
         } catch {
-            Write-Color "[WARN] Errore durante la compilazione del frontend: $_" "Yellow"
+            Write-Color "[WARN] Error building the frontend: $_" "Yellow"
         } finally {
             Set-Location $OrigLoc
         }
@@ -313,7 +313,7 @@ if ($RebuildFrontend) {
 
 # 8. Optional Docker Restart
 if ($RestartDocker -and -not $NoDocker) {
-    Write-Color "`n=== FASE 7: Riavvio Container Docker ===" "Cyan"
+    Write-Color "`n=== STEP 7: Restarting the Docker containers ===" "Cyan"
     $DockerCmd = Get-Command "docker" -ErrorAction SilentlyContinue
     if ($DockerCmd) {
         $OrigLoc = Get-Location
@@ -324,11 +324,11 @@ if ($RestartDocker -and -not $NoDocker) {
             $NodeService = if ($ServicesOutput -and ($ServicesOutput -contains "superset-node")) { "superset-node" } elseif ($ServicesOutput -and ($ServicesOutput -contains "superset_node")) { "superset_node" } else { "superset-node" }
             $AppService = if ($ServicesOutput -and ($ServicesOutput -contains "superset")) { "superset" } elseif ($ServicesOutput -and ($ServicesOutput -contains "superset_app")) { "superset_app" } else { "superset" }
             
-            Write-Color "[INFO] Esecuzione docker compose restart $NodeService $AppService..." "Yellow"
+            Write-Color "[INFO] Running docker compose restart $NodeService $AppService..." "Yellow"
             & $DockerCmd.Source compose restart $NodeService $AppService
             Write-Color "[OK] Container Docker ($NodeService, $AppService) riavviati con successo." "Green"
         } catch {
-            Write-Color "[WARN] Errore durante il restart Docker: $_" "Yellow"
+            Write-Color "[WARN] Error restarting Docker: $_" "Yellow"
         } finally {
             Set-Location $OrigLoc
         }
@@ -336,8 +336,8 @@ if ($RestartDocker -and -not $NoDocker) {
 }
 
 Write-Color "`n=================================================================" "Green"
-Write-Color "   Installazione di StratumBar completata con successo! [OK]" "Green"
+Write-Color "   StratumBar installed successfully! [OK]" "Green"
 Write-Color "=================================================================" "Green"
 Write-Color "1. Riavviare o ricompilare il frontend Superset se non eseguito automaticamente."
-Write-Color "2. Il chart 'StratumBar - 3D Isometric & Advanced Bar Chart' apparira' nel chart gallery."
+Write-Color "2. The chart 'StratumBar - 3D Isometric & Advanced Bar Chart' will appear in the chart gallery."
 Write-Color ""

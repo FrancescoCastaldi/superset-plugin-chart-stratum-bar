@@ -94,8 +94,8 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       ? comparisonMetric.label || comparisonMetric.metric_name
       : String(comparisonMetric || (metricList.length > 1 ? metricList[1] : '')));
 
-    const t1Display = time1Label || 'Tempo 1 (Riferimento)';
-    const t2Display = time2Label || 'Tempo 2 (Confronto)';
+    const t1Display = time1Label || 'Time 1 (reference)';
+    const t2Display = time2Label || 'Time 2 (comparison)';
 
     const t1Data: (number | null)[] = [];
     const t2Data: (number | null)[] = [];
@@ -200,7 +200,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
       if (isOffsetKey) {
         seriesColor = '#E12B72';
-        if (time2Label && time2Label !== 'Tempo 2 (Confronto)') {
+        if (time2Label && time2Label !== 'Time 2 (comparison)') {
           displayName = time2Label;
         } else {
           const rowConfLabel = sampleRow?.MESE_CONFRONTO_ETICHETTA || sampleRow?.DATA_RIFERIMENTO || sampleRow?.PERIODO_CONFRONTO;
@@ -210,24 +210,24 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
             const parts = sName.split('__');
             const offsetToken = parts[1] || 'confronto';
             if (offsetToken.includes('year') || offsetToken.includes('anno')) {
-              displayName = 'Anno Precedente';
+              displayName = 'Previous year';
             } else if (offsetToken.includes('month') || offsetToken.includes('mese')) {
-              displayName = 'Mese Precedente';
+              displayName = 'Previous month';
             } else {
-              displayName = `Confronto (${offsetToken.replace(/_/g, ' ')})`;
+              displayName = `Comparison (${offsetToken.replace(/_/g, ' ')})`;
             }
           }
         }
       } else if (hasAnyOffset) {
         seriesColor = '#0A224E';
-        if (time1Label && time1Label !== 'Tempo 1 (Riferimento)') {
+        if (time1Label && time1Label !== 'Time 1 (reference)') {
           displayName = time1Label;
         } else {
           const rowCorrLabel = sampleRow?.MESE_CORRENTE_ETICHETTA || sampleRow?.DATA_CORRENTE || sampleRow?.PERIODO_CORRENTE;
           if (rowCorrLabel) {
             displayName = String(rowCorrLabel);
           } else {
-            displayName = 'Periodo Corrente';
+            displayName = 'Current period';
           }
         }
       }

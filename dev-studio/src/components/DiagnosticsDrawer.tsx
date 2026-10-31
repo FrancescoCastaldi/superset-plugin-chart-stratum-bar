@@ -43,9 +43,9 @@ export const DiagnosticsDrawer: React.FC<DiagnosticsDrawerProps> = ({
             type="button"
             className="btn-drawer btn-minimize"
             onClick={() => setIsMinimized(!isMinimized)}
-            title={isMinimized ? 'Espandi drawer' : 'Riduci a icona'}
+            title={isMinimized ? 'Expand drawer' : 'Collapse to icon'}
           >
-            {isMinimized ? 'Massimizza ▲' : 'Riduci a icona ▼'}
+            {isMinimized ? 'Maximize ▲' : 'Collapse to icon ▼'}
           </button>
         </div>
       </div>

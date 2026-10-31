@@ -1679,7 +1679,7 @@
         },
         "label": {
          "position": "insideEndTop",
-         "formatter": "// Taglio Asse: 92",
+         "formatter": "// Axis cut: 92",
          "color": "#7e22ce",
          "fontSize": 10,
          "fontWeight": 600,
@@ -1839,7 +1839,7 @@
       "8",
       "7",
       "73",
-      "// 1331"
+      "// 1,331"
      ]
     },
     {
@@ -1847,7 +1847,7 @@
       "5",
       "9",
       "60",
-      "// 1200"
+      "// 1,200"
      ]
     }
    ],
@@ -1855,7 +1855,7 @@
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Sportello</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">8</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-92.0%</strong> (-92)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">5</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-95.0%</strong> (-95)\n          </div>\n        ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Web</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">7</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-93.0%</strong> (-93)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">9</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-91.0%</strong> (-91)\n          </div>\n        ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Cup</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">73</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-27.0%</strong> (-27)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">60</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-40.0%</strong> (-40)\n          </div>\n        ",
-    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Farmacia</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1331</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1231.0%</strong> (+1231)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1200</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1100.0%</strong> (+1100)\n          </div>\n        "
+    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Farmacia</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1,331</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1231.0%</strong> (+1,231)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1,200</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1100.0%</strong> (+1,100)\n          </div>\n        "
    ]
   }
  },
@@ -2586,7 +2586,7 @@
         },
         "label": {
          "position": "insideEndTop",
-         "formatter": "// Taglio Asse: 300",
+         "formatter": "// Axis cut: 300",
          "color": "#7e22ce",
          "fontSize": 10,
          "fontWeight": 600,
@@ -3150,12 +3150,12 @@
     ],
     [
      "0",
-     "7,5",
+     "7.5",
      "950",
      "-1.2k",
      "12.5k",
      "2.5M",
-     "0,12"
+     "0.12"
     ]
    ],
    "series": [
@@ -3172,7 +3172,7 @@
      "labelFormatter": [
       "100",
       "",
-      "95,5",
+      "95.5",
       "120"
      ]
     }
@@ -3180,7 +3180,7 @@
    "tooltip": [
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Sportello</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">150</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ea580c;\"></span>\n            <span style=\"font-weight: 500;\">Media</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: #ea580c;\">100</span>\n        </div>\n      ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Web</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">280</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ea580c;\"></span>\n            <span style=\"font-weight: 500;\">Media</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: #ea580c;\">N/D</span>\n        </div>\n      ",
-    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Cup</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">90</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ea580c;\"></span>\n            <span style=\"font-weight: 500;\">Media</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: #ea580c;\">95,5</span>\n        </div>\n      ",
+    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Cup</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">90</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ea580c;\"></span>\n            <span style=\"font-weight: 500;\">Media</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: #ea580c;\">95.5</span>\n        </div>\n      ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Farmacia</div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">40</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ea580c;\"></span>\n            <span style=\"font-weight: 500;\">Media</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: #ea580c;\">120</span>\n        </div>\n      "
    ]
   }
@@ -23164,7 +23164,7 @@
          {
           "type": "text",
           "style": {
-           "text": "// 1331",
+           "text": "// 1,331",
            "x": 196.595,
            "y": 299.625,
            "textAlign": "left",
@@ -25006,7 +25006,7 @@
          {
           "type": "text",
           "style": {
-           "text": "// 1331",
+           "text": "// 1,331",
            "x": 86.6,
            "y": 299.625,
            "textAlign": "left",
@@ -26608,7 +26608,7 @@
          {
           "type": "text",
           "style": {
-           "text": "// 1200",
+           "text": "// 1,200",
            "x": 195.033,
            "y": 332.375,
            "textAlign": "left",
@@ -28202,7 +28202,7 @@
          {
           "type": "text",
           "style": {
-           "text": "// 1200",
+           "text": "// 1,200",
            "x": 86.6,
            "y": 332.375,
            "textAlign": "left",
@@ -28245,7 +28245,7 @@
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #f8fafc;\">Sportello <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">8</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-92.0%</strong> (-92)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">5</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-95.0%</strong> (-95)\n          </div>\n        ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #f8fafc;\">Web <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">7</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-93.0%</strong> (-93)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">9</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-91.0%</strong> (-91)\n          </div>\n        ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #f8fafc;\">Cup <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">73</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-27.0%</strong> (-27)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">60</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #ef4444; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>-40.0%</strong> (-40)\n          </div>\n        ",
-    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #f8fafc;\">Farmacia <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1331</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1231.0%</strong> (+1231)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1200</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1100.0%</strong> (+1100)\n          </div>\n        "
+    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #f8fafc;\">Farmacia <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Conv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1,331</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1231.0%</strong> (+1,231)\n          </div>\n        \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Priv</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1,200</span>\n        </div>\n      \n          <div style=\"font-size: 11px; color: #10b981; text-align: right; margin-top: 2px;\">\n            vs Target: <strong>+1100.0%</strong> (+1,100)\n          </div>\n        "
    ]
   }
  },
@@ -31416,7 +31416,7 @@
          {
           "type": "text",
           "style": {
-           "text": "0,5",
+           "text": "0.5",
            "x": 90,
            "y": 209.625,
            "textAlign": "left",
@@ -31592,7 +31592,7 @@
          {
           "type": "text",
           "style": {
-           "text": "-0,2",
+           "text": "-0.2",
            "x": 78,
            "y": 299.625,
            "textAlign": "left",
@@ -32122,7 +32122,7 @@
          {
           "type": "text",
           "style": {
-           "text": "0,5",
+           "text": "0.5",
            "x": 90,
            "y": 209.625,
            "textAlign": "left",
@@ -32298,7 +32298,7 @@
          {
           "type": "text",
           "style": {
-           "text": "-0,2",
+           "text": "-0.2",
            "x": 78,
            "y": 299.625,
            "textAlign": "left",
@@ -33243,8 +33243,8 @@
    "tooltip": [
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Sportello <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">35</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Base</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">1</span>\n        </div>\n      ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Web <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">-42</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Base</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">2</span>\n        </div>\n      ",
-    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Cup <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">0,5</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Base</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">3</span>\n        </div>\n      ",
-    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Farmacia <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">-0,2</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Base</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">400</span>\n        </div>\n      "
+    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Cup <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">0.5</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Base</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">3</span>\n        </div>\n      ",
+    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Farmacia <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">-0.2</span>\n        </div>\n      \n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Base</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">400</span>\n        </div>\n      "
    ]
   }
  },
@@ -38309,7 +38309,7 @@
          {
           "type": "text",
           "style": {
-           "text": "0,5",
+           "text": "0.5",
            "x": 309,
            "y": 378,
            "textAlign": "center",
@@ -38594,7 +38594,7 @@
          {
           "type": "text",
           "style": {
-           "text": "-0,2",
+           "text": "-0.2",
            "x": 419,
            "y": 390,
            "textAlign": "center",
@@ -39451,7 +39451,7 @@
          {
           "type": "text",
           "style": {
-           "text": "0,5",
+           "text": "0.5",
            "x": 309,
            "y": 378,
            "textAlign": "center",
@@ -39736,7 +39736,7 @@
          {
           "type": "text",
           "style": {
-           "text": "-0,2",
+           "text": "-0.2",
            "x": 419,
            "y": 390,
            "textAlign": "center",
@@ -39758,8 +39758,8 @@
    "tooltip": [
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Sportello <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">35</span>\n        </div>\n      ",
     "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Web <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">-42</span>\n        </div>\n      ",
-    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Cup <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">0,5</span>\n        </div>\n      ",
-    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Farmacia <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">-0,2</span>\n        </div>\n      "
+    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Cup <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">0.5</span>\n        </div>\n      ",
+    "<div style=\"font-weight: 700; margin-bottom: 8px; font-size: 14px; color: #111827;\">Farmacia <span style=\"font-size: 10px; color: #38bdf8; margin-left: 4px;\">[3D View]</span></div>\n        <div style=\"display: flex; justify-content: space-between; align-items: center; gap: 18px; margin: 4px 0; font-size: 12px;\">\n          <span style=\"display: flex; align-items: center; gap: 7px;\">\n            <span style=\"display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #123456;\"></span>\n            <span style=\"font-weight: 500;\">Delta</span>\n          </span>\n          <span style=\"font-weight: 700; font-variant-numeric: tabular-nums; color: inherit;\">-0.2</span>\n        </div>\n      "
    ]
   }
  },
@@ -40097,12 +40097,12 @@
     ],
     [
      "0",
-     "7,5",
+     "7.5",
      "950",
      "-1.2k",
      "12.5k",
      "2.5M",
-     "0,12"
+     "0.12"
     ]
    ],
    "yAxis": [

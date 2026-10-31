@@ -56,10 +56,10 @@ export function format2DBarLabel(
       if (numberFormat) {
         formatted = getNumberFormatter(numberFormat)(realVal);
       } else {
-        formatted = realVal.toLocaleString('it-IT');
+        formatted = realVal.toLocaleString('en-US');
       }
     } catch {
-      formatted = realVal.toLocaleString('it-IT');
+      formatted = realVal.toLocaleString('en-US');
     }
     return isCapped ? `// ${formatted}` : formatted;
   }

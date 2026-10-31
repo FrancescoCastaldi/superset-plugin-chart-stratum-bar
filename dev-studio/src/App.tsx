@@ -127,8 +127,8 @@ export default function App() {
       props = transformProps(chartProps as any);
       opts = props.viewMode === '3d' ? get3DBarOption(props) : get2DBarOption(props);
     } catch (e: any) {
-      console.error('[StratumBar Dev Studio] Errore in transformProps:', e);
-      addLog('error', `Errore transformProps: ${e.message}`);
+      console.error('[StratumBar Dev Studio] Error in transformProps:', e);
+      addLog('error', `transformProps error: ${e.message}`);
       props = null;
     }
 

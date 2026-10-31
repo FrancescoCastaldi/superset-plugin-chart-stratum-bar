@@ -56,6 +56,6 @@ export const axisBreakOutlierFormData = {
   emit_filter: true,
   enableToolbar: true,
   y_axis_title: 'Transazioni Elaborate',
-  x_axis_title: 'Mese Operativo',
+  x_axis_title: 'Operating month',
   sort_by: 'original',
 };

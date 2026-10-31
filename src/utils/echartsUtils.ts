@@ -71,7 +71,7 @@ export function getSecondaryValueAxisConfig(
         }
         if (Math.abs(val) >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
         if (Math.abs(val) >= 1_000) return (val / 1_000).toFixed(1) + 'k';
-        return Number(val.toFixed(2)).toLocaleString('it-IT');
+        return Number(val.toFixed(2)).toLocaleString('en-US');
       },
     },
     splitLine: { show: false },
@@ -139,7 +139,7 @@ export function getTooltipFormatter(
       const isSec = it.seriesName === yAxis2Title || (it.seriesIndex != null && it.seriesIndex === items.length - 1 && secondaryLineColor !== undefined) || it.seriesType === 'line';
       const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'
         ? `${(val * 100).toFixed(1)}%`
-        : (typeof val === 'number' ? val.toLocaleString('it-IT') : (val !== null && val !== undefined ? String(val) : (is3D ? '-' : 'N/D')));
+        : (typeof val === 'number' ? val.toLocaleString('en-US') : (val !== null && val !== undefined ? String(val) : (is3D ? '-' : 'N/D')));
       
       const defaultColor = colorScheme[(it.seriesIndex || 0) % colorScheme.length] || '#38bdf8';
       const color = isSec && secondaryLineColor ? secondaryLineColor : (it.color && typeof it.color === 'string' ? it.color : (it.color?.colorStops?.[0]?.color || defaultColor));
@@ -162,14 +162,14 @@ export function getTooltipFormatter(
         const sign = isPositive ? '+' : '';
         html += `
           <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 2px;">
-            vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${delta.toLocaleString('it-IT')})
+            vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${delta.toLocaleString('en-US')})
           </div>
         `;
       }
     });
 
     const isComparativePair = items.length >= 2 && (
-      items.some(it => it.seriesName?.includes('Tempo') || it.seriesName?.includes('Periodo') || it.seriesName?.includes('Confronto') || it.seriesName?.includes('Anno Precedente')) ||
+      items.some(it => it.seriesName?.includes('Tempo') || it.seriesName?.includes('Periodo') || it.seriesName?.includes('Confronto') || it.seriesName?.includes('Comparison') || it.seriesName?.includes('Previous year')) ||
       (items[0]?.color === '#0A224E' && items[1]?.color === '#E12B72')
     );
 
@@ -194,7 +194,7 @@ export function getTooltipFormatter(
       const badgeSign = isPositive ? '+' : '';
       const deltaText = isNew
         ? 'Nuovo'
-        : `${badgeSign}${deltaPct.toFixed(1)}% (${badgeSign}${delta.toLocaleString('it-IT')})`;
+        : `${badgeSign}${deltaPct.toFixed(1)}% (${badgeSign}${delta.toLocaleString('en-US')})`;
 
       html += `
         <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}; display: flex; justify-content: space-between; align-items: center;">

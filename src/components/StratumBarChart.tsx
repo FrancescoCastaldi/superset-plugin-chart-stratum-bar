@@ -380,7 +380,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 onClick={() => setOrientation(prev => (prev === 'vertical' ? 'horizontal' : 'vertical'))}
                 title={orientation === 'vertical' ? 'Orientamento: Verticale (clicca per Orizzontale)' : 'Orientamento: Orizzontale (clicca per Verticale)'}
               >
-                {orientation === 'vertical' ? '↕ Colonne' : '↔ Barre'}
+                {orientation === 'vertical' ? '↕ Columns' : '↔ Bars'}
               </button>
             )}
 
@@ -402,7 +402,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 type="button"
                 className={`stratum-bar-btn ${hasDualYAxis ? 'active-secondary' : ''}`}
                 onClick={() => setHasDualYAxis(prev => !prev)}
-                title="Attiva/Disattiva Secondo Asse Y a runtime"
+                title="Toggle secondary Y axis at runtime"
               >
                 <span className={`stratum-bar-dot ${hasDualYAxis ? 'dot-orange' : 'dot-off'}`} /> Asse 2
               </button>
@@ -414,7 +414,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 type="button"
                 className={`stratum-bar-btn ${combineBreakdown ? 'active-accent' : ''}`}
                 onClick={() => setCombineBreakdown(prev => !prev)}
-                title={`Unifica o separa la dimensione "${breakdownDimName || 'Breakdown'}" sull'asse X`}
+                title={`Merge or split the dimension "${breakdownDimName || 'Breakdown'}" on the X axis`}
               >
                 <span className={`stratum-bar-dot ${combineBreakdown ? 'dot-green' : 'dot-off'}`} /> {breakdownDimName ? `Combina ${breakdownDimName}` : 'Combina'}
               </button>
@@ -426,7 +426,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 type="button"
                 className={`stratum-bar-btn ${showBenchmark ? 'active' : ''}`}
                 onClick={() => setShowBenchmark(prev => !prev)}
-                title="Mostra/Nascondi soglia benchmark target a runtime"
+                title="Show/hide the benchmark target line at runtime"
               >
                 <span className={`stratum-bar-dot ${showBenchmark ? 'dot-blue' : 'dot-off'}`} /> Target
               </button>
@@ -438,7 +438,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 type="button"
                 className={`stratum-bar-btn ${enableAxisBreak ? 'active-accent' : ''}`}
                 onClick={() => setEnableAxisBreak(prev => !prev)}
-                title="Attiva/Disattiva scala spezzata (capping visivo outlier // per esaltare barre minori)"
+                title="Toggle broken scale (visual outlier capping to highlight smaller bars)"
               >
                 <span className={`stratum-bar-dot ${enableAxisBreak ? 'dot-purple' : 'dot-off'}`} /> ✂️ Asse Spezzato
               </button>
@@ -455,9 +455,9 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                   return 'top';
                 });
               }}
-              title="Posizione valori sulle barre: Sopra / Dentro / Di traverso (clicca per alternare)"
+              title="Value position on the bars: Above / Inside / Slanted (click to switch)"
             >
-              🏷️ {valuePosition === 'inside' ? 'Valori: Dentro' : valuePosition === 'slanted' ? 'Valori: Di traverso' : 'Valori: Sopra'}
+              🏷️ {valuePosition === 'inside' ? 'Values: Inside' : valuePosition === 'slanted' ? 'Values: Slanted' : 'Values: Above'}
             </button>
           </div>
 
@@ -470,7 +470,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                   type="button"
                   className={`stratum-bar-btn ${showSettings3D ? 'active' : ''}`}
                   onClick={handleToggle3D}
-                  title="Parametri 3D (Inclinazione & Profondità)"
+                  title="3D parameters (tilt & depth)"
                 >
                   ⚙️ 3D
                 </button>
@@ -572,7 +572,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                   type="button"
                   className="stratum-bar-btn stratum-bar-icon-btn"
                   onClick={handleExportPNG}
-                  title="Esporta immagine PNG ad alta risoluzione"
+                  title="Export high-resolution PNG image"
                 >
                   📷
                 </button>
@@ -580,7 +580,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                   type="button"
                   className="stratum-bar-btn stratum-bar-icon-btn"
                   onClick={handleExportCSV}
-                  title="Esporta dati in formato CSV"
+                  title="Export data as CSV"
                 >
                   📊
                 </button>

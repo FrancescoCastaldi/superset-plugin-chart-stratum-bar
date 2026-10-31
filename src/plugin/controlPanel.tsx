@@ -18,7 +18,7 @@ const config: ControlPanelConfig = {
             config: {
               ...sharedControls.groupby,
               label: t('X-Axis / Categoria Principale'),
-              description: t('Dimensione primaria per le categorie dell\'asse X (es. Mese, Reparto, Canale)'),
+              description: t('Primary dimension for the X axis categories (e.g. month, department, channel)'),
               multi: false,
               clearable: true,
               validators: [],
@@ -30,8 +30,8 @@ const config: ControlPanelConfig = {
             name: 'groupby',
             config: {
               ...sharedControls.groupby,
-              label: t('Serie / Breakdown per Colore'),
-              description: t('Dimensione opzionale per suddividere le barre in serie colorate distinte (es. Regime: Privato / SSN)'),
+              label: t('Series / breakdown by color'),
+              description: t('Optional dimension to split the bars into distinct colored series (e.g. regime: private / public)'),
               multi: true,
               clearable: true,
               validators: [],
@@ -43,8 +43,8 @@ const config: ControlPanelConfig = {
             name: 'combine_category_breakdown',
             config: {
               type: 'CheckboxControl',
-              label: t('Etichette Composte su Ascisse (Compound Labels)'),
-              description: t('Mostra Categoria e Serie insieme sull\'asse X invece di barre affiancate'),
+              label: t('Compound labels on the axis'),
+              description: t('Show category and series together on the X axis instead of side-by-side bars'),
               default: false,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -57,8 +57,8 @@ const config: ControlPanelConfig = {
             name: 'metrics',
             config: {
               ...sharedControls.metrics,
-              label: t('Metrica Principale (Valore Barre)'),
-              description: t('Metrica numerica che determina l\'altezza delle barre (es. Numero Richieste, Fatturato)'),
+              label: t('Main metric (bar value)'),
+              description: t('Numeric metric that sets the bar height (e.g. number of requests, revenue)'),
               clearable: true,
               validators: [],
             },
@@ -70,11 +70,11 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               label: t('Criterio di Ordinamento (Sort By)'),
-              description: t('Scegli se ordinare per Categoria/Dimensione (es. Giorni Lun-Dom, Mesi cronologici) o per Valore Metrica (es. Classifiche Top N)'),
+              description: t('Choose whether to sort by category or dimension (e.g. days Mon-Sun, months in order) or by metric value (e.g. top N rankings)'),
               choices: [
                 ['original', t('Ordine Originale / Query')],
-                ['category', t('Categoria / Dimensione (es. Lun-Dom, Mesi, A-Z)')],
-                ['metric', t('Valore Metrica (es. Top N, Volume Richieste)')],
+                ['category', t('Category / dimension (e.g. Mon-Sun, months, A-Z)')],
+                ['metric', t('Metric value (e.g. top N, request volume)')],
               ],
               default: 'original',
               renderTrigger: false,
@@ -84,8 +84,8 @@ const config: ControlPanelConfig = {
             name: 'order_desc',
             config: {
               type: 'CheckboxControl',
-              label: t('Ordinamento Decrescente (Sort Descending)'),
-              description: t('Se attivo: Z-A o valore più alto in cima. Se disattivo: A-Z / 1-7 cronologico o valore più basso in cima.'),
+              label: t('Descending sort'),
+              description: t('When on: Z-A or the highest value on top. When off: A-Z or 1-7 in order, or the lowest value on top.'),
               default: false,
               renderTrigger: false,
             },
@@ -96,7 +96,7 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Confronto Temporale (Tempo 1 vs Tempo 2)'),
+      label: t('Time comparison (Time 1 vs Time 2)'),
       expanded: true,
       controlSetRows: [
         [
@@ -104,11 +104,11 @@ const config: ControlPanelConfig = {
             name: 'time_comparison_mode',
             config: {
               type: 'SelectControl',
-              label: t('Modalita Confronto Temporale'),
-              description: t('Scegli come alimentare il confronto: Metriche Accoppiate (anti-cartesiano IDI) o Time Offsets nativi Superset'),
+              label: t('Time comparison mode'),
+              description: t('Choose how to feed the comparison: paired metrics (anti-Cartesian) or native Superset time offsets'),
               choices: [
-                ['none', t('Disattivato (Singolo Periodo)')],
-                ['dual_metric', t('Metriche Accoppiate (es. richieste_corr vs richieste_conf)')],
+                ['none', t('Off (single period)')],
+                ['dual_metric', t('Paired metrics (e.g. richieste_corr vs richieste_conf)')],
                 ['time_offsets', t('Time Offsets Nativi Superset (__1 year ago)')],
               ],
               default: 'none',
@@ -121,8 +121,8 @@ const config: ControlPanelConfig = {
             name: 'comparison_metric',
             config: {
               ...sharedControls.metric,
-              label: t('Metrica Periodo Confronto (Tempo 2)'),
-              description: t('Seleziona la metrica del secondo periodo per creare la coppia comparativa con la Metrica Principale'),
+              label: t('Comparison period metric (Time 2)'),
+              description: t('Select the metric of the second period to pair it with the main metric'),
               clearable: true,
               validators: [],
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -135,9 +135,9 @@ const config: ControlPanelConfig = {
             name: 'time1_label',
             config: {
               type: 'TextControl',
-              label: t('Etichetta Tempo 1 (Riferimento)'),
-              description: t('Nome visualizzato per il periodo principale. Supporta token dinamici o nome esplicito (es. Ottobre 2026, Corrente)'),
-              default: 'Tempo 1 (Riferimento)',
+              label: t('Time 1 label (reference)'),
+              description: t('Name shown for the main period. Supports dynamic tokens or an explicit name (e.g. October 2026, Current)'),
+              default: 'Time 1 (reference)',
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
                 controls?.time_comparison_mode?.value !== 'none',
@@ -147,9 +147,9 @@ const config: ControlPanelConfig = {
             name: 'time2_label',
             config: {
               type: 'TextControl',
-              label: t('Etichetta Tempo 2 (Confronto)'),
-              description: t('Nome visualizzato per il periodo di confronto (es. Ottobre 2025, Anno Precedente)'),
-              default: 'Tempo 2 (Confronto)',
+              label: t('Time 2 label (comparison)'),
+              description: t('Name shown for the comparison period (e.g. October 2025, Previous year)'),
+              default: 'Time 2 (comparison)',
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
                 controls?.time_comparison_mode?.value !== 'none',
@@ -161,8 +161,8 @@ const config: ControlPanelConfig = {
             name: 'show_comparison_delta',
             config: {
               type: 'CheckboxControl',
-              label: t('Mostra Delta % e Scostamenti Comparativi'),
-              description: t('Calcola e visualizza nei tooltip e sopra le barre lo scostamento percentuale e assoluto tra Tempo 1 e Tempo 2'),
+              label: t('Show delta % and comparison deviations'),
+              description: t('Calculates and shows in the tooltips and above the bars the percentage and absolute deviation between Time 1 and Time 2'),
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -318,7 +318,7 @@ const config: ControlPanelConfig = {
               label: t('Orientation'),
               description: t('Vertical columns or Horizontal bars'),
               choices: [
-                ['vertical', t('Verticale (Colonne)')],
+                ['vertical', t('Vertical (columns)')],
                 ['horizontal', t('Orizzontale (Barre)')],
               ],
               default: 'vertical',
@@ -355,11 +355,11 @@ const config: ControlPanelConfig = {
             name: 'valuePosition',
             config: {
               type: 'SelectControl',
-              label: t('Posizione Valori'),
-              description: t('Posizione e orientamento dei valori numerici sulle barre (Sopra, Dentro, Di traverso)'),
+              label: t('Value position'),
+              description: t('Position and orientation of the numeric values on the bars (above, inside, slanted)'),
               choices: [
-                ['top', t('Sopra la barra (Top)')],
-                ['inside', t('Dentro la barra (Inside)')],
+                ['top', t('Above the bar (top)')],
+                ['inside', t('Inside the bar (inside)')],
                 ['slanted', t('Di traverso (Inclinato 45°)')],
                 ['outside', t('Esterno (Outside)')],
               ],
@@ -380,7 +380,7 @@ const config: ControlPanelConfig = {
               choices: [
                 [',.0f', t('Intero con separatore (1,234)')],
                 [',.2f', t('Decimale 2 cifre (1,234.56)')],
-                ['.2%', t('Percentuale (12.34%)')],
+                ['.2%', t('Percentage (12.34%)')],
                 ['~s', t('Prefisso SI (1.2k, 3.4M)')],
               ],
               default: ',.0f',
@@ -443,7 +443,7 @@ const config: ControlPanelConfig = {
               description: t('How to render secondary metrics: Smooth Line with markers or Secondary Bars'),
               choices: [
                 ['line', t('Linea con Indicatori (Line + Markers)')],
-                ['bar', t('Barra Secondaria (Bar)')],
+                ['bar', t('Secondary bar (bar)')],
               ],
               default: 'line',
               renderTrigger: true,
@@ -473,7 +473,7 @@ const config: ControlPanelConfig = {
               label: t('Right Axis Number Format'),
               description: t('D3 format string for right Y-axis (e.g. .2% for rates/percentages, ,.2f for currency)'),
               choices: [
-                ['.2%', t('Percentuale (12.34%)')],
+                ['.2%', t('Percentage (12.34%)')],
                 [',.2f', t('Decimale 2 cifre (1,234.56)')],
                 [',.0f', t('Intero (1,234)')],
                 ['$,.2f', t('Valuta ($1,234.56)')],
@@ -545,7 +545,7 @@ const config: ControlPanelConfig = {
             config: {
               type: 'CheckboxControl',
               label: t('Smart Annotations (Max/Min Highlight)'),
-              description: t('Evidenzia automaticamente i picchi massimi e minimi nel grafico con etichette dinamiche (🏆/📉).'),
+              description: t('Automatically highlights the highest and lowest peaks in the chart with dynamic labels (🏆/📉).'),
               default: false,
               renderTrigger: true,
             },
@@ -556,8 +556,8 @@ const config: ControlPanelConfig = {
             name: 'showBenchmark',
             config: {
               type: 'CheckboxControl',
-              label: t('Mostra Linea di Soglia (Target)'),
-              description: t('Disegna una reference line trasversale per confrontare i valori.'),
+              label: t('Show threshold line (target)'),
+              description: t('Draws a horizontal reference line to compare the values.'),
               default: false,
               renderTrigger: true,
             },
@@ -567,12 +567,12 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               label: t('Tipo di Calcolo Target'),
-              description: t('Come calcolare la soglia: valore fisso manuale, media, mediana o metrica dinamica.'),
+              description: t('How to compute the threshold: fixed manual value, average, median or dynamic metric.'),
               choices: [
-                ['fixed_value', t('Valore Fisso (Fixed Value)')],
-                ['average', t('Media dei Valori (Average)')],
-                ['median', t('Mediana dei Valori (Median)')],
-                ['target_metric', t('Metrica Target (Target Metric)')],
+                ['fixed_value', t('Fixed value')],
+                ['average', t('Average of values')],
+                ['median', t('Median of values')],
+                ['target_metric', t('Target metric')],
               ],
               default: 'fixed_value',
               renderTrigger: true,
@@ -639,7 +639,7 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('✂️ Asse Spezzato & Gestione Outlier (Axis Break)'),
+      label: t('✂️ Broken axis & outlier handling (axis break)'),
       expanded: false,
       controlSetRows: [
         [
@@ -647,8 +647,8 @@ const config: ControlPanelConfig = {
             name: 'enable_axis_break',
             config: {
               type: 'CheckboxControl',
-              label: t('Attiva Asse Spezzato / Outlier Capping'),
-              description: t('Taglia la scala delle barre anomale/outlier preservando le proporzioni e leggibilità delle barre minori, mantenendo in cima il valore numerico reale assoluto'),
+              label: t('Enable broken axis / outlier capping'),
+              description: t('Cuts the scale of the anomalous outlier bars, preserving the proportions and readability of the smaller bars, and keeping the real absolute value on top'),
               default: false,
               renderTrigger: true,
             },
@@ -657,13 +657,13 @@ const config: ControlPanelConfig = {
             name: 'axis_break_mode',
             config: {
               type: 'SelectControl',
-              label: t('Modalità Calcolo Soglia'),
+              label: t('Threshold calculation mode'),
               description: t('Metodo per determinare il punto di taglio: Automatico (rileva skewness), Percentile 90, Percentile 95, o Manuale'),
               choices: [
                 ['auto', t('Automatico Smart (Auto Outlier Detection)')],
                 ['p90', t('Percentile 90 (P90)')],
                 ['p95', t('Percentile 95 (P95)')],
-                ['manual', t('Soglia Manuale Fissa')],
+                ['manual', t('Fixed manual threshold')],
               ],
               default: 'auto',
               renderTrigger: true,
@@ -676,8 +676,8 @@ const config: ControlPanelConfig = {
             name: 'axis_break_threshold',
             config: {
               type: 'TextControl',
-              label: t('Soglia Manuale di Taglio'),
-              description: t('Valore massimo della scala oltre il quale le barre vengono tagliate con l\'indicatore //'),
+              label: t('Manual cut threshold'),
+              description: t('Maximum scale value above which the bars are cut, with the marker //'),
               default: 150,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -847,8 +847,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_axis_break',
             config: {
               type: 'CheckboxControl',
-              label: t('Pulsante Toolbar Asse Spezzato (✂️)'),
-              description: t('Mostra il pulsante "✂️ Asse Spezzato" sulla barra degli strumenti a runtime'),
+              label: t('Broken axis toolbar button (✂️)'),
+              description: t('Shows the "✂️ Broken axis" button on the toolbar at runtime'),
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),

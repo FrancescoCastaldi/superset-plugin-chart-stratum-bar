@@ -37,7 +37,7 @@ function isAboveCutoff(rawVal: unknown, axisBreak: AxisBreakCalculation): boolea
 function format3DValueLabel(rawVal: number | null | undefined, visualVal: number, axisBreak: AxisBreakCalculation): string {
   const displayVal = rawVal !== undefined && rawVal !== null ? rawVal : visualVal;
   const formattedVal = typeof displayVal === 'number'
-    ? displayVal.toLocaleString('it-IT')
+    ? displayVal.toLocaleString('en-US')
     : String(displayVal);
   return isAboveCutoff(rawVal, axisBreak) ? `// ${formattedVal}` : formattedVal;
 }

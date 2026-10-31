@@ -26,7 +26,7 @@ export function getItemOpacity(isSelected: boolean): number {
 }
 
 export function formatBenchmarkLabel(benchmark: BenchmarkConfig): string {
-  return `${benchmark.label}: ${benchmark.value.toLocaleString('it-IT')}`;
+  return `${benchmark.label}: ${benchmark.value.toLocaleString('en-US')}`;
 }
 
 export function getBenchmarkLineStyle() {
@@ -54,7 +54,7 @@ export function getBenchmarkLabel(benchmark: BenchmarkConfig, position: 'start' 
   };
 }
 
-/** markLine data item for the dashed "// Taglio Asse" cutoff of an active axis break. */
+/** markLine data item for the dashed "// Axis cut" cutoff of an active axis break. */
 export function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff: number) {
   const item: any = isVertical ? { yAxis: cutoff } : { xAxis: cutoff };
   item.lineStyle = {
@@ -64,7 +64,7 @@ export function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff
   };
   item.label = {
     position: 'insideEndTop',
-    formatter: `// Taglio Asse: ${cutoff.toLocaleString('it-IT')}`,
+    formatter: `// Axis cut: ${cutoff.toLocaleString('en-US')}`,
     color: isDark ? '#d8b4fe' : '#7e22ce',
     fontSize: 10,
     fontWeight: 600,
@@ -138,7 +138,7 @@ export function formatLineSeriesValue(value: any, yAxis2Format?: string): string
   if (yAxis2Format === '.2%') {
     return `${(Number(value) * 100).toFixed(1)}%`;
   }
-  return typeof value === 'number' ? value.toLocaleString('it-IT') : String(value);
+  return typeof value === 'number' ? value.toLocaleString('en-US') : String(value);
 }
 
 export interface LineSeriesOptions {

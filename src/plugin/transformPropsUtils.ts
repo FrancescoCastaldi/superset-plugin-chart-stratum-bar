@@ -21,7 +21,7 @@ export function resolveColors(
         manualJsonColors = fd.custom_colors_json as Record<string, string>;
       }
     } catch (e) {
-      console.warn('[StratumBar] Errore nel parsing di custom_colors_json:', e);
+      console.warn('[StratumBar] Error parsing custom_colors_json:', e);
     }
   }
 

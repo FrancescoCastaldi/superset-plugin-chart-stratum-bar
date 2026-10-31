@@ -45,15 +45,15 @@ describe('benchmark and axis-break mark lines', () => {
   const benchmark = { value: 1234.5, label: 'Target' };
 
   it('formats the benchmark label in Italian locale', () => {
-    expect(formatBenchmarkLabel(benchmark)).toBe('Target: 1234,5');
-    expect(getBenchmarkLabel(benchmark, 'end')).toMatchObject({ position: 'insideEndTop', formatter: 'Target: 1234,5', padding: [3, 8] });
+    expect(formatBenchmarkLabel(benchmark)).toBe('Target: 1,234.5');
+    expect(getBenchmarkLabel(benchmark, 'end')).toMatchObject({ position: 'insideEndTop', formatter: 'Target: 1,234.5', padding: [3, 8] });
   });
 
   it('builds the cutoff line on the value axis of the orientation', () => {
     const v = getAxisBreakCutLine(true, false, 12500);
     expect(v.yAxis).toBe(12500);
     expect(v.xAxis).toBeUndefined();
-    expect(v.label.formatter).toBe('// Taglio Asse: 12.500');
+    expect(v.label.formatter).toBe('// Axis cut: 12,500');
     expect(v.lineStyle.color).toBe('#9333ea');
     const h = getAxisBreakCutLine(false, true, 10);
     expect(h.xAxis).toBe(10);
@@ -84,7 +84,7 @@ describe('smart annotations', () => {
 describe('line series scaffolding', () => {
   it('formats values as percentage for .2% and Italian locale otherwise', () => {
     expect(formatLineSeriesValue(0.1234, '.2%')).toBe('12.3%');
-    expect(formatLineSeriesValue(1234.5)).toBe('1234,5');
+    expect(formatLineSeriesValue(1234.5)).toBe('1,234.5');
     expect(formatLineSeriesValue('abc')).toBe('abc');
     expect(formatLineSeriesValue(null)).toBe('');
   });
@@ -115,7 +115,7 @@ describe('line series scaffolding', () => {
     const l = buildLineSeries({ ...base, isVertical: true, areaGradient: true });
     expect(l.lineStyle.shadowColor).toBe('rgba(255, 0, 0, 0.35)');
     expect(l.areaStyle.color.colorStops[0].color).toBe('rgba(255, 0, 0, 0.15)');
-    expect(l.label.formatter({ value: 0.5 })).toBe('0,5');
+    expect(l.label.formatter({ value: 0.5 })).toBe('0.5');
     expect(l.z).toBe(10);
   });
 });
@@ -135,7 +135,7 @@ describe('arrangeAxes', () => {
 describe('2D bar labels', () => {
   it('prefers the original value and marks capped bars', () => {
     const opts = { stacking: 'none' as const, effectiveMaxVal: 100, numberFormat: '' };
-    expect(format2DBarLabel({ data: { originalVal: 1500, isCapped: true }, value: 80 }, opts)).toBe('// 1500');
+    expect(format2DBarLabel({ data: { originalVal: 1500, isCapped: true }, value: 80 }, opts)).toBe('// 1,500');
     expect(format2DBarLabel({ data: {}, value: 42 }, opts)).toBe('42');
     expect(format2DBarLabel({ data: {}, value: null }, opts)).toBe('');
     expect(format2DBarLabel({ data: { isCapped: true }, value: 'x' }, opts)).toBe('// x');

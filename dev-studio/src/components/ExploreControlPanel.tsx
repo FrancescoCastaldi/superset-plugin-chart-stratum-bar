@@ -40,7 +40,7 @@ export const ExploreControlPanel: React.FC<ExploreControlPanelProps> = ({
           </div>
 
           <div className="control-group">
-            <label className="control-label">Serie / Breakdown per Colore</label>
+            <label className="control-label">Series / breakdown by color</label>
             <select
               className="control-select"
               value={Array.isArray(formData.groupby) && formData.groupby.length > 0 ? formData.groupby[0] : ''}

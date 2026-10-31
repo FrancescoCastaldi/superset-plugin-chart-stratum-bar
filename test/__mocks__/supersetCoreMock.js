@@ -1,7 +1,7 @@
 module.exports = {
   getNumberFormatter: (format) => (val) => {
     if (val === null || val === undefined) return '';
-    if (typeof val === 'number') return val.toLocaleString('it-IT');
+    if (typeof val === 'number') return val.toLocaleString('en-US');
     return String(val);
   },
   ensureIsArray: (val) => (val ? (Array.isArray(val) ? val : [val]) : []),

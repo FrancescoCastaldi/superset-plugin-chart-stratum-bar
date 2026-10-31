@@ -132,7 +132,7 @@ describe('Axis Break & Outlier Pinning (//)', () => {
     // Label formatter test
     const label0 = mainSeries.label.formatter({ data: data0, value: data0.value });
     expect(label0).toContain('//');
-    expect(label0).toContain('1331'); // Real number preserved!
+    expect(label0).toContain('1,331'); // Real number preserved!
 
     const label1 = mainSeries.label.formatter({ data: data1, value: data1.value });
     expect(label1).not.toContain('//');
@@ -201,7 +201,7 @@ describe('Axis Break & Outlier Pinning (//)', () => {
     expect(breakElement).toBeDefined();
 
     // Check label element in children
-    const labelElement = rendered0.children.find((c: any) => c.type === 'text' && c.style?.text?.startsWith('//') && c.style?.text?.includes('1331'));
+    const labelElement = rendered0.children.find((c: any) => c.type === 'text' && c.style?.text?.startsWith('//') && c.style?.text?.includes('1,331'));
     expect(labelElement).toBeDefined();
   });
 
@@ -265,7 +265,7 @@ describe('Axis Break & Outlier Pinning (//)', () => {
     expect(mainSeries.markLine).toBeDefined();
     expect(mainSeries.markLine.data.length).toBeGreaterThanOrEqual(1);
 
-    const breakLine = mainSeries.markLine.data.find((d: any) => d.label?.formatter?.includes('// Taglio Asse'));
+    const breakLine = mainSeries.markLine.data.find((d: any) => d.label?.formatter?.includes('// Axis cut'));
     expect(breakLine).toBeDefined();
     expect(breakLine.yAxis).toBe(25); // 20 * 1.25
   });
