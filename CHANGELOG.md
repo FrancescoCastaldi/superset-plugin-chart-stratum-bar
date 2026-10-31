@@ -1,23 +1,23 @@
 # Changelog
 
-Tutte le modifiche degne di nota a **StratumBar** saranno documentate in questo file.
+All notable changes to **StratumBar** will be documented in this file.
 
-Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/) e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.4.7] - 2026-10-29
 
 ### Fixed
-- **Deduplicazione Metriche in buildQuery (Protezione Errore Duplicate Labels)**: introdotta la funzione getMetricKey e la deduplicazione preventiva tramite Set di chiavi/etichette su candidateMetrics in uildQuery.ts. Viene eliminata alla radice la possibilita di inviare a Superset metriche con etichette duplicate (Duplicate column/metric labels), anche nel caso in cui la metrica di confronto sia gia inclusa tra le metriche primarie o riaggiunta in Explore da sessioni browser concorrenti o cache.
+- **Metric deduplication in buildQuery (Duplicate Labels Error Protection)**: introduced the getMetricKey function and preventive deduplication through a Set of keys/labels on candidateMetrics in buildQuery.ts. The possibility of sending Superset metrics with duplicate labels (Duplicate column/metric labels) is eliminated at the root, even when the comparison metric is already included among the primary metrics or is added back in Explore by concurrent browser sessions or cache.
 
 ## [0.4.6] - 2026-10-28
 
 ### Fixed
-- **Filtri nativi invisibili al Jinja dei dataset (`buildQuery.ts`)**: l'oggetto query non contiene piu `adhoc_filters`. Superset converte i filtri nativi in filtri leggibili da `filter_values()` e `get_filters()` solo se `adhoc_filters` e vuoto (`convert_legacy_filters_into_adhoc`); con il campo valorizzato i dataset virtuali con query Jinja non vedevano periodo e Escludi Laboratorio e i grafici risultavano vuoti o fermi al mese corrente. I filtri del chart e di `extra_form_data` restano applicati: `buildQueryContext` li converte gia in `filters` ed `extras`.
+- **Native filters invisible to dataset Jinja (`buildQuery.ts`)**: the query object no longer contains `adhoc_filters`. Superset converts native filters into filters readable by `filter_values()` and `get_filters()` only when `adhoc_filters` is empty (`convert_legacy_filters_into_adhoc`); with the field set, virtual datasets with Jinja queries did not see the period and the Escludi Laboratorio filter, and the charts were empty or stuck on the current month. The chart filters and those of `extra_form_data` remain applied: `buildQueryContext` already converts them into `filters` and `extras`.
 
 ## [0.4.5] - 2026-10-26
 
 ### Changed
-- **Controlli Non Bloccanti (Zero Parametri Obbligatori)**: Rimossi tutti i vincoli `validateNonEmpty` e impostato `clearable: true` e `validators: []` per garantire piena flessibilita operativa senza blocchi nell'Explore di Superset.
+- **Non-Blocking Controls (Zero Required Parameters)**: Removed all `validateNonEmpty` constraints and set `clearable: true` and `validators: []` to guarantee full operational flexibility without blocks in the Superset Explore.
 
 ## [0.4.4] - 2026-10-26
 
@@ -25,28 +25,28 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 - **Chronological Time Slots in SQL Query**: `buildQuery.ts` now automatically applies an adhoc SQL CASE orderby for dimensions containing "FASCIA" (e.g. `8-13`, `13-18`, `18-22`, `22-8`) across both `category` and `original` sort modes, ensuring SQL Server returns slot rows in true chronological order instead of alphanumeric string collation.
 
 ### Fixed
-- **Controlli Query Flessibili e Sblocco Aggiornamento Grafico (`controlPanel.tsx`)**:
-  - Rimossa l'obbligatorietà vincolante da `x_axis` e `metrics` (`clearable: true, validators: []`), consentendo l'aggiornamento e la modifica del grafico in Explore senza blocchi o errori di validazione formali.
-  - Reso esplicitamente facoltativo `comparison_metric` (`clearable: true, validators: []`) per evitare l'ereditarietà di `validateNonEmpty` da `sharedControls.metric`.
-  - In `buildQuery.ts`, accodamento di `comparison_metric` condizionato a `time_comparison_mode === 'dual_metric'`.
+- **Flexible query controls and chart update unlock (`controlPanel.tsx`)**:
+  - Removed the mandatory requirement from `x_axis` and `metrics` (`clearable: true, validators: []`), allowing the chart to be updated and edited in Explore without blocks or formal validation errors.
+  - Explicitly made `comparison_metric` optional (`clearable: true, validators: []`) to avoid inheriting `validateNonEmpty` from `sharedControls.metric`.
+  - In `buildQuery.ts`, `comparison_metric` is appended only when `time_comparison_mode === 'dual_metric'`.
 
 ## [0.4.3] - 2026-10-26
 ### Added
-- **Decodifica dinamica degli alias di comparazione temporale**: Riconoscimento ed etichettatura automatica in legenda per serie Tempo 1 vs Tempo 2 senza duplicazione cartesiana delle righe.
-- **Allineamento trend secondario su doppio asse Y**: Preservazione della mappatura colore e compatibilità con il motore di rendering 3D isometrico.
+- **Dynamic decoding of time comparison aliases**: Automatic recognition and labeling in the legend for Tempo 1 vs Tempo 2 series, without cartesian duplication of rows.
+- **Secondary trend alignment on dual Y-axis**: Preservation of the color mapping and compatibility with the isometric 3D rendering engine.
 
 
 ## [0.4.2] - 2026-10-25
 
 ### Fixed
-- **Matching Categorie Serie Secondarie (Dual Y-Axis)**: Risolto il disallineamento tra il formato delle categorie combinate (` · `) e il filtro delle righe nelle metriche secondarie, ripristinando il corretto calcolo ed ingaggio dei trend su secondo asse Y.
-- **Visibilità Serie Secondaria in Legenda**: Rimossa l'esclusione delle serie di tipo linea dalla legenda e introdotta icona dedicata `roundRect` per identificare chiaramente la metrica secondaria.
-- **Preservazione Colore Linea in 3D Isometrico**: Corretta la propagazione del colore configurato (`s.color` o `secondary_line_color`) nel motore di rendering 3D volumetrico.
+- **Secondary series category matching (Dual Y-Axis)**: Fixed the misalignment between the format of the combined categories (` · `) and the row filter on the secondary metrics, restoring the correct calculation and tracking of the trends on the secondary Y axis.
+- **Secondary series visibility in the legend**: Removed the exclusion of line-type series from the legend and introduced a dedicated `roundRect` icon to clearly identify the secondary metric.
+- **Line color preservation in 3D Isometric**: Corrected the propagation of the configured color (`s.color` or `secondary_line_color`) in the volumetric 3D rendering engine.
 
 ## [0.4.1] - 2026-10-24
 
 ### Added
-- **Supporto Nativo per Filtro Dashboard PeriodCompare**: Integrato l'aggancio a `extra_form_data.time_compare`. Quando sulla dashboard e attivo un filtro di confronto temporale nativo, la configurazione della query imposta automaticamente i `time_offsets` permettendo a Superset di estrarre le serie del periodo a confronto senza moltiplicazione di righe su database.
+- **Native support for the PeriodCompare dashboard filter**: Integrated the hook to `extra_form_data.time_compare`. When a native time comparison filter is active on the dashboard, the query configuration automatically sets `time_offsets`, allowing Superset to extract the comparison period series without row multiplication on the database.
 
 ## [0.4.0] - 2026-10-19
 
@@ -90,28 +90,28 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 ## [0.3.19] - 2026-10-07
 
 ### Fixed
-- **Idempotenza Rigida della Registrazione in `MainPreset.ts`**: Riscritta la fase di patch di `install-plugin.ps1` allineandola agli standard della suite: verifica riga-esatta della forma canonica `new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),` (indentazione standard a 8 spazi), normalizzazione delle varianti legacy (righe `.register()`, indentazioni anomale, duplicati) invece della duplicazione, preservazione dei fine riga originali del file e scrittura UTF-8 senza BOM.
+- **Rigid idempotence of the registration in `MainPreset.ts`**: Rewrote the patch phase of `install-plugin.ps1` to align it with the suite standards: exact line-by-line check of the canonical form `new StratumBarChartPlugin().configure({ key: 'stratum_bar' }),` (standard 8-space indentation), normalization of legacy variants (`.register()` lines, anomalous indentation, duplicates) instead of duplication, preservation of the file's original line endings, and UTF-8 writing without BOM.
 
 ### Changed
-- **Coerenza `dist/` e `package-lock.json`**: Rigenerato `dist/` tramite `npm run build` verificando la coincidenza byte a byte con gli artefatti committati (`git status` pulito su `dist/**`) e sincronizzato `package-lock.json` con le devDependencies correnti di `package.json`.
+- **Consistency of `dist/` and `package-lock.json`**: Regenerated `dist/` via `npm run build`, verifying a byte-for-byte match with the committed artifacts (`git status` clean on `dist/**`), and synced `package-lock.json` with the current devDependencies of `package.json`.
 
 ## [0.3.18] - 2026-10-05
 
 ### Fixed
-- **Risoluzione Elastica e Resiliente delle Dimensioni (`transformPropsUtils.ts`)**:
-  - Implementata estrazione esaustiva dei candidati di identificazione per le colonne selezionate (`column_name`, `sqlExpression`, `label`, `name`, `verbose_name`), risolvendo alla radice il disallineamento quando Explore espone label con spazi (es. `Regime di Erogazione`) ma la query SQL restituisce identificatori fisici camelCase o privi di spazi (es. `RegimeErogazione`).
-  - Introdotto matching multi-fase in `findRowKey`: corrispondenza esatta, case-insensitive e normalizzazione alfanumerica senza separatori.
-  - Aggiunto fallback dinamico categorico per `actualBreakdownKey` che assegna automaticamente la colonna qualitativa residua presente in riga qualora il nome configurato non combaci letteralmente.
-  - Implementata deduplica automatica tra asse primario (`x_axis`) e serie (`groupby`): se la medesima dimensione viene inserita sia come asse che come breakdown, viene automaticamente esclusa dal breakdown per prevenire serie ridondanti.
+- **Elastic and resilient dimension resolution (`transformPropsUtils.ts`)**:
+  - Implemented exhaustive extraction of identification candidates for the selected columns (`column_name`, `sqlExpression`, `label`, `name`, `verbose_name`), fixing at the root the misalignment when Explore exposes labels with spaces (e.g. `Regime di Erogazione`) but the SQL query returns camelCase or space-free physical identifiers (e.g. `RegimeErogazione`).
+  - Introduced multi-step matching in `findRowKey`: exact match, case-insensitive match and alphanumeric normalization without separators.
+  - Added a dynamic categorical fallback for `actualBreakdownKey` that automatically assigns the remaining qualitative column present in the row when the configured name does not match literally.
+  - Implemented automatic deduplication between the primary axis (`x_axis`) and the series (`groupby`): if the same dimension is entered both as axis and as breakdown, it is automatically excluded from the breakdown to prevent redundant series.
 
 ## [0.3.17] - 2026-10-02
 
 ### Changed
 - **Query Configuration Ergonomics & UI Cleanup (`controlPanel.tsx`)**:
-  - Resi obbligatori i campi essenziali `x_axis` (*X-Axis / Categoria Principale*) e `metrics` (*Metrica Principale*) con validatore `validateNonEmpty` e disattivazione di `clearable` per prevenire query vuote accidentali.
-  - Rimossa definitivamente ogni ambiguità tra `x_axis_group` e `groupby`: la scomposizione delle barre in serie colorate è ora affidata esclusivamente a `groupby` (*Serie / Breakdown per Colore*).
-  - Reso condizionale e contestuale il controllo `combine_category_breakdown` (*Etichette Composte su Ascisse*), visibile solo se è presente almeno una dimensione in Breakdown.
-  - Impostato `sort_by` con opzione predefinita `'original'` (*Ordine Originale / Query*) per preservare rigorosamente l'ordinamento nativo dei dataset e delle query SQL, consentendo l'ordinamento naturale/cronologico su richiesta esplicita.
+  - Made the essential fields `x_axis` (*X-Axis / Categoria Principale*) and `metrics` (*Metrica Principale*) mandatory with the `validateNonEmpty` validator, and disabled `clearable` to prevent accidental empty queries.
+  - Definitively removed any ambiguity between `x_axis_group` and `groupby`: the split of the bars into colored series is now handled exclusively by `groupby` (*Serie / Breakdown per Colore*).
+  - Made the `combine_category_breakdown` control (*Etichette Composte su Ascisse*) conditional and context-aware, visible only when at least one dimension is in Breakdown.
+  - Set `sort_by` with default option `'original'` (*Ordine Originale / Query*) to strictly preserve the native ordering of datasets and SQL queries, allowing natural/chronological ordering on explicit request.
 
 ## [0.3.16] - 2026-10-02
 
@@ -218,7 +218,7 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 ## [0.3.7] - 2026-09-21
 
 ### Added
-- **Asse Spezzato & Gestione Outlier (Axis Break / Outlier Pinning `//`)**:
+- **Broken Axis & Outlier Management (Axis Break / Outlier Pinning `//`)**:
   - **Visual Outlier Capping**: automatically caps disproportionately high values (e.g. 1331 vs 8, 7, 73) so the chart's primary scale accommodates the minor bars with full visual contrast and readable proportions.
   - **Preserved Real Numbers**: values displayed on top of the bars and in interactive tooltips remain the authentic absolute values (e.g. `// 1.331`), with a clear double slash prefix (`//`) indicating the capped scale break.
   - **Universal Support**: completely generic and customer-agnostic, functioning across 2D Curved Modern & 3D Isometric, Horizontal & Vertical orientations, and Grouped & Stacked bars.
@@ -285,146 +285,146 @@ Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/)
 
 ## [0.2.9] - 2026-09-21
 
-### Risolto
-- **Colori Legenda Non Corrispondenti alle Barre**: la legenda ECharts usava i colori interni generati dal motore invece di quelli esplicitamente assegnati per serie (`label_colors` dashboard, mappa JSON manuale, palette). Aggiunto `data: legendData` alla configurazione della legenda con `itemStyle.color` basato sul campo `color` di ogni serie (sia 2D che 3D).
-- **Valori Invisibili in Modalità Impilata (Stacked)**: i label erano posizionati a `'top'` (fuori dalla barra) per tutte le serie, rendendoli invisibili o sovrapposti nei segmenti intermedi. Impostato `position: 'inside'` quando `stacking !== 'none'` e aggiunta soppressione automatica per segmenti inferiori all'1,5% del valore massimo.
-- **Overflow Testo in Modalità Orizzontale**: i valori etichetta all'estremità destra della barra uscivano dall'area del grafico. Aumentato dinamicamente il padding destro della griglia (`grid.right`) a 60px (senza doppio asse) e 90px (con doppio asse) in modalità orizzontale.
+### Fixed
+- **Legend colors not matching the bars**: the ECharts legend used the internal colors generated by the engine instead of those explicitly assigned per series (dashboard `label_colors`, manual JSON map, palette). Added `data: legendData` to the legend configuration with `itemStyle.color` based on the `color` field of each series (both 2D and 3D).
+- **Invisible values in stacked mode**: the labels were positioned at `'top'` (outside the bar) for all series, making them invisible or overlapping in the intermediate segments. Set `position: 'inside'` when `stacking !== 'none'` and added automatic suppression for segments below 1.5% of the maximum value.
+- **Text overflow in horizontal mode**: the label values at the right end of the bar went outside the chart area. Dynamically increased the right grid padding (`grid.right`) to 60px (without dual axis) and 90px (with dual axis) in horizontal mode.
 
 ## [0.2.8] - 2026-09-21
 
-### Risolto
-- **Visibilità e Stacking Context del Micro Popover Impostazioni 3D (`⚙️ 3D`)**:
-  - Risolto il problema per cui il popup delle impostazioni 3D risultava invisibile o scivolava in secondo piano dietro il canvas di ECharts.
-  - Impostato `overflow: visible` sul contenitore della toolbar `.stratum-bar-toolbar` e `.stratum-bar-toolbar-right`, confinando lo scorrimento orizzontale a `.stratum-bar-toolbar-left` per evitare che l'altezza fissa della barra tagliasse i menu a tendina o i popover aperti.
-  - Assegnato `z-index: 1000` alla toolbar, `z-index: 999999 !important` al popover `.stratum-bar-popover` con `pointer-events: auto` e `z-index: 1` al container canvas `.stratum-bar-canvas-container`.
-  - Aggiunto listener `handleClickOutside` per chiudere in modo fluido e naturale il popover al click in qualsiasi punto esterno della pagina o del grafico.
+### Fixed
+- **Visibility and stacking context of the 3D settings micro popover (`⚙️ 3D`)**:
+  - Fixed the issue where the 3D settings popup was invisible or slipped behind the ECharts canvas.
+  - Set `overflow: visible` on the toolbar containers `.stratum-bar-toolbar` and `.stratum-bar-toolbar-right`, confining horizontal scrolling to `.stratum-bar-toolbar-left`, so that the fixed bar height would not cut off dropdown menus or open popovers.
+  - Assigned `z-index: 1000` to the toolbar, `z-index: 999999 !important` to the `.stratum-bar-popover` popover with `pointer-events: auto`, and `z-index: 1` to the `.stratum-bar-canvas-container` canvas container.
+  - Added a `handleClickOutside` listener to close the popover smoothly and naturally when clicking anywhere outside the page or the chart.
 
 ## [0.2.7] - 2026-09-21
 
-### Aggiunto
-- **Reattività Completa ai Filtri Nativi della Dashboard (`buildQuery.ts`)**:
-  - Unione e conservazione esplicita e resiliente di tutti i filtri nativi (`extra_form_data.filters`) e dei filtri ad-hoc (`extra_form_data.adhoc_filters`), garantendo che cambi di periodo, sede, branca, ambulatorio o canale aggiornino istantaneamente la query e i dati del grafico.
-  - Sincronizzazione di `series_columns` con la dimensione di breakdown per l'aggiornamento automatico del contesto dashboard.
-- **Cross-Filtering Avanzato con Deselezione Toggle e Dimming Visivo**:
-  - Supporto completo per interazione cross-filter: al click su una barra, il grafico emette filtri nativi su `CANALE` e `REGIME` via `setDataMask` verso tutti i grafici della dashboard.
-  - Implementata la deselezione toggle a due vie: cliccando nuovamente sulla barra o categoria già selezionata, il filtro viene rimosso automaticamente riportando tutti i grafici allo stato globale.
-  - Feedback visivo immediato: le barre non selezionate vengono sfumate (`opacity: 0.28`) evidenziando la barra o categoria attiva in 2D e 3D.
-- **Gestione Dinamica della Palette Colori (Dashboard, JSON e CSS)**:
-  - **Ereditarietà Totale da Dashboard (`label_colors`)**: prioritizzazione assoluta dei colori definiti nella dashboard (`json_metadata.label_colors`, es. `SSN: #3a6a9b`, `Convenzioni: #1c3d5e`, `Libera professione: #7aa8cf`, `Solventi: #bcd5ea`), con supporto per corrispondenza esatta, case-insensitive e scomposizione di etichette composte (`Canale · Regime`).
-  - **Mappatura Manuale JSON (`custom_colors_json`)**: nuovo controllo in backend/Explore per sovrascrivere o definire a mano una mappa colori JSON (`{"SSN": "#3a6a9b", ...}`).
-  - **Personalizzazione Diretta via CSS**: supporto a variabili CSS custom property sul contenitore (es. `--color-ssn`, `--stratum-color-ssn`) per applicare stili e palette personalizzate direttamente dal pannello CSS della dashboard.
-  - **Scelta Engine di Rendering (`renderer`)**: opzione per selezionare `Canvas` (default, massime prestazioni 60fps) oppure `SVG` (vettoriale, permette sovrascrittura diretta degli stili dal DOM tramite CSS).
+### Added
+- **Full responsiveness to native dashboard filters (`buildQuery.ts`)**:
+  - Explicit and resilient merging and preservation of all native filters (`extra_form_data.filters`) and ad-hoc filters (`extra_form_data.adhoc_filters`), ensuring that changes of period, site, branch, clinic or channel instantly update the query and the chart data.
+  - Synchronization of `series_columns` with the breakdown dimension for the automatic update of the dashboard context.
+- **Advanced cross-filtering with toggle deselection and visual dimming**:
+  - Full support for cross-filter interaction: on clicking a bar, the chart emits native filters on `CANALE` and `REGIME` via `setDataMask` to all the charts of the dashboard.
+  - Implemented two-way toggle deselection: clicking again on the bar or category already selected automatically removes the filter, bringing all the charts back to the global state.
+  - Immediate visual feedback: unselected bars are faded (`opacity: 0.28`), highlighting the active bar or category in 2D and 3D.
+- **Dynamic color palette management (Dashboard, JSON and CSS)**:
+  - **Full inheritance from the dashboard (`label_colors`)**: absolute priority to the colors defined in the dashboard (`json_metadata.label_colors`, e.g. `SSN: #3a6a9b`, `Convenzioni: #1c3d5e`, `Libera professione: #7aa8cf`, `Solventi: #bcd5ea`), with support for exact and case-insensitive matching and for splitting composite labels (`Canale · Regime`).
+  - **Manual JSON mapping (`custom_colors_json`)**: new control in the backend/Explore to override or manually define a JSON color map (`{"SSN": "#3a6a9b", ...}`).
+  - **Direct customization via CSS**: support for CSS custom properties on the container (e.g. `--color-ssn`, `--stratum-color-ssn`) to apply custom styles and palettes directly from the dashboard CSS panel.
+  - **Rendering engine choice (`renderer`)**: option to select `Canvas` (default, maximum performance at 60fps) or `SVG` (vector, allows direct overriding of styles from the DOM via CSS).
 
 ## [0.2.6] - 2026-09-21
 
-### Risolto
-- **Allineamento Dimensioni Query Backend (`groupby: columns`)**:
-  - Risolto problema critico di precedenza nel query builder di Superset: quando `groupby` è presente in `baseQueryObject` da `formData`, il backend Superset poteva ignorare `columns` e raggruppare esclusivamente per `groupby`, omettendo le dimensioni dell'asse X (es. `CANALE`) dalla query SQL.
-  - Sincronizzato esplicitamente `groupby: columns` nell'oggetto di query ritornato da `buildQuery.ts`, garantendo che tutte le dimensioni (`x_axis`, `x_axis_group`, `groupby`) siano sempre presenti sia nella clausola `SELECT` che nel `GROUP BY` del database.
+### Fixed
+- **Backend query dimensions alignment (`groupby: columns`)**:
+  - Fixed a critical precedence problem in the Superset query builder: when `groupby` is present in `baseQueryObject` from `formData`, the Superset backend could ignore `columns` and group only by `groupby`, omitting the X-axis dimensions (e.g. `CANALE`) from the SQL query.
+  - Explicitly synchronized `groupby: columns` in the query object returned by `buildQuery.ts`, ensuring that all dimensions (`x_axis`, `x_axis_group`, `groupby`) are always present both in the `SELECT` clause and in the database `GROUP BY`.
 
 ## [0.2.5] - 2026-09-21
 
-### Aggiunto
-- **Controllo Esplicito Raggruppamento Ascisse (`x_axis_group`)**:
-  - Aggiunto il controllo dedicato `X-Axis Group Dimension (Raggruppamento Ascisse)` in *Query Configuration* per consentire la configurazione immediata di dimensioni aggregate sulle ascisse (es. Canale di Prenotazione raggruppato con Regime).
-  - Supporto per selezione multipla su `x_axis` (`multi: true`) che permette di selezionare liberamente più dimensioni direttamente sull'asse X.
-- **Raggruppamento Flessibile su Ascisse**:
-  - Spostamento del controllo `combine_category_breakdown` ("Etichette Raggruppate su Ascisse - Compound Labels") direttamente nella sezione primaria *Query Configuration*.
-  - Visualizzazione ad alta leggibilità con separatore puntato (`Canale · Regime`, es. `App · SSN`, `Call center · Convenzioni`) mantenendo la colorazione coerente per serie e la legenda dei singoli regimi.
-  - Aggregazione robusta a sommatoria per righe multiple o duplicate nella matrice categoria/serie.
-  - Supporto cross-filtering a due dimensioni per etichette composte (`CANALE` + `REGIME`).
+### Added
+- **Explicit X-axis grouping control (`x_axis_group`)**:
+  - Added the dedicated control `X-Axis Group Dimension (Raggruppamento Ascisse)` in *Query Configuration* to allow the immediate configuration of aggregated dimensions on the X axis (e.g. Canale di Prenotazione grouped with Regime).
+  - Support for multiple selection on `x_axis` (`multi: true`), which allows freely selecting several dimensions directly on the X axis.
+- **Flexible grouping on the X axis**:
+  - Moved the `combine_category_breakdown` control ("Etichette Raggruppate su Ascisse - Compound Labels") directly into the primary *Query Configuration* section.
+  - Highly readable display with a dot separator (`Canale · Regime`, e.g. `App · SSN`, `Call center · Convenzioni`), keeping the colors consistent per series and the legend of the individual regimes.
+  - Robust summing aggregation for multiple or duplicate rows in the category/series matrix.
+  - Two-dimension cross-filtering support for composite labels (`CANALE` + `REGIME`).
 
 ## [0.2.4] - 2026-09-21
 
-### Ottimizzato & Risolto
-- **Frontend BI Dashboard: Toolbar Compatta, Responsive & Zero Accozzaglia**:
-  - **Single-Line Executive Pill Bar (36px)**: altezza ridotta da 70-100px a 36px fissi con sfumatura glassmorphism (`backdrop-filter: blur(10px)`) e tema scuro/chiaro integrato, liberando fino all'80% di spazio verticale per il canvas ECharts.
-  - **Micro-Pills con Glowing Status Dots**: sostituzione di bottoni lunghi e testuali con micro-pillole eleganti a punto luminoso (`● Asse 2`, `● Combina [Dim]`, `● Target`), commutatore segmentato `2D / 3D` e switch compatti `↕ Colonne / ↔ Barre` e `☷ Impila`.
-  - **Popover 3D a Scomparsa**: rimossi gli slider statici ingombranti dalla toolbar principale, integrati in un popover a scomparsa fluida `⚙️ 3D` attivabile solo al bisogno.
-  - **Esportazione Minimale**: micro-pulsanti iconici `📷` e `📊` ultra-compatti.
-- **Backend Superset ("k-end"): Progressive Disclosure Completa**:
-  - **Zero Duplicati**: rimosso il controllo duplicato `enableToolbar`.
-  - **Visibilità Dinamica (`visibility`)**:
-    - Controlli 3D visibili solo in modalità `3d`.
-    - Controlli 2D (raggio angoli, track) visibili solo in modalità `2d`.
-    - Controlli del secondo asse visibili solo in presenza di `secondary_metrics`.
-    - Controlli del benchmark visibili solo con `showBenchmark` abilitato.
-    - Checkbox della toolbar visibili solo con `enableToolbar` abilitato.
-  - **Metriche Riorganizzate**: posizionamento di `secondary_metrics` nella sezione *Query Configuration* per una configurazione dati intuitiva e unificata.
+### Optimized & Fixed
+- **BI dashboard frontend: compact, responsive toolbar and zero clutter**:
+  - **Single-Line Executive Pill Bar (36px)**: height reduced from 70-100px to a fixed 36px, with a glassmorphism effect (`backdrop-filter: blur(10px)`) and an integrated dark/light theme, freeing up to 80% of the vertical space for the ECharts canvas.
+  - **Micro-pills with glowing status dots**: replaced long text buttons with elegant micro-pills with a glowing dot (`● Asse 2`, `● Combina [Dim]`, `● Target`), a segmented `2D / 3D` switch and compact `↕ Colonne / ↔ Barre` and `☷ Impila` switches.
+  - **Collapsible 3D popover**: removed the bulky static sliders from the main toolbar and integrated them into a smooth collapsible `⚙️ 3D` popover that opens only when needed.
+  - **Minimal export**: ultra-compact iconic micro-buttons `📷` and `📊`.
+- **Superset backend ("k-end"): complete progressive disclosure**:
+  - **No duplicates**: removed the duplicate `enableToolbar` control.
+  - **Dynamic visibility (`visibility`)**:
+    - 3D controls visible only in `3d` mode.
+    - 2D controls (corner radius, track) visible only in `2d` mode.
+    - Second axis controls visible only when `secondary_metrics` are present.
+    - Benchmark controls visible only when `showBenchmark` is enabled.
+    - Toolbar checkboxes visible only when `enableToolbar` is enabled.
+  - **Metrics reorganized**: placement of `secondary_metrics` in the *Query Configuration* section for an intuitive and unified data configuration.
 
 ## [0.2.3] - 2026-09-21
 
-### Ottimizzato & Risolto
-- **Compatibilità Docker Compose & Frontend Superset 100% Affidabile**:
-  - Rimozione delle dipendenze superflue e non importate (`classnames`, `d3-format`, `lodash`) da `package.json`, eliminando qualsiasi potenziale conflitto o discrepanza nei controlli di integrità del lockfile durante `npm ci` nei container Docker (`superset-node`).
-  - Correzione automatica del mapping dei servizi in `install-plugin.ps1`: risoluzione dinamica di `superset-node` e `superset` (rispetto ai nomi legacy con underscore `superset_node` / `superset_app`).
-  - Pulizia e allineamento automatico dei file pre-compilati `dist/`, `src/` e `assets/` all'aggiornamento di istanze Apache Superset già esistenti, evitando residui o conflitti di cache Webpack/Babel.
-- **Showcase Visivo Ufficiale**:
-  - Aggiunta dell'immagine di anteprima ad alta risoluzione in `assets/stratumbar_preview.jpg` integrata nella documentazione master.
+### Optimized & Fixed
+- **Docker Compose and Superset frontend compatibility, 100% reliable**:
+  - Removed the superfluous and unimported dependencies (`classnames`, `d3-format`, `lodash`) from `package.json`, eliminating any potential conflict or mismatch in the lockfile integrity checks during `npm ci` in the Docker containers (`superset-node`).
+  - Automatic correction of the service mapping in `install-plugin.ps1`: dynamic resolution of `superset-node` and `superset` (instead of the legacy underscore names `superset_node` / `superset_app`).
+  - Automatic cleanup and alignment of the precompiled `dist/`, `src/` and `assets/` files when updating existing Apache Superset instances, avoiding leftovers or Webpack/Babel cache conflicts.
+- **Official visual showcase**:
+  - Added the high-resolution preview image `assets/stratumbar_preview.jpg`, included in the master documentation.
 
 ## [0.2.2] - 2026-09-20
 
-### Aggiunto
-- **Universal Agnostic Architecture & Toolbar Configurable dal Backend**:
-  - **Nessuna Assunzione o Hardcoding di Dominio**: la dimensione di scomposizione non e' piu' fissa, ma rilevata e iniettata dinamicamente (`breakdownDimName`), adattando automaticamente testi, bottoni e logica di raggruppamento a qualsiasi dataset (es. Reparto, Canale, Fornitore, Regione).
-  - **Pannello di Controllo Esplora / Backend ("k-end") Granulare**:
-    - Nuova sezione *Barra degli Strumenti Runtime (Interactive Toolbar)* con toggle master `enableToolbar` e controlli individuali per abilitare/disabilitare ciascun pulsante a runtime (`toolbar_show_view_mode`, `toolbar_show_orientation`, `toolbar_show_stacking`, `toolbar_show_dual_axis`, `toolbar_show_breakdown_toggle`, `toolbar_show_benchmark`, `toolbar_show_export`).
-    - Possibilita' per gli autori di dashboard di disattivare la toolbar o limitare i toggle a runtime per visualizzatori finali.
-  - **Reattivita' 60fps Client-Side in StratumBarChart**:
-    - Doppio calcolo e cache di rappresentazione (`standardCategories`/`standardSeries` e `combinedCategories`/`combinedSeries`) in `transformProps.ts` per switch istantaneo client-side.
-    - Pulsanti reattivi per Doppio Asse Y (`ON/OFF`), Combina Dimensione (`ON/OFF`) e Target (`ON/OFF`), mostrati unicamente se le rispettive funzionalita' sono configurate nel grafico.
-  - **Test Suite Dedicata**: aggiunto test unitario in `test/dualAxis.test.ts` (12/12 test passing).
+### Added
+- **Universal agnostic architecture and toolbar configurable from the backend**:
+  - **No domain assumptions or hardcoding**: the breakdown dimension is no longer fixed, but detected and injected dynamically (`breakdownDimName`), automatically adapting texts, buttons and grouping logic to any dataset (e.g. Reparto, Canale, Fornitore, Regione).
+  - **Granular Explore / backend ("k-end") control panel**:
+    - New section *Barra degli Strumenti Runtime (Interactive Toolbar)* with a master `enableToolbar` toggle and individual controls to enable or disable each button at runtime (`toolbar_show_view_mode`, `toolbar_show_orientation`, `toolbar_show_stacking`, `toolbar_show_dual_axis`, `toolbar_show_breakdown_toggle`, `toolbar_show_benchmark`, `toolbar_show_export`).
+    - Dashboard authors can disable the toolbar or limit the runtime toggles for end viewers.
+  - **60fps client-side responsiveness in StratumBarChart**:
+    - Double computation and representation cache (`standardCategories`/`standardSeries` and `combinedCategories`/`combinedSeries`) in `transformProps.ts` for instant client-side switching.
+    - Reactive buttons for Dual Y-Axis (`ON/OFF`), Combine Dimension (`ON/OFF`) and Target (`ON/OFF`), shown only if the respective features are configured in the chart.
+  - **Dedicated test suite**: added unit test in `test/dualAxis.test.ts` (12/12 tests passing).
 
 ## [0.2.1] - 2026-09-20
 
-### Aggiunto
-- **Design System & Estetica Avanzata Tangibile**:
-  - **Glassmorphism Tooltip con Backdrop Blur**: tooltip interattivi con effetto vetro smerigliato (`backdrop-filter: blur(8px)`), bordi semi-trasparenti, font tabular-nums e badge delta allineati per metriche primarie vs target.
-  - **Area Gradient Glowing**: gradiente luminoso e sfumato sotto la linea del secondo asse (`secondary_area_gradient`) per visualizzazione ibrida barre + trend.
-  - **Color-Coded Axis Matching**: sincronizzazione cromatico-visiva automatica tra linea secondaria, asse destro, etichette numeriche e titolo.
-  - **Dark Obsidian & Light Enterprise Mode**: supporto completo a temi chiari e scuri (`theme_mode: 'light' | 'dark'`) con contrasto ottimizzato WCAG.
-  - **Texture e Pattern Geometrici Accessibili (W3C A11y Decals)**: pattern geometrici differenziati abilitabili per utenti daltonici (`enable_a11y_decal`).
-- **Raffinamento Motore di Trasformazione Dati**:
-  - Risolto conflitto nell'estrazione delle serie nei dataframe non pivotati: isolamento rigoroso delle metriche secondarie rispetto alle barre primarie.
+### Added
+- **Design System & advanced tangible aesthetics**:
+  - **Glassmorphism tooltip with backdrop blur**: interactive tooltips with a frosted glass effect (`backdrop-filter: blur(8px)`), semi-transparent borders, tabular-nums font and delta badges aligned for primary metrics vs target.
+  - **Glowing area gradient**: a luminous, faded gradient under the second-axis line (`secondary_area_gradient`) for a hybrid bars + trend view.
+  - **Color-coded axis matching**: automatic color and visual synchronization between the secondary line, right axis, numeric labels and title.
+  - **Dark Obsidian & Light Enterprise Mode**: full support for light and dark themes (`theme_mode: 'light' | 'dark'`) with WCAG-optimized contrast.
+  - **Accessible textures and geometric patterns (W3C A11y Decals)**: distinct geometric patterns that can be enabled for colorblind users (`enable_a11y_decal`).
+- **Refinement of the data transformation engine**:
+  - Fixed a conflict in series extraction from non-pivoted dataframes: strict isolation of the secondary metrics from the primary bars.
 
 ## [0.2.0] - 2026-09-20
 
-### Aggiunto
-- **Supporto Completo Doppio Asse delle Ordinate (Dual Y-Axis)**:
-  - Abilitazione del secondo asse Y indipendente a destra (o in alto se orientamento orizzontale) sia per il motore 2D che 3D Isometrico.
-  - Assegnazione dinamica `yAxisIndex: 1` per le metriche secondarie tracciate.
-  - Supporto per visualizzazione secondaria ibrida: **Linea smussata con indicatori (Line + Markers)** sovrapposta alle colonne/barre, oppure barre secondarie.
-  - Formato numerico dedicato indipendente per il secondo asse (`y_axis_2_format`, es. percentuali `.2%` o valute) e titolo dedicato (`y_axis_2_title`).
-- **Raggruppamento Multi-Dimensione e Breakdown Combinato**:
-  - Estrazione e aggregazione contemporanea di metriche primarie e secondarie in `buildQuery.ts`.
-  - Supporto al parametro `combine_category_breakdown`: visualizzazione unificata delle etichette sull'asse (`Categoria [Regime]`, es. *Cardiologia [SSN]* e *Cardiologia [Privato]*).
-- **Test Suite Dedicata**:
-  - Aggiunta suite di test unitari Jest [`test/dualAxis.test.ts`](file:///D:/Sviluppo/superset-plugins/superset-plugin-chart-stratum-bar/test/dualAxis.test.ts) (10/10 test passing).
+### Added
+- **Full dual Y-axis support (Dual Y-Axis)**:
+  - Enabled the independent second Y axis on the right (or at the top with horizontal orientation) for both the 2D and the 3D Isometric engine.
+  - Dynamic assignment of `yAxisIndex: 1` for the tracked secondary metrics.
+  - Support for a hybrid secondary view: **smoothed line with markers (Line + Markers)** overlaid on the columns/bars, or secondary bars.
+  - Dedicated, independent number format for the second axis (`y_axis_2_format`, e.g. percentages `.2%` or currencies) and a dedicated title (`y_axis_2_title`).
+- **Multi-dimension grouping and combined breakdown**:
+  - Simultaneous extraction and aggregation of primary and secondary metrics in `buildQuery.ts`.
+  - Support for the `combine_category_breakdown` parameter: unified display of the labels on the axis (`Categoria [Regime]`, e.g. *Cardiologia [SSN]* and *Cardiologia [Privato]*).
+- **Dedicated test suite**:
+  - Added Jest unit test suite [`test/dualAxis.test.ts`](file:///D:/Sviluppo/superset-plugins/superset-plugin-chart-stratum-bar/test/dualAxis.test.ts) (10/10 tests passing).
 
 ---
 
 ## [0.1.0] - 2026-09-17
 
-### Aggiunto
-- **Inizializzazione Plugin**: Creazione del plugin `superset-plugin-chart-stratum-bar` compatibile con Apache Superset (versioni 3.x, 4.x, 6.x).
-- **Doppio Motore di Rendering 2D/3D**:
-  - Motore 3D Isometrico con proiezioni geometriche poligonali su canvas 2D, illuminazione direzionale a tre facce (frontale, laterale, top cap) e ombre a terra (ground shadows) a 60 fps con zero overhead WebGL.
-  - Motore 2D Moderno con angoli arrotondati configurabili (`barBorderRadius`), gradienti cromatici e guide di scala trasparenti (**Track Background**).
-- **Modulo Benchmark & Delta %**:
-  - Supporto per target di riferimento fisso, media aritmetica, mediana o metrica target dinamica per categoria.
-  - Calcolo e visualizzazione di badge di scostamento percentuale (`+X%` / `-Y%`) con polarità normale (verde per aumento, rosso per decremento) o invertita.
-- **Toolbar Interattiva a Runtime**:
-  - Switch rapido 2D / 3D.
-  - Switch orientamento (Verticale / Orizzontale).
-  - Switch raggruppamento (Barre affiancate o Impilate).
-  - Slider interattivi per regolazione dell'angolo di inclinazione (Tilt) e della profondità (Depth) in modalità 3D.
-  - Esportazione istantanea ad alta risoluzione in PNG e download dei dati aggregati in formato CSV.
+### Added
+- **Plugin initialization**: creation of the `superset-plugin-chart-stratum-bar` plugin compatible with Apache Superset (versions 3.x, 4.x, 6.x).
+- **Dual 2D/3D rendering engine**:
+  - 3D Isometric engine with polygonal geometric projections on a 2D canvas, three-face directional lighting (front, side, top cap) and ground shadows at 60 fps with zero WebGL overhead.
+  - Modern 2D engine with configurable rounded corners (`barBorderRadius`), color gradients and transparent scale guides (**Track Background**).
+- **Benchmark & Delta % module**:
+  - Support for a fixed reference target, arithmetic mean, median or a dynamic target metric per category.
+  - Calculation and display of percentage deviation badges (`+X%` / `-Y%`) with normal polarity (green for increase, red for decrease) or inverted polarity.
+- **Interactive runtime toolbar**:
+  - Quick 2D / 3D switch.
+  - Orientation switch (Vertical / Horizontal).
+  - Grouping switch (side-by-side or stacked bars).
+  - Interactive sliders to adjust the tilt angle (Tilt) and the depth (Depth) in 3D mode.
+  - Instant high-resolution export to PNG and download of the aggregated data in CSV format.
 - **Cross-Filtering**:
-  - Integrazione nativa con il motore dei filtri di Superset (`setDataMask` ed extraFormData).
-- **Suite di Installazione Resiliente**:
-  - `install-plugin.ps1` conforme alla *Chart Plugins Golden Rule* con pre-flight automatico `npm install`, catena di fallback per la compilazione, backup `MainPreset.ts.bak` e registrazione idempotente.
-  - `install.bat` per esecuzione immediata.
-- **Test Suite**:
-  - Unit test Jest per trasformazione props, partizionamento multi-serie, calcolo benchmark e renderers 2D/3D.
-- **Demo Interattiva**:
-  - File standalone `examples/interactive_preview.html` basato sul dataset reale di IDI IRCCS Slice 430 (*ADS - Richieste per canale di prenotazione e regime*).
+  - Native integration with the Superset filter engine (`setDataMask` and extraFormData).
+- **Resilient installation suite**:
+  - `install-plugin.ps1` compliant with the *Chart Plugins Golden Rule*, with an automatic `npm install` pre-flight, a fallback chain for the build, a `MainPreset.ts.bak` backup and idempotent registration.
+  - `install.bat` for immediate execution.
+- **Test suite**:
+  - Jest unit tests for props transformation, multi-series partitioning, benchmark calculation and 2D/3D renderers.
+- **Interactive demo**:
+  - Standalone file `examples/interactive_preview.html` based on the real IDI IRCCS Slice 430 dataset (*ADS - Richieste per canale di prenotazione e regime*).
