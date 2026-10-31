@@ -97,4 +97,60 @@ describe('StratumBar Comparative Dual Time Mode', () => {
     expect(transformed.series[0].name).toBe('Corrente');
     expect(transformed.series[1].name).toBe('Precedente');
   });
+
+  describe('native time offsets', () => {
+    const offset = '2007-01-01 : 2008-01-01';
+    const offsetData = [
+      { state: 'CA', sum__num: 110, [`sum__num__${offset}`]: 100 },
+      { state: 'NY', sum__num: 40, [`sum__num__${offset}`]: 60 },
+    ];
+    const run = (formData: Record<string, unknown>) =>
+      transformProps({
+        width: 800,
+        height: 500,
+        formData: {
+          viz_type: 'stratum_bar',
+          datasource: '1__table',
+          x_axis: 'state',
+          metrics: ['sum__num'],
+          ...formData,
+        },
+        queriesData: [{ data: offsetData }],
+      } as unknown as ChartProps);
+
+    it('turns the offset column into the comparison series, named after the two periods', () => {
+      const props = run({
+        time_comparison_mode: 'time_offsets',
+        extra_form_data: { time_range: '2008-01-01 : 2009-01-01', time_compare: [offset] },
+      });
+      expect(props.series).toHaveLength(2);
+      expect(props.series[0].name).toBe('2008-01-01 : 2009-01-01');
+      expect(props.series[0].data).toEqual([110, 40]);
+      expect(props.series[1].name).toBe(offset);
+      expect(props.series[1].data).toEqual([100, 60]);
+      expect(props.series[0].items[0].delta).toBe(10);
+    });
+
+    it('uses the labels typed in the control panel', () => {
+      const props = run({ time_comparison_mode: 'time_offsets', time_1_label: 'This year', time_2_label: 'Last year' });
+      expect(props.series.map((s: any) => s.name)).toEqual(['This year', 'Last year']);
+    });
+
+    it('reads the comparison mode from rawFormData when a dashboard camel-cases formData', () => {
+      const props = transformProps({
+        width: 800,
+        height: 500,
+        formData: { viz_type: 'stratum_bar', datasource: '1__table', xAxis: 'state', metrics: ['sum__num'], timeComparisonMode: 'time_offsets' },
+        rawFormData: { viz_type: 'stratum_bar', x_axis: 'state', metrics: ['sum__num'], time_comparison_mode: 'time_offsets' },
+        queriesData: [{ data: offsetData }],
+      } as unknown as ChartProps);
+      expect(props.series).toHaveLength(2);
+      expect(props.series[1].data).toEqual([100, 60]);
+    });
+
+    it('leaves the offset column alone when the comparison is off', () => {
+      const props = run({ time_comparison_mode: 'none' });
+      expect(props.series.map((s: any) => s.name)).not.toContain(offset);
+    });
+  });
 });

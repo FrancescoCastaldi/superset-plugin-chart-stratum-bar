@@ -4,6 +4,13 @@ All notable changes to **StratumBar** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.9] - 2026-11-01
+
+### Fixed
+- **Time comparison on dashboards**: Superset passes `formData` to the chart in camelCase, while `time_comparison_mode`, `time_1_label`, `time_2_label` and the other comparison options were read in snake_case, so in a dashboard the comparison was always off. They are now also read from `rawFormData`.
+- **Native time offsets** (`time_comparison_mode = time_offsets`): the comparison column `<metric>__<offset>`, where the offset is a shift or an explicit range sent by a dashboard filter such as the Calendar Filter, was treated as a pivoted series and the reference series disappeared. It now becomes the second series next to the reference one, with deltas, named after the two periods when no label is set.
+- 4 new tests (129 in total).
+
 ## [0.4.8] - 2026-11-01
 
 ### Changed

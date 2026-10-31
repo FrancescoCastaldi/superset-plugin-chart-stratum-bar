@@ -18,7 +18,9 @@ import {
 
 export default function transformProps(chartProps: ChartProps): StratumBarTransformedProps {
   const { width, height, formData, queriesData, hooks } = chartProps as StratumBarChartProps;
-  const fd = (formData || {}) as StratumBarFormData;
+  // On a dashboard Superset hands over `formData` in camelCase while the options of this chart are
+  // read in snake_case: `rawFormData` keeps the names typed in the control panel
+  const fd = { ...((chartProps as any).rawFormData || {}), ...(formData || {}) } as StratumBarFormData;
   const data = (queriesData?.[0]?.data || []) as DataRecord[];
 
   const {
@@ -122,7 +124,20 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     .filter(Boolean)
     .map(s => s.toLowerCase());
 
+  // With native time offsets the query returns the second period as `<metric>__<offset>`, where the
+  // offset is a shift (`1 year ago`) or an explicit range sent by a dashboard filter
+  const offsetKey =
+    time_comparison_mode === 'time_offsets'
+      ? Object.keys(sampleRow).find(
+          k =>
+            k.toLowerCase() !== primaryMetric.toLowerCase() &&
+            k.toLowerCase().startsWith(`${primaryMetric.toLowerCase()}__`) &&
+            typeof sampleRow[k] === 'number',
+        )
+      : undefined;
+
   const potentialPivotedKeys = Object.keys(sampleRow).filter(k =>
+    k !== offsetKey &&
     k.toLowerCase() !== actualXKey.toLowerCase() &&
     k !== '__timestamp' &&
     !k.startsWith('__') &&
@@ -159,9 +174,9 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       combineFlag, sampleRow, potentialPivotedKeys,
       sortBy, isOrderDesc,
       timeComparisonMode: fd.time_comparison_mode,
-      comparisonMetric: fd.comparison_metric,
-      time1Label: fd.time_1_label,
-      time2Label: fd.time_2_label,
+      comparisonMetric: fd.comparison_metric || offsetKey,
+      time1Label: fd.time_1_label || (offsetKey ? fd.extra_form_data?.time_range || undefined : undefined),
+      time2Label: fd.time_2_label || (offsetKey ? offsetKey.slice(primaryMetric.length + 2) : undefined),
     });
   };
 
