@@ -4,6 +4,12 @@ All notable changes to **StratumBar** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.8] - 2026-11-01
+
+### Changed
+- **Toolbar, tooltips and control panel choices in English**: the orientation and layout buttons and their tooltips (`Orientation: vertical (click for horizontal)`, `Layout: grouped (click to stack)`), `Axis 2`, `Axis break`, the value position options (`Above`, `Inside`, `Slanted`), the empty state message and the control panel choices (`Horizontal (bars)`, `Grouped`, `Stacked`, `Slanted (45°)`, `Outside`, `Line with markers`) were partly Italian and are now English. Saved charts keep their settings: only the visible texts change.
+- Comparison pairs are also recognised from series named with the English words `Time` or `Period`, besides the Italian ones.
+
 ## [0.4.7] - 2026-10-29
 
 ### Fixed

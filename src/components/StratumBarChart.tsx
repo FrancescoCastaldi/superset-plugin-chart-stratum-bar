@@ -333,7 +333,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     return (
       <div className={`stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''}`} style={{ width, height }}>
         <div className="stratum-bar-empty">
-          <span>Nessun dato disponibile da visualizzare nel grafico StratumBar.</span>
+          <span>No data to show in the StratumBar chart.</span>
         </div>
       </div>
     );
@@ -378,7 +378,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 type="button"
                 className={`stratum-bar-btn ${orientation === 'horizontal' ? 'active' : ''}`}
                 onClick={() => setOrientation(prev => (prev === 'vertical' ? 'horizontal' : 'vertical'))}
-                title={orientation === 'vertical' ? 'Orientamento: Verticale (clicca per Orizzontale)' : 'Orientamento: Orizzontale (clicca per Verticale)'}
+                title={orientation === 'vertical' ? 'Orientation: vertical (click for horizontal)' : 'Orientation: horizontal (click for vertical)'}
               >
                 {orientation === 'vertical' ? '↕ Columns' : '↔ Bars'}
               </button>
@@ -390,9 +390,9 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 type="button"
                 className={`stratum-bar-btn ${stacking === 'stack' ? 'active' : ''}`}
                 onClick={() => setStacking(prev => (prev === 'none' ? 'stack' : 'none'))}
-                title={stacking === 'none' ? 'Disposizione: Raggruppate (clicca per Impilare)' : 'Disposizione: Impilate (clicca per Raggruppare)'}
+                title={stacking === 'none' ? 'Layout: grouped (click to stack)' : 'Layout: stacked (click to group)'}
               >
-                {stacking === 'stack' ? '☷ Impilate' : '☷ Affiancate'}
+                {stacking === 'stack' ? '☷ Stacked' : '☷ Grouped'}
               </button>
             )}
 
@@ -404,7 +404,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 onClick={() => setHasDualYAxis(prev => !prev)}
                 title="Toggle secondary Y axis at runtime"
               >
-                <span className={`stratum-bar-dot ${hasDualYAxis ? 'dot-orange' : 'dot-off'}`} /> Asse 2
+                <span className={`stratum-bar-dot ${hasDualYAxis ? 'dot-orange' : 'dot-off'}`} /> Axis 2
               </button>
             )}
 
@@ -440,11 +440,11 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 onClick={() => setEnableAxisBreak(prev => !prev)}
                 title="Toggle broken scale (visual outlier capping to highlight smaller bars)"
               >
-                <span className={`stratum-bar-dot ${enableAxisBreak ? 'dot-purple' : 'dot-off'}`} /> ✂️ Asse Spezzato
+                <span className={`stratum-bar-dot ${enableAxisBreak ? 'dot-purple' : 'dot-off'}`} /> ✂️ Axis break
               </button>
             )}
 
-            {/* Value Position Pill: Sopra / Dentro / Di traverso */}
+            {/* Value Position Pill: Above / Inside / Slanted */}
             <button
               type="button"
               className={`stratum-bar-btn ${valuePosition !== 'top' ? 'active-secondary' : ''}`}
@@ -531,7 +531,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                       </div>
                     </div>
                     <div className="stratum-bar-popover-row" style={{ marginTop: 4 }}>
-                      <span>Valori</span>
+                      <span>Values</span>
                       <div className="stratum-bar-segmented">
                         <button
                           type="button"
@@ -539,7 +539,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                           onClick={() => setValuePosition('top')}
                           style={{ padding: '2px 6px', fontSize: 10 }}
                         >
-                          Sopra
+                          Above
                         </button>
                         <button
                           type="button"
@@ -547,7 +547,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                           onClick={() => setValuePosition('inside')}
                           style={{ padding: '2px 6px', fontSize: 10 }}
                         >
-                          Dentro
+                          Inside
                         </button>
                         <button
                           type="button"
@@ -555,7 +555,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                           onClick={() => setValuePosition('slanted')}
                           style={{ padding: '2px 6px', fontSize: 10 }}
                         >
-                          Di traverso
+                          Slanted
                         </button>
                       </div>
                     </div>

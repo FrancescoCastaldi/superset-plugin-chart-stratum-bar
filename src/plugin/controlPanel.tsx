@@ -319,7 +319,7 @@ const config: ControlPanelConfig = {
               description: t('Vertical columns or Horizontal bars'),
               choices: [
                 ['vertical', t('Vertical (columns)')],
-                ['horizontal', t('Orizzontale (Barre)')],
+                ['horizontal', t('Horizontal (bars)')],
               ],
               default: 'vertical',
               renderTrigger: true,
@@ -332,8 +332,8 @@ const config: ControlPanelConfig = {
               label: t('Series Stacking'),
               description: t('Display series side-by-side (Grouped) or stacked on top of each other'),
               choices: [
-                ['none', t('Raggruppate (Grouped)')],
-                ['stack', t('Impilate (Stacked)')],
+                ['none', t('Grouped')],
+                ['stack', t('Stacked')],
               ],
               default: 'none',
               renderTrigger: true,
@@ -360,8 +360,8 @@ const config: ControlPanelConfig = {
               choices: [
                 ['top', t('Above the bar (top)')],
                 ['inside', t('Inside the bar (inside)')],
-                ['slanted', t('Di traverso (Inclinato 45°)')],
-                ['outside', t('Esterno (Outside)')],
+                ['slanted', t('Slanted (45°)')],
+                ['outside', t('Outside')],
               ],
               default: 'top',
               renderTrigger: true,
@@ -442,7 +442,7 @@ const config: ControlPanelConfig = {
               label: t('Secondary Visualization'),
               description: t('How to render secondary metrics: Smooth Line with markers or Secondary Bars'),
               choices: [
-                ['line', t('Linea con Indicatori (Line + Markers)')],
+                ['line', t('Line with markers')],
                 ['bar', t('Secondary bar (bar)')],
               ],
               default: 'line',
