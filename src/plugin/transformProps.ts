@@ -1,4 +1,5 @@
 import { resolveColors, resolveDimensions, computeBenchmark } from './transformPropsUtils';
+import { periodTitle, readDashboardPeriods } from '../utils/dashboardPeriods';
 import { buildSeriesRepresentation } from './seriesBuilder';
 import { buildCrossFilterHandler } from './crossFilterHandler';
 import {
@@ -136,6 +137,9 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
         )
       : undefined;
 
+  // Names and readable ranges of the periods when a dashboard filter (the Calendar Filter) chose them
+  const dashboardPeriods = readDashboardPeriods(fd.extra_form_data);
+
   const potentialPivotedKeys = Object.keys(sampleRow).filter(k =>
     k !== offsetKey &&
     k.toLowerCase() !== actualXKey.toLowerCase() &&
@@ -175,8 +179,8 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       sortBy, isOrderDesc,
       timeComparisonMode: fd.time_comparison_mode,
       comparisonMetric: fd.comparison_metric || offsetKey,
-      time1Label: fd.time_1_label || (offsetKey ? fd.extra_form_data?.time_range || undefined : undefined),
-      time2Label: fd.time_2_label || (offsetKey ? offsetKey.slice(primaryMetric.length + 2) : undefined),
+      time1Label: fd.time_1_label || (offsetKey ? periodTitle(dashboardPeriods.referenceName, dashboardPeriods.referenceText, fd.extra_form_data?.time_range || undefined) : undefined),
+      time2Label: fd.time_2_label || (offsetKey ? periodTitle(dashboardPeriods.comparisonName, dashboardPeriods.comparisonText, offsetKey.slice(primaryMetric.length + 2)) : undefined),
     });
   };
 

@@ -131,6 +131,21 @@ describe('StratumBar Comparative Dual Time Mode', () => {
       expect(props.series[0].items[0].delta).toBe(10);
     });
 
+    it('names the periods after the calendar names and readable ranges', () => {
+      const props = run({
+        time_comparison_mode: 'time_offsets',
+        extra_form_data: {
+          time_range: '2008-01-01 : 2008-04-01',
+          time_compare: [offset],
+          custom_form_data: [{ period_labels: { reference: 'This year', comparison: 'Last year' }, period_text: { reference: '1 Jan - 31 Mar 2008', comparison: '1 Jan - 31 Mar 2007' } }],
+        },
+      });
+      expect(props.series.map((s: any) => s.name)).toEqual([
+        'This year · 1 Jan - 31 Mar 2008',
+        'Last year · 1 Jan - 31 Mar 2007',
+      ]);
+    });
+
     it('uses the labels typed in the control panel', () => {
       const props = run({ time_comparison_mode: 'time_offsets', time_1_label: 'This year', time_2_label: 'Last year' });
       expect(props.series.map((s: any) => s.name)).toEqual(['This year', 'Last year']);
