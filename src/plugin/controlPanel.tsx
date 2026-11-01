@@ -254,7 +254,7 @@ const config: ControlPanelConfig = {
               label: t('3D Geometry Shape'),
               description: t('Geometric shape for 3D rendering: Rectangular Prism or Cylinder'),
               choices: [
-                ['prism', t('Prisma Rettangolare (Prism)')],
+                ['prism', t('Rectangular prism')],
                 ['cylinder', t('Cilindrico (Cylinder)')],
               ],
               default: 'prism',

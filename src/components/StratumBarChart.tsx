@@ -416,7 +416,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                 onClick={() => setCombineBreakdown(prev => !prev)}
                 title={`Merge or split the dimension "${breakdownDimName || 'Breakdown'}" on the X axis`}
               >
-                <span className={`stratum-bar-dot ${combineBreakdown ? 'dot-green' : 'dot-off'}`} /> {breakdownDimName ? `Combina ${breakdownDimName}` : 'Combina'}
+                <span className={`stratum-bar-dot ${combineBreakdown ? 'dot-green' : 'dot-off'}`} /> {breakdownDimName ? `Combine ${breakdownDimName}` : 'Combine'}
               </button>
             )}
 
@@ -486,7 +486,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                     }}
                   >
                     <div className="stratum-bar-popover-row">
-                      <span>Inclinazione</span>
+                      <span>Tilt</span>
                       <input
                         type="range"
                         min="10"
@@ -498,7 +498,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                       <span className="stratum-bar-val">{tilt3D}°</span>
                     </div>
                     <div className="stratum-bar-popover-row">
-                      <span>Profondità</span>
+                      <span>Depth</span>
                       <input
                         type="range"
                         min="8"
@@ -510,7 +510,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                       <span className="stratum-bar-val">{depth3D}px</span>
                     </div>
                     <div className="stratum-bar-popover-row" style={{ marginTop: 4 }}>
-                      <span>Geometria</span>
+                      <span>Shape</span>
                       <div className="stratum-bar-segmented">
                         <button
                           type="button"
@@ -518,7 +518,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                           onClick={() => setBarShape3D('prism')}
                           style={{ padding: '2px 8px', fontSize: 11 }}
                         >
-                          Prisma
+                          Prism
                         </button>
                         <button
                           type="button"
@@ -526,7 +526,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
                           onClick={() => setBarShape3D('cylinder')}
                           style={{ padding: '2px 8px', fontSize: 11 }}
                         >
-                          Cilindro
+                          Cylinder
                         </button>
                       </div>
                     </div>

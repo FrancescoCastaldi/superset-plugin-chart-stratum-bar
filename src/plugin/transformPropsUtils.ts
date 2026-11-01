@@ -238,12 +238,12 @@ export function computeBenchmark(
     if (allVals.length > 0) {
       if (benchmarkType === 'average') {
         resolvedBenchmarkVal = allVals.reduce((a, b) => a + b, 0) / allVals.length;
-        bLabel = `Media (${formatter(resolvedBenchmarkVal)})`;
+        bLabel = `Average (${formatter(resolvedBenchmarkVal)})`;
       } else {
         allVals.sort((a, b) => a - b);
         const mid = Math.floor(allVals.length / 2);
         resolvedBenchmarkVal = allVals.length % 2 !== 0 ? allVals[mid] : (allVals[mid - 1] + allVals[mid]) / 2;
-        bLabel = `Mediana (${formatter(resolvedBenchmarkVal)})`;
+        bLabel = `Median (${formatter(resolvedBenchmarkVal)})`;
       }
     }
   }

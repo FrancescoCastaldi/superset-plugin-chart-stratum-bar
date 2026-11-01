@@ -9,23 +9,30 @@
 
 **StratumBar** is an enterprise-grade visualization plugin for **Apache Superset** that expands the analytical and aesthetic capabilities of the standard bar chart (`echarts_timeseries_bar`). It introduces a **dual rendering engine (Modern 2D Curved & Volumetric 3D Isometric)**, reference **Benchmark Target Lines**, automated **Percentage Variance Badges (Delta %)**, an **Interactive Runtime Control Toolbar**, and native **Dashboard Cross-Filtering (`setDataMask`)**.
 
-![StratumBar Dev Studio Live Demo](docs/images/dev_studio_demo.gif)
+![StratumBar in Superset](docs/images/demo.gif)
 
-*Live Dev Studio: Interactive workbench featuring real-time Explore control panel synchronization, volumetric 3D cylinders and prisms, dual Y-axis spline overlay, benchmark pill badges, and sub-50ms Hot Module Reloading.*
+*Recorded in Chrome on a running Superset: switching between 2D and 3D, and between columns and bars, with the runtime toolbar.*
 
 ---
 
 ## 📸 Visual Preview
 
-![StratumBar 3D Isometric & Dual Y-Axis Showcase](./assets/stratumbar_preview.jpg)
+![StratumBar in 3D](./assets/stratumbar_preview.jpg)
 
-*Figure 1: StratumBar v0.4.3 Live Dev Studio Showcase: Healthcare IRCCS ADS with 3D smooth cylinders, secondary wait time spline line, anti-clipping benchmark pill badge, and live diagnostics.*
+*Figure 1: StratumBar in 3D on Superset's example sales data: sales by product line as volumetric prisms with the values above the bars.*
 
-### 🖥️ Live Production Dashboard Showcase
+### 🖥️ Screenshots from Superset
 
 ![StratumBar Live Dashboard Showcase](docs/images/live_dashboard_showcase.png)
 
-*Figure 2: StratumBar v0.4.3 live production rendering on Apache Superset with monthly hospital activity trend, 3D cylindrical volumetric bars, interactive runtime toolbar controls, and baseline ground shadows.*
+*Figure 2: 3D cylinders with the baseline ground shadows. Every image here is a screenshot of a real chart in Chrome, on Superset's example sales data.*
+
+| | |
+|:---|:---|
+| ![Stacked with benchmark](docs/images/02_stacked_benchmark.png) | ![Axis break](docs/images/03_axis_break_outliers.png) |
+| *Stacked by deal size, with the average as a benchmark line.* | *Axis break: a very large value is cut so the others stay readable.* |
+| ![2D](docs/images/04_2d_modern_standard.png) | ![3D options](docs/images/05_3d_options_popover.png) |
+| *The 2D view with rounded bars.* | *The 3D options: tilt, depth, shape and where the values sit.* |
 
 ---
 
