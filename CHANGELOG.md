@@ -4,6 +4,12 @@ All notable changes to **StratumBar** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-11-01
+
+### Fixed
+- **Empty comparison period**: when the comparison period had no rows the column of native time offsets came back with empty values, was not recognised, and the chart silently showed one period. The comparison series is now kept and named with `no data` (`nessun dato` in Italian, following the dashboard filter).
+- 2 new tests (136 in total).
+
 ## [0.5.0] - 2026-11-01
 
 ### Added

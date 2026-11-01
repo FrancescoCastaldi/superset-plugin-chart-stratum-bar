@@ -146,6 +146,28 @@ describe('StratumBar Comparative Dual Time Mode', () => {
       ]);
     });
 
+    it('still shows the comparison period, marked as empty, when it has no data', () => {
+      const props = transformProps({
+        width: 800,
+        height: 500,
+        formData: {
+          viz_type: 'stratum_bar',
+          datasource: '1__table',
+          x_axis: 'state',
+          metrics: ['sum__num'],
+          time_comparison_mode: 'time_offsets',
+          extra_form_data: {
+            time_range: '2008-01-01 : 2008-04-01',
+            time_compare: ['2008-04-01 : 2008-07-01'],
+            custom_form_data: [{ period_labels: { reference: 'Q1', comparison: 'Q2' }, period_text: { reference: '1 Jan - 31 Mar 2008', comparison: '1 Apr - 30 Jun 2008' }, locale: 'it' }],
+          },
+        },
+        queriesData: [{ data: [{ state: 'CA', sum__num: 110, 'sum__num__2008-04-01 : 2008-07-01': null }, { state: 'NY', sum__num: 40, 'sum__num__2008-04-01 : 2008-07-01': null }] }],
+      } as unknown as ChartProps);
+      expect(props.series).toHaveLength(2);
+      expect(props.series[1].name).toBe('Q2 · 1 Apr - 30 Jun 2008 · nessun dato');
+    });
+
     it('uses the labels typed in the control panel', () => {
       const props = run({ time_comparison_mode: 'time_offsets', time_1_label: 'This year', time_2_label: 'Last year' });
       expect(props.series.map((s: any) => s.name)).toEqual(['This year', 'Last year']);

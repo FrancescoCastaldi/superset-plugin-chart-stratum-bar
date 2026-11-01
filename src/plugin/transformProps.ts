@@ -1,5 +1,5 @@
 import { resolveColors, resolveDimensions, computeBenchmark } from './transformPropsUtils';
-import { periodTitle, readDashboardPeriods } from '../utils/dashboardPeriods';
+import { periodTitle, readDashboardPeriods, withNoData } from '../utils/dashboardPeriods';
 import { buildSeriesRepresentation } from './seriesBuilder';
 import { buildCrossFilterHandler } from './crossFilterHandler';
 import {
@@ -133,12 +133,18 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
           k =>
             k.toLowerCase() !== primaryMetric.toLowerCase() &&
             k.toLowerCase().startsWith(`${primaryMetric.toLowerCase()}__`) &&
-            typeof sampleRow[k] === 'number',
+            (typeof sampleRow[k] === 'number' || sampleRow[k] === null),
         )
       : undefined;
 
   // Names and readable ranges of the periods when a dashboard filter (the Calendar Filter) chose them
   const dashboardPeriods = readDashboardPeriods(fd.extra_form_data);
+  // A comparison period without a single value (no rows in it) is still shown, and said to be empty
+  const comparisonIsEmpty = Boolean(offsetKey) && data.every(row => row[offsetKey as string] === null || row[offsetKey as string] === undefined);
+  const comparisonName = offsetKey
+    ? periodTitle(dashboardPeriods.comparisonName, dashboardPeriods.comparisonText, offsetKey.slice(primaryMetric.length + 2))
+    : undefined;
+  const comparisonTitle = comparisonIsEmpty ? withNoData(comparisonName, dashboardPeriods.locale) : comparisonName;
 
   const potentialPivotedKeys = Object.keys(sampleRow).filter(k =>
     k !== offsetKey &&
@@ -180,7 +186,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       timeComparisonMode: fd.time_comparison_mode,
       comparisonMetric: fd.comparison_metric || offsetKey,
       time1Label: fd.time_1_label || (offsetKey ? periodTitle(dashboardPeriods.referenceName, dashboardPeriods.referenceText, fd.extra_form_data?.time_range || undefined) : undefined),
-      time2Label: fd.time_2_label || (offsetKey ? periodTitle(dashboardPeriods.comparisonName, dashboardPeriods.comparisonText, offsetKey.slice(primaryMetric.length + 2)) : undefined),
+      time2Label: fd.time_2_label || comparisonTitle,
     });
   };
 
