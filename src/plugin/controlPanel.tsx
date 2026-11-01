@@ -69,7 +69,7 @@ const config: ControlPanelConfig = {
             name: 'sort_by',
             config: {
               type: 'SelectControl',
-              label: t('Criterio di Ordinamento (Sort By)'),
+              label: t('Sort by'),
               description: t('Choose whether to sort by category or dimension (e.g. days Mon-Sun, months in order) or by metric value (e.g. top N rankings)'),
               choices: [
                 ['original', t('Ordine Originale / Query')],
@@ -174,9 +174,9 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               label: t('Polarita Scostamento Comparativo'),
-              description: t('Normale: incremento verde, decremento rosso. Invertito: incremento rosso (adatto per tempi di attesa o costi).'),
+              description: t('Normal: increase green, decrease red. Inverted: increase red (for waiting times or costs).'),
               choices: [
-                ['normal', t('Normale (Verde = Crescita, Rosso = Calo)')],
+                ['normal', t('Normal (green = growth, red = decline)')],
                 ['inverted', t('Invertita (Rosso = Crescita, Verde = Calo)')],
               ],
               default: 'normal',
@@ -378,7 +378,7 @@ const config: ControlPanelConfig = {
               label: t('Primary Number Format'),
               description: t('D3 format string for primary metrics (e.g. ,.0f, .2%, $, etc.)'),
               choices: [
-                [',.0f', t('Intero con separatore (1,234)')],
+                [',.0f', t('Integer with separator (1,234)')],
                 [',.2f', t('Decimale 2 cifre (1,234.56)')],
                 ['.2%', t('Percentage (12.34%)')],
                 ['~s', t('Prefisso SI (1.2k, 3.4M)')],
@@ -428,7 +428,7 @@ const config: ControlPanelConfig = {
             config: {
               ...sharedControls.metrics,
               label: t('Secondary Metrics (Right Axis)'),
-              description: t('Optional metrics plotted on the independent right secondary Y-axis (e.g., Tasso %, Degenza Media, Costo Unitario)'),
+              description: t('Optional metrics plotted on the independent right secondary Y-axis (e.g., Rate %, Average stay, Unit cost)'),
               multi: true,
               validators: [],
             },
@@ -566,7 +566,7 @@ const config: ControlPanelConfig = {
             name: 'benchmarkType',
             config: {
               type: 'SelectControl',
-              label: t('Tipo di Calcolo Target'),
+              label: t('Target calculation'),
               description: t('How to compute the threshold: fixed manual value, average, median or dynamic metric.'),
               choices: [
                 ['fixed_value', t('Fixed value')],
@@ -626,8 +626,8 @@ const config: ControlPanelConfig = {
               label: t('Delta Polarity'),
               description: t('Normal: positive is green. Inverted: positive is red (essential for wait times, delays, costs)'),
               choices: [
-                ['normal', t('Normale (Verde = Positivo, Rosso = Negativo)')],
-                ['inverted', t('Invertito (Rosso = Incremento, es. Tempi/Costi)')],
+                ['normal', t('Normal (green = positive, red = negative)')],
+                ['inverted', t('Inverted (red = increase, e.g. times or costs)')],
               ],
               default: 'normal',
               renderTrigger: true,
@@ -658,11 +658,11 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               label: t('Threshold calculation mode'),
-              description: t('Metodo per determinare il punto di taglio: Automatico (rileva skewness), Percentile 90, Percentile 95, o Manuale'),
+              description: t('How to choose the cut point: Automatic (detects skewness), 90th percentile, 95th percentile, or Manual'),
               choices: [
-                ['auto', t('Automatico Smart (Auto Outlier Detection)')],
-                ['p90', t('Percentile 90 (P90)')],
-                ['p95', t('Percentile 95 (P95)')],
+                ['auto', t('Automatic (outlier detection)')],
+                ['p90', t('90th percentile (P90)')],
+                ['p95', t('95th percentile (P95)')],
                 ['manual', t('Fixed manual threshold')],
               ],
               default: 'auto',
@@ -730,8 +730,8 @@ const config: ControlPanelConfig = {
               type: 'SelectControl',
               label: t('Legend Position'),
               choices: [
-                ['top', t('In alto (Top)')],
-                ['bottom', t('In basso (Bottom)')],
+                ['top', t('Top')],
+                ['bottom', t('Bottom')],
                 ['right', t('A destra (Right)')],
               ],
               default: 'top',

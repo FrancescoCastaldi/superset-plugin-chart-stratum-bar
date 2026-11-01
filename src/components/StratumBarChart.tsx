@@ -55,6 +55,8 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+  const onCrossFilterRef = useRef<typeof onCrossFilter>(undefined);
+  const activeCategoriesRef = useRef<string[]>([]);
   const popoverRef = useRef<HTMLDivElement>(null);
   const btn3DRef = useRef<HTMLButtonElement>(null);
   const currentRendererRef = useRef<string>(props.renderer === 'svg' ? 'svg' : 'canvas');
@@ -279,13 +281,20 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       chartInstanceRef.current = null;
     }
 
+    onCrossFilterRef.current = onCrossFilter;
+    activeCategoriesRef.current = activeCategories;
+
     if (!chartInstanceRef.current) {
       currentRendererRef.current = chosenRenderer;
       chartInstanceRef.current = echarts.init(chartContainerRef.current, undefined, {
         renderer: chosenRenderer,
       });
 
+      // The listener is added once, so it reads the latest handler and categories from refs: a handler
+      // captured here would keep the first selection and a second click could never clear the filter
       chartInstanceRef.current.on('click', (params: any) => {
+        const onCrossFilter = onCrossFilterRef.current;
+        const activeCategories = activeCategoriesRef.current;
         if (!onCrossFilter) return;
         let selectedCategory = '';
         let selectedSeriesName = '';
