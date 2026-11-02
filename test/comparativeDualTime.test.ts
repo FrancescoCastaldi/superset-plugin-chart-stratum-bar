@@ -9,7 +9,7 @@ describe('StratumBar Comparative Dual Time Mode', () => {
     { REP: 'Pediatria', accessi_corr: 50, accessi_conf: 0 },
   ];
 
-  it('builds two comparison series with Navy and Magenta colors and computes deltas', () => {
+  it('builds two comparison series with Navy and Azure Blue colors and computes deltas', () => {
     const res = buildSeriesRepresentation({
       data: sampleData,
       isPivoted: false,
@@ -19,8 +19,8 @@ describe('StratumBar Comparative Dual Time Mode', () => {
       metricList: ['accessi_corr'],
       secondaryMetricList: [],
       y_axis_2_format: ',.2f',
-      getColor: () => '#0A224E',
-      palette: ['#0A224E', '#E12B72'],
+      getColor: () => undefined,
+      palette: ['#1c3d5e', '#7aa8cf'],
       formatter: (v: number) => String(v),
       resolvedXAxis: 'REP',
       secFormatter: (v: number) => String(v),
@@ -40,11 +40,11 @@ describe('StratumBar Comparative Dual Time Mode', () => {
     const [t1Series, t2Series] = res.series;
 
     expect(t1Series.name).toBe('Anno 2026');
-    expect(t1Series.color).toBe('#0A224E');
+    expect(t1Series.color).toBe('#1c3d5e');
     expect(t1Series.data).toEqual([120, 80, 50]);
 
     expect(t2Series.name).toBe('Anno 2025');
-    expect(t2Series.color).toBe('#E12B72');
+    expect(t2Series.color).toBe('#7aa8cf');
     expect(t2Series.data).toEqual([100, 90, 0]);
 
     // Check Cardiologia delta: 120 vs 100 => delta +20, deltaPercent +20%

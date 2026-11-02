@@ -151,22 +151,24 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       });
     });
 
-    // Series 0: Time 1 Reference in Navy (#0A224E)
+    // Series 0: Time 1 Reference (Navy #1c3d5e)
+    const t1Color = getColor(t1Display, 0) || getColor(t1Key, 0) || '#1c3d5e';
     repSeries.push({
       name: t1Display,
       key: t1Key,
-      color: '#0A224E',
+      color: t1Color,
       data: t1Data,
       items: t1Items,
       yAxisIndex: 0,
       seriesType: 'bar',
     });
 
-    // Series 1: Time 2 Comparison in Magenta (#E12B72)
+    // Series 1: Time 2 Comparison (Steel Azure #7aa8cf)
+    const t2Color = getColor(t2Display, 1) || getColor(t2Key, 1) || '#7aa8cf';
     repSeries.push({
       name: t2Display,
       key: t2Key,
-      color: '#E12B72',
+      color: t2Color,
       data: t2Data,
       items: t2Items,
       yAxisIndex: 0,
@@ -199,7 +201,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       const hasAnyOffset = potentialPivotedKeys.some(k => k.includes('__'));
 
       if (isOffsetKey) {
-        seriesColor = '#E12B72';
+        seriesColor = getColor(sName, sIdx) || '#7aa8cf';
         if (time2Label && time2Label !== 'Time 2 (comparison)') {
           displayName = time2Label;
         } else {
@@ -219,7 +221,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           }
         }
       } else if (hasAnyOffset) {
-        seriesColor = '#0A224E';
+        seriesColor = getColor(sName, sIdx) || '#1c3d5e';
         if (time1Label && time1Label !== 'Time 1 (reference)') {
           displayName = time1Label;
         } else {

@@ -170,7 +170,8 @@ export function getTooltipFormatter(
 
     const isComparativePair = items.length >= 2 && (
       items.some(it => it.seriesName?.includes('Tempo') || it.seriesName?.includes('Time') || it.seriesName?.includes('Period') || it.seriesName?.includes('Periodo') || it.seriesName?.includes('Confronto') || it.seriesName?.includes('Comparison') || it.seriesName?.includes('Previous year')) ||
-      (items[0]?.color === '#0A224E' && items[1]?.color === '#E12B72')
+      (items[0]?.color === '#0A224E' && items[1]?.color === '#E12B72') ||
+      (items[0]?.color === '#1c3d5e' && items[1]?.color === '#7aa8cf')
     );
 
     if (isComparativePair) {

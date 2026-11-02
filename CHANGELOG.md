@@ -4,6 +4,13 @@ All notable changes to **StratumBar** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2026-11-02
+
+### Changed
+- **Color palette harmonization**: replaced hardcoded comparison Magenta (`#E12B72`) with design system Steel Azure (`#7aa8cf`) and Navy (`#1c3d5e`) in `seriesBuilder.ts` and `echartsUtils.ts`.
+- Integrated `getColor(t1Display, 0)` and `getColor(t2Display, 1)` with fallback to `#1c3d5e` / `#7aa8cf`.
+- Time 1 / Time 2 comparative dual-metric series now seamlessly respect custom color mappings and dashboard institutional palette.
+
 ## [0.5.3] - 2026-11-01
 
 ### Fixed
