@@ -8,13 +8,14 @@ import example from '../images/example.png';
 const t = (str: string) => str;
 
 const metadata = new ChartMetadata({
-  name: t('StratumBar — 3D Isometric & Advanced Bar Chart'),
+  name: t('StratumBar: 3D Isometric & Advanced Bar Chart'),
   description: t(
     'Advanced Bar and Column chart with dual-engine 2D/3D isometric volumetric rendering, benchmark reference lines, automatic delta % badges, grouped and stacked layouts, and an interactive runtime toolbar.',
   ),
   behaviors: [Behavior.InteractiveChart, Behavior.DrillToDetail],
   category: t('Ranking'),
   tags: [
+    t('Stratum'),
     t('StratumBar'),
     t('Bar'),
     t('Column'),
