@@ -213,11 +213,13 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       // Multiple metrics: generate paired series (T1_i, T2_i) for each metric M_i in metricList
       metricList.forEach((mKey, mIdx) => {
         const t1Key = mKey;
-        const t2Key =
-          comparisonMetricMap?.get(mKey) ||
-          (typeof comparisonMetric === 'object' && comparisonMetric !== null
-            ? comparisonMetric.label || comparisonMetric.metric_name
-            : String(comparisonMetric || ''));
+        const t2Key = comparisonMetricMap
+          ? comparisonMetricMap.get(mKey)
+          : (mIdx === 0
+              ? (typeof comparisonMetric === 'object' && comparisonMetric !== null
+                  ? comparisonMetric.label || comparisonMetric.metric_name
+                  : (comparisonMetric ? String(comparisonMetric) : undefined))
+              : undefined);
 
         const t1SeriesName = `${mKey} · ${t1Display}`;
         const t2SeriesName = `${mKey} · ${t2Display}`;
@@ -293,7 +295,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
         repSeries.push({
           name: t2SeriesName,
-          key: `${t2Key || t1Key}__t2`,
+          key: `${t1Key}__t2`,
           color: t2Color,
           data: t2Data,
           items: t2Items,

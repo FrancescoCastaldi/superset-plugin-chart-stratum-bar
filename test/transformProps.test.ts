@@ -26,7 +26,8 @@ describe('StratumBar transformProps', () => {
         viewMode: '3d',
       },
       queriesData: [
-        {\n          data: sampleData,
+        {
+          data: sampleData,
         },
       ],
     };

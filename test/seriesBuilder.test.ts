@@ -298,12 +298,20 @@ describe('buildSeriesRepresentation — dual comparison (R2)', () => {
       metricList: ['m1', 'm2'],
       palette: ['#0284c7', '#0d9488'],
       timeComparisonMode: 'time_shift',
+      comparisonMetric: 'm1__prev',
       comparisonMetricMap: compMap,
       time1Label: 'Current',
       time2Label: 'Previous',
     });
 
     expect(series).toHaveLength(4);
+    // Keys must be unique and non-colliding
+    expect(series[0].key).toBe('m1__t1');
+    expect(series[1].key).toBe('m1__t2');
+    expect(series[2].key).toBe('m2__t1');
+    expect(series[3].key).toBe('m2__t2');
+    expect(series[1].key).not.toBe(series[3].key);
+
     // m1 T1 has null in row 0
     expect(series[0].data).toEqual([null, 30]);
     // m1 T2 has null in row 1
