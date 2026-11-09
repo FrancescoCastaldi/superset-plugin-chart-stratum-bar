@@ -20,6 +20,7 @@ const config: ControlPanelConfig = {
   controlPanelSections: [
     {
       label: 'Dati',
+      tabOverride: 'data',
       description:
         'Cosa mostrare sull\'asse orizzontale, quanto alta è ogni barra e come dividere le barre per colore. Il grafico legge i dati dalla query del dataset.',
       expanded: true,
@@ -72,9 +73,9 @@ const config: ControlPanelConfig = {
             name: 'metrics',
             config: {
               ...sharedControls.metrics,
-              label: 'Metrica principale (altezza delle barre)',
+              label: 'Metriche (altezza delle barre)',
               description:
-                'Il valore numerico che decide l\'altezza delle barre del periodo corrente. Esempio: Numero richieste, Fatturato, Accessi.',
+                'Valori numerici che determinano l\'altezza delle barre. Supporta una o più metriche: con una sola metrica viene mostrata una serie di barre; con più metriche ciascuna genera una serie distinta (o coppie T1/T2 coordinate se il confronto temporale è attivo). Esempi: Richieste, Fatturato, Accessi.',
               clearable: true,
               validators: [],
             },
@@ -87,7 +88,7 @@ const config: ControlPanelConfig = {
               type: 'SelectControl',
               label: 'Ordina per',
               description:
-                'Come mettere in ordine le barre. "Ordine originale": come arrivano dalla query. "Categoria": in ordine alfabetico o cronologico, per esempio Lun-Dom. "Valore della metrica": dalla più alta alla più bassa, utile per le classifiche (Top 10).',
+                'Come mettere in ordine le barre. "Ordine originale": come arrivano dalla query. "Categoria": in ordine alfabetico o cronologico, per esempio Lun-Dom. "Valore della metrica": dalla più alta alla più bassa (sulla prima metrica), utile per le classifiche (Top 10).',
               choices: [
                 ['original', 'Ordine originale (come nella query)'],
                 ['category', 'Categoria (A-Z, mesi, giorni della settimana)'],
@@ -115,6 +116,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Confronto tra due periodi',
+      tabOverride: 'data',
       description:
         'Mette accanto al periodo corrente (T1) un secondo periodo (T2), per vedere quanto è cambiato. Il periodo T1 segue sempre il filtro di tempo della dashboard, per esempio il Calendar Filter. Scegli la modalità in base a come vuoi scegliere il secondo periodo.',
       expanded: true,
@@ -126,11 +128,11 @@ const config: ControlPanelConfig = {
               type: 'SelectControl',
               label: 'Modalità di confronto',
               description:
-                'Nessun confronto: mostra solo il periodo del filtro. Periodo corrente e confronto dal Calendar Filter: il secondo periodo è quello selezionato nel filtro (T2). Confronto automatico (shift): il secondo periodo è il T1 spostato indietro di un anno, un mese, 28 giorni o di un intervallo a scelta. Avanzato: due metriche già calcolate, per esempio "Richieste 2026" e "Richieste 2025".',
+                'Seleziona come generare il secondo periodo (T2) accanto al periodo corrente (T1). "Filtro temporale dashboard": eredita il confronto impostato nel Calendar Filter nativo. "Confronto automatico": calcola automaticamente il T2 spostando indietro il T1 dell\'intervallo specificato. "Avanzato": confronta due metriche distinte del dataset. Le modalità temporali supportano confronti multi-metrica.',
               choices: [
-                ['none', 'Nessun confronto (solo il periodo del filtro)'],
-                ['time_offsets', 'Periodo corrente e confronto dal Calendar Filter'],
-                ['time_shift', 'Confronto automatico (shift di 1 anno, 1 mese, 28 giorni)'],
+                ['none', 'Nessun confronto (periodo singolo)'],
+                ['time_offsets', 'Filtro temporale dashboard (Calendar Filter / T1 vs T2)'],
+                ['time_shift', 'Confronto automatico (shift: 1 anno fa, 1 mese fa, ecc.)'],
                 ['dual_metric', 'Avanzato: due metriche già calcolate'],
               ],
               default: 'none',
@@ -146,12 +148,14 @@ const config: ControlPanelConfig = {
               freeForm: true,
               label: 'Di quanto spostare il periodo',
               description:
-                'Lo spostamento all\'indietro del periodo corrente. Scegli una voce o scrivi il tuo. Esempi: "1 year ago" (anno precedente), "1 month ago" (mese precedente), "28 days ago" (28 giorni prima), "52 weeks ago" (52 settimane prima), "3 months ago" (trimestre precedente).',
+                'Intervallo temporale di spostamento all\'indietro del periodo corrente (T1). Scegli una voce predefinita o digita un intervallo personalizzato in sintassi Superset. Esempi: "1 year ago" (anno precedente), "3 months ago" (trimestre precedente), "1 month ago" (mese precedente), "1 week ago" (settimana precedente).',
               choices: [
                 ['1 year ago', 'Anno precedente (1 year ago)'],
+                ['3 months ago', 'Trimestre precedente (3 months ago)'],
                 ['1 month ago', 'Mese precedente (1 month ago)'],
-                ['28 days ago', '28 giorni prima (28 days ago)'],
                 ['52 weeks ago', '52 settimane prima (52 weeks ago)'],
+                ['28 days ago', '28 giorni prima (28 days ago)'],
+                ['1 week ago', 'Settimana precedente (1 week ago)'],
               ],
               default: '1 year ago',
               renderTrigger: true,
@@ -167,7 +171,7 @@ const config: ControlPanelConfig = {
               ...sharedControls.metric,
               label: 'Metrica del secondo periodo (T2)',
               description:
-                'Solo per la modalità avanzata: la metrica già calcolata del secondo periodo, da confrontare con la metrica principale. Esempio: Richieste 2025 da confrontare con Richieste 2026.',
+                'Solo per la modalità avanzata: la metrica già calcolata del secondo periodo (T2) da confrontare con la prima metrica selezionata. Esempio: "Richieste 2025" a confronto con "Richieste 2026". Per confronti multi-metrica su base temporale, seleziona la modalità Calendar Filter o Confronto automatico.',
               clearable: true,
               validators: [],
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -208,7 +212,7 @@ const config: ControlPanelConfig = {
               type: 'CheckboxControl',
               label: 'Mostra lo scostamento tra T1 e T2',
               description:
-                'Nel tooltip, sotto le due barre, compare la differenza in valore assoluto e in percentuale tra il periodo corrente e il confronto. Esempio: 120 contro 100 mostra "+20,0% (+20)". Se il confronto è zero compare "Nuovo".',
+                'Nel tooltip, sotto le due barre, compare la differenza in valore assoluto e in percentuale tra il periodo corrente e il confronto. Esempio: 120 contro 100 mostra "+20,0% (+20)". Con più metriche, lo scostamento è calcolato per ciascuna coppia.',
               default: true,
               renderTrigger: true,
               visibility: isComparing,
@@ -236,6 +240,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Aspetto e motore di disegno',
+      tabOverride: 'customize',
       description:
         'Come appare il grafico: forma 3D o 2D, colori, tema e formato dei numeri.',
       expanded: true,
@@ -357,6 +362,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Layout, etichette e valori',
+      tabOverride: 'customize',
       description: 'Direzione delle barre, come sono impilate le serie, dove compaiono i numeri e come sono formattati.',
       expanded: true,
       controlSetRows: [
@@ -472,6 +478,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Secondo asse (metriche aggiuntive)',
+      tabOverride: 'data',
       description:
         'Metriche in più disegnate su un secondo asse verticale a destra, con un colore proprio. Esempio: barre per numero di accessi e una linea per il tasso di ricovero in percentuale.',
       expanded: false,
@@ -586,6 +593,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Soglia e annotazioni',
+      tabOverride: 'customize',
       description:
         'Una linea di riferimento (obiettivo o media) per confrontare le barre, e l\'evidenziazione automatica di massimi e minimi.',
       expanded: true,
@@ -693,6 +701,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Asse spezzato (valori anomali)',
+      tabOverride: 'customize',
       description:
         'Quando una barra è molto più alta delle altre, il grafico tronca la sua scala: le barre piccole restano leggibili e sopra la barra troncata compare il valore reale.',
       expanded: false,
@@ -746,6 +755,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Assi, legenda e interattività',
+      tabOverride: 'customize',
       description: 'Titoli degli assi, legenda e cosa succede quando si clicca una barra.',
       expanded: false,
       controlSetRows: [
@@ -815,6 +825,7 @@ const config: ControlPanelConfig = {
     },
     {
       label: 'Barra degli strumenti (in dashboard)',
+      tabOverride: 'customize',
       description:
         'La barra piccola sopra il grafico, visibile a chi guarda la dashboard. Ogni pulsante può essere nascosto. Il grafico resta uguale, cambia solo ciò che l\'utente può modificare al volo.',
       expanded: false,

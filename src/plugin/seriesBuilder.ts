@@ -2,6 +2,7 @@ import { DataRecord } from '@superset-ui/core';
 import { StratumBarSeries, StratumBarSeriesItem, TimeComparisonMode } from '../types';
 import { comparisonTexts, ChartLocale } from '../utils/comparison';
 import { sortCategories } from '../utils/sortingUtils';
+import { adjustColorBrightness } from '../utils/colors';
 
 export interface BuildRepresentationOptions {
   data: DataRecord[];
@@ -29,6 +30,7 @@ export interface BuildRepresentationOptions {
   isOrderDesc?: boolean;
   timeComparisonMode?: TimeComparisonMode;
   comparisonMetric?: any;
+  comparisonMetricMap?: Map<string, string>;
   time1Label?: string;
   time2Label?: string;
   /** Language of the default names of the two periods */
@@ -43,7 +45,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     secondary_line_color, secondary_series_type, secPalette,
     combineFlag, sampleRow, potentialPivotedKeys,
     sortBy = 'original', isOrderDesc = false,
-    timeComparisonMode, comparisonMetric, time1Label, time2Label, locale = 'it',
+    timeComparisonMode, comparisonMetric, comparisonMetricMap, time1Label, time2Label, locale = 'it',
   } = options;
 
   const texts = comparisonTexts(locale);
@@ -91,14 +93,11 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
   // The second period is drawn only when a mode asks for it. A comparison metric left in a chart
   // whose comparison is off must not switch the comparison on.
   const isDualComparison =
-    timeComparisonMode !== undefined && timeComparisonMode !== 'none' && Boolean(comparisonMetric);
+    timeComparisonMode !== undefined &&
+    timeComparisonMode !== 'none' &&
+    (Boolean(comparisonMetric) || (comparisonMetricMap !== undefined && comparisonMetricMap.size > 0));
 
   if (isDualComparison) {
-    const t1Key = metricList[0] || actualMetricKey;
-    const t2Key = (typeof comparisonMetric === 'object' && comparisonMetric !== null
-      ? comparisonMetric.label || comparisonMetric.metric_name
-      : String(comparisonMetric || (metricList.length > 1 ? metricList[1] : '')));
-
     const t1Display = time1Label || texts.current;
     const t2Display = time2Label || texts.comparison;
 
@@ -112,83 +111,197 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       if (!rowByCategory.has(key)) rowByCategory.set(key, r);
     });
 
-    const t1Data: (number | null)[] = [];
-    const t2Data: (number | null)[] = [];
-    const t1Items: StratumBarSeriesItem[] = [];
-    const t2Items: StratumBarSeriesItem[] = [];
-
-    repCategories.forEach(cat => {
-      const row = rowByCategory.get(cat);
-      const v1Raw = row ? row[t1Key] : null;
-      const v2Raw = row && t2Key ? row[t2Key] : null;
-
-      const v1 = typeof v1Raw === 'number' ? v1Raw : v1Raw !== null && !isNaN(Number(v1Raw)) ? Number(v1Raw) : null;
-      const v2 = typeof v2Raw === 'number' ? v2Raw : v2Raw !== null && !isNaN(Number(v2Raw)) ? Number(v2Raw) : null;
-
-      t1Data.push(v1);
-      t2Data.push(v2);
-
-      let delta: number | null = null;
-      let deltaPct: number | null = null;
-      let isNewBaseline = false;
-
-      if (v1 !== null && v2 !== null) {
-        delta = v1 - v2;
-        if (v2 !== 0) {
-          deltaPct = ((v1 - v2) / Math.abs(v2)) * 100;
-        } else if (v1 > 0) {
-          isNewBaseline = true;
-          deltaPct = null;
-        } else {
-          deltaPct = 0;
-        }
+    const resolveRowValue = (row: DataRecord | undefined, colKey: string | undefined): number | null => {
+      if (!row || !colKey) return null;
+      let rawVal = row[colKey];
+      if (rawVal === undefined) {
+        const lower = colKey.toLowerCase();
+        const match = Object.keys(row).find(k => k.toLowerCase() === lower);
+        rawVal = match ? row[match] : null;
       }
+      return typeof rawVal === 'number'
+        ? rawVal
+        : rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal))
+        ? Number(rawVal)
+        : null;
+    };
 
-      t1Items.push({
-        category: cat,
-        value: v1,
-        formattedValue: v1 !== null ? formatter(v1) : undefined,
-        comparisonValue: v2,
-        delta,
-        deltaPercent: deltaPct,
-        isNewBaseline,
-        rawData: row,
+    if (metricList.length <= 1) {
+      // Historical behavior for single metric: exactly 2 series (t1Display, t2Display) with navy & azure blue
+      const t1Key = metricList[0] || actualMetricKey;
+      const t2Key =
+        comparisonMetricMap?.get(t1Key) ||
+        (typeof comparisonMetric === 'object' && comparisonMetric !== null
+          ? comparisonMetric.label || comparisonMetric.metric_name
+          : String(comparisonMetric || ''));
+
+      const t1Data: (number | null)[] = [];
+      const t2Data: (number | null)[] = [];
+      const t1Items: StratumBarSeriesItem[] = [];
+      const t2Items: StratumBarSeriesItem[] = [];
+
+      repCategories.forEach(cat => {
+        const row = rowByCategory.get(cat);
+        const v1 = resolveRowValue(row, t1Key);
+        const v2 = resolveRowValue(row, t2Key);
+
+        t1Data.push(v1);
+        t2Data.push(v2);
+
+        let delta: number | null = null;
+        let deltaPct: number | null = null;
+        let isNewBaseline = false;
+
+        if (v1 !== null && v2 !== null) {
+          delta = v1 - v2;
+          if (v2 !== 0) {
+            deltaPct = ((v1 - v2) / Math.abs(v2)) * 100;
+          } else if (v1 > 0) {
+            isNewBaseline = true;
+            deltaPct = null;
+          } else {
+            deltaPct = 0;
+          }
+        }
+
+        t1Items.push({
+          category: cat,
+          value: v1,
+          formattedValue: v1 !== null ? formatter(v1) : undefined,
+          comparisonValue: v2,
+          delta,
+          deltaPercent: deltaPct,
+          isNewBaseline,
+          rawData: row,
+        });
+
+        t2Items.push({
+          category: cat,
+          value: v2,
+          formattedValue: v2 !== null ? formatter(v2) : undefined,
+          comparisonValue: v1,
+          delta: delta !== null ? -delta : null,
+          deltaPercent: deltaPct !== null ? -deltaPct : null,
+          rawData: row,
+        });
       });
 
-      t2Items.push({
-        category: cat,
-        value: v2,
-        formattedValue: v2 !== null ? formatter(v2) : undefined,
-        comparisonValue: v1,
-        delta: delta !== null ? -delta : null,
-        deltaPercent: deltaPct !== null ? -deltaPct : null,
-        rawData: row,
+      // Series 0: Time 1 Reference (Navy #1c3d5e)
+      const t1Color = getColor(t1Display, 0) || getColor(t1Key, 0) || '#1c3d5e';
+      repSeries.push({
+        name: t1Display,
+        key: t1Key,
+        color: t1Color,
+        data: t1Data,
+        items: t1Items,
+        yAxisIndex: 0,
+        seriesType: 'bar',
       });
-    });
 
-    // Series 0: Time 1 Reference (Navy #1c3d5e)
-    const t1Color = getColor(t1Display, 0) || getColor(t1Key, 0) || '#1c3d5e';
-    repSeries.push({
-      name: t1Display,
-      key: t1Key,
-      color: t1Color,
-      data: t1Data,
-      items: t1Items,
-      yAxisIndex: 0,
-      seriesType: 'bar',
-    });
+      // Series 1: Time 2 Comparison (Steel Azure #7aa8cf)
+      const t2Color = getColor(t2Display, 1) || getColor(t2Key, 1) || '#7aa8cf';
+      repSeries.push({
+        name: t2Display,
+        key: t2Key,
+        color: t2Color,
+        data: t2Data,
+        items: t2Items,
+        yAxisIndex: 0,
+        seriesType: 'bar',
+      });
+    } else {
+      // Multiple metrics: generate paired series (T1_i, T2_i) for each metric M_i in metricList
+      metricList.forEach((mKey, mIdx) => {
+        const t1Key = mKey;
+        const t2Key =
+          comparisonMetricMap?.get(mKey) ||
+          (typeof comparisonMetric === 'object' && comparisonMetric !== null
+            ? comparisonMetric.label || comparisonMetric.metric_name
+            : String(comparisonMetric || ''));
 
-    // Series 1: Time 2 Comparison (Steel Azure #7aa8cf)
-    const t2Color = getColor(t2Display, 1) || getColor(t2Key, 1) || '#7aa8cf';
-    repSeries.push({
-      name: t2Display,
-      key: t2Key,
-      color: t2Color,
-      data: t2Data,
-      items: t2Items,
-      yAxisIndex: 0,
-      seriesType: 'bar',
-    });
+        const t1SeriesName = `${mKey} · ${t1Display}`;
+        const t2SeriesName = `${mKey} · ${t2Display}`;
+
+        const t1Data: (number | null)[] = [];
+        const t2Data: (number | null)[] = [];
+        const t1Items: StratumBarSeriesItem[] = [];
+        const t2Items: StratumBarSeriesItem[] = [];
+
+        repCategories.forEach(cat => {
+          const row = rowByCategory.get(cat);
+          const v1 = resolveRowValue(row, t1Key);
+          const v2 = resolveRowValue(row, t2Key);
+
+          t1Data.push(v1);
+          t2Data.push(v2);
+
+          let delta: number | null = null;
+          let deltaPct: number | null = null;
+          let isNewBaseline = false;
+
+          if (v1 !== null && v2 !== null) {
+            delta = v1 - v2;
+            if (v2 !== 0) {
+              deltaPct = ((v1 - v2) / Math.abs(v2)) * 100;
+            } else if (v1 > 0) {
+              isNewBaseline = true;
+              deltaPct = null;
+            } else {
+              deltaPct = 0;
+            }
+          }
+
+          t1Items.push({
+            category: cat,
+            value: v1,
+            formattedValue: v1 !== null ? formatter(v1) : undefined,
+            comparisonValue: v2,
+            delta,
+            deltaPercent: deltaPct,
+            isNewBaseline,
+            rawData: row,
+          });
+
+          t2Items.push({
+            category: cat,
+            value: v2,
+            formattedValue: v2 !== null ? formatter(v2) : undefined,
+            comparisonValue: v1,
+            delta: delta !== null ? -delta : null,
+            deltaPercent: deltaPct !== null ? -deltaPct : null,
+            rawData: row,
+          });
+        });
+
+        const paletteColor = palette[mIdx % palette.length] || '#1c3d5e';
+        const customColor = getColor(t1SeriesName, mIdx * 2);
+        const t1Color = (customColor && customColor.startsWith('#')) ? customColor : paletteColor;
+        const customT2Color = getColor(t2SeriesName, mIdx * 2 + 1);
+        const t2Color = (customT2Color && customT2Color.startsWith('#'))
+          ? customT2Color
+          : adjustColorBrightness(t1Color, 35);
+
+        repSeries.push({
+          name: t1SeriesName,
+          key: `${t1Key}__t1`,
+          color: t1Color,
+          data: t1Data,
+          items: t1Items,
+          yAxisIndex: 0,
+          seriesType: 'bar',
+        });
+
+        repSeries.push({
+          name: t2SeriesName,
+          key: `${t2Key || t1Key}__t2`,
+          color: t2Color,
+          data: t2Data,
+          items: t2Items,
+          yAxisIndex: 0,
+          seriesType: 'bar',
+        });
+      });
+    }
   } else if (isPivoted) {
     potentialPivotedKeys.forEach((sName, sIdx) => {
       const seriesData: (number | null)[] = [];

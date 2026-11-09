@@ -26,8 +26,7 @@ describe('StratumBar transformProps', () => {
         viewMode: '3d',
       },
       queriesData: [
-        {
-          data: sampleData,
+        {\n          data: sampleData,
         },
       ],
     };
@@ -351,5 +350,138 @@ describe('StratumBar transformProps', () => {
     expect(transformed.categories).toEqual(['S. Carlo']);
     expect(transformed.series.length).toBe(2);
     expect(transformed.series.map(s => s.name)).toEqual(['SSN', 'Privato']);
+  });
+
+  describe('multi-metric period comparison (R1)', () => {
+    it('constructs comparisonMetricMap for all metrics and sets comparison.active = true', () => {
+      const offset = '1 year ago';
+      const multiData = [
+        {
+          canale: 'Web',
+          richieste: 100,
+          [`richieste__${offset}`]: 80,
+          accessi: 50,
+          [`accessi__${offset}`]: 40,
+        },
+        {
+          canale: 'Cup',
+          richieste: 60,
+          [`richieste__${offset}`]: 70,
+          accessi: 30,
+          [`accessi__${offset}`]: 25,
+        },
+      ];
+
+      const chartProps: any = {
+        width: 800,
+        height: 500,
+        formData: {
+          viz_type: 'stratum_bar',
+          datasource: '1__table',
+          x_axis: 'canale',
+          metrics: ['richieste', 'accessi'],
+          time_comparison_mode: 'time_shift',
+          comparison_shift: offset,
+          time_1_label: 'Corrente',
+          time_2_label: 'Precedente',
+          show_comparison_delta: true,
+        },
+        queriesData: [{ data: multiData }],
+      };
+
+      const transformed = transformProps(chartProps);
+
+      expect(transformed.comparison?.active).toBe(true);
+      expect(transformed.timeComparisonMode).toBe('time_shift');
+      expect(transformed.series).toHaveLength(4);
+
+      // Verify pair 1: richieste
+      expect(transformed.series[0].name).toBe('richieste · Corrente');
+      expect(transformed.series[1].name).toBe('richieste · Precedente');
+      expect(transformed.series[0].data).toEqual([100, 60]);
+      expect(transformed.series[1].data).toEqual([80, 70]);
+
+      // Verify pair 2: accessi
+      expect(transformed.series[2].name).toBe('accessi · Corrente');
+      expect(transformed.series[3].name).toBe('accessi · Precedente');
+      expect(transformed.series[2].data).toEqual([50, 30]);
+      expect(transformed.series[3].data).toEqual([40, 25]);
+
+      // Verify dedicated deltas per metric
+      // Web richieste: (100 - 80) = +20, deltaPercent = +25%
+      expect(transformed.series[0].items[0].delta).toBe(20);
+      expect(transformed.series[0].items[0].deltaPercent).toBe(25);
+
+      // Web accessi: (50 - 40) = +10, deltaPercent = +25%
+      expect(transformed.series[2].items[0].delta).toBe(10);
+      expect(transformed.series[2].items[0].deltaPercent).toBe(25);
+    });
+
+    it('filters offset columns for all metrics from potentialPivotedKeys to prevent leaks', () => {
+      const dataWithOffsets = [
+        {
+          canale: 'Web',
+          richieste: 100,
+          'richieste__1 year ago': 80,
+          accessi: 50,
+          'accessi__1 year ago': 40,
+        },
+      ];
+
+      const chartProps: any = {
+        width: 800,
+        height: 500,
+        formData: {
+          viz_type: 'stratum_bar',
+          datasource: '1__table',
+          x_axis: 'canale',
+          metrics: ['richieste', 'accessi'],
+          time_comparison_mode: 'time_shift',
+          comparison_shift: '1 year ago',
+        },
+        queriesData: [{ data: dataWithOffsets }],
+      };
+
+      const transformed = transformProps(chartProps);
+      const seriesNames = transformed.series.map(s => s.name);
+
+      expect(seriesNames).not.toContain('richieste__1 year ago');
+      expect(seriesNames).not.toContain('accessi__1 year ago');
+    });
+
+    it('activates comparison when mode !== none and at least one metric has comparison offset', () => {
+      const partialData = [
+        {
+          canale: 'Web',
+          m1: 10,
+          m1__offset: 8,
+          m2: 20, // no m2__offset
+        },
+      ];
+
+      const chartProps: any = {
+        width: 800,
+        height: 500,
+        formData: {
+          viz_type: 'stratum_bar',
+          datasource: '1__table',
+          x_axis: 'canale',
+          metrics: ['m1', 'm2'],
+          time_comparison_mode: 'time_shift',
+          comparison_shift: 'offset',
+        },
+        queriesData: [{ data: partialData }],
+      };
+
+      const transformed = transformProps(chartProps);
+      expect(transformed.comparison?.active).toBe(true);
+      expect(transformed.series).toHaveLength(4);
+      // m1 has comparison data
+      expect(transformed.series[0].data).toEqual([10]);
+      expect(transformed.series[1].data).toEqual([8]);
+      // m2 has no comparison data, gracefully null
+      expect(transformed.series[2].data).toEqual([20]);
+      expect(transformed.series[3].data).toEqual([null]);
+    });
   });
 });

@@ -26,4 +26,27 @@ module.exports = {
   buildQueryContext: function(formData, buildQueryFn) {
     return buildQueryFn({ formData });
   },
+  sharedControls: {
+    groupby: {
+      type: 'SelectControl',
+      label: 'Group by',
+      multi: true,
+      clearable: true,
+      validators: [],
+    },
+    metrics: {
+      type: 'MetricsControl',
+      label: 'Metrics',
+      multi: true,
+      clearable: true,
+      validators: [],
+    },
+    metric: {
+      type: 'MetricsControl',
+      label: 'Metric',
+      multi: false,
+      clearable: true,
+      validators: [],
+    },
+  },
 };
