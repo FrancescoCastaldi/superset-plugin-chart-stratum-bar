@@ -296,7 +296,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
     echartsSeries.push(seriesItem);
   });
 
-  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false, isVertical);
+  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false, isVertical, props.comparison);
   const tooltip = getTooltipConfig(isDark, tooltipFormatter);
 
   // Legend with explicit per-series colors so the legend swatches match the bars

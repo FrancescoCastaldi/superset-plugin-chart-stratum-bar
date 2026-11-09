@@ -124,9 +124,9 @@ describe('StratumBar Comparative Dual Time Mode', () => {
         extra_form_data: { time_range: '2008-01-01 : 2009-01-01', time_compare: [offset] },
       });
       expect(props.series).toHaveLength(2);
-      expect(props.series[0].name).toBe('2008-01-01 : 2009-01-01');
+      expect(props.series[0].name).toBe('Periodo corrente · 01/01/2008 al 31/12/2008');
       expect(props.series[0].data).toEqual([110, 40]);
-      expect(props.series[1].name).toBe(offset);
+      expect(props.series[1].name).toBe('Periodo di confronto · 01/01/2007 al 31/12/2007');
       expect(props.series[1].data).toEqual([100, 60]);
       expect(props.series[0].items[0].delta).toBe(10);
     });

@@ -1,5 +1,6 @@
 import { DataRecord } from '@superset-ui/core';
 import { StratumBarSeries, TimeComparisonMode } from '../types';
+import { ChartLocale } from '../utils/comparison';
 export interface BuildRepresentationOptions {
     data: DataRecord[];
     isPivoted: boolean;
@@ -28,6 +29,8 @@ export interface BuildRepresentationOptions {
     comparisonMetric?: any;
     time1Label?: string;
     time2Label?: string;
+    /** Language of the default names of the two periods */
+    locale?: ChartLocale;
 }
 export declare function buildSeriesRepresentation(options: BuildRepresentationOptions): {
     categories: string[];

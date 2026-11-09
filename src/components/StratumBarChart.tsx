@@ -13,6 +13,7 @@ import {
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries, BarShape3D, ValuePosition } from '../types';
 import { get2DBarOption } from './renderers2D';
+import { comparisonTexts } from '../utils/comparison';
 import { get3DBarOption } from './renderers3D';
 import './StratumBarChart.css';
 
@@ -342,7 +343,7 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     return (
       <div className={`stratum-bar-container ${props.themeMode === 'dark' ? 'dark' : ''}`} style={{ width, height }}>
         <div className="stratum-bar-empty">
-          <span>No data to show in the StratumBar chart.</span>
+          <span>{comparisonTexts(props.comparison?.locale || 'it').empty}</span>
         </div>
       </div>
     );
@@ -356,6 +357,11 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
       style={{ width, height }}
       data-selected-values={props.selectedValues?.join(',')}
     >
+      {props.comparison?.notice && (
+        <div className="stratum-bar-notice" role="status">
+          {props.comparison.notice}
+        </div>
+      )}
       {enableToolbar && (
         <div className="stratum-bar-toolbar">
           <div className="stratum-bar-toolbar-left">

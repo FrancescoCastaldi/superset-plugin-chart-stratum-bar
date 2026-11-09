@@ -1,4 +1,4 @@
-import { StratumBarSeries } from '../types';
+import { ComparisonInfo, StratumBarSeries } from '../types';
 export declare function getCategoryAxisConfig(categories: string[], isVertical: boolean, isDark: boolean, axisTitle?: string): {
     type: "category";
     data: string[];
@@ -90,7 +90,7 @@ export declare function getLegendConfig(series: StratumBarSeries[], colorScheme:
         };
     }[];
 };
-export declare function getTooltipFormatter(categories: string[], isDark: boolean, colorScheme: string[], showBenchmark: boolean, benchmark: any, yAxis2Title?: string, yAxis2Format?: string, secondaryLineColor?: string, is3D?: boolean, isVertical?: boolean): (params: any) => string;
+export declare function getTooltipFormatter(categories: string[], isDark: boolean, colorScheme: string[], showBenchmark: boolean, benchmark: any, yAxis2Title?: string, yAxis2Format?: string, secondaryLineColor?: string, is3D?: boolean, isVertical?: boolean, comparison?: ComparisonInfo): (params: any) => string;
 export declare function getTooltipConfig(isDark: boolean, formatterFn: (params: any) => string): {
     trigger: "axis";
     axisPointer: {

@@ -4,6 +4,28 @@ All notable changes to **StratumBar** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-11-09
+
+### Added
+- **Time comparison, three ways to choose the second period**: *Periodo corrente e confronto dal Calendar Filter* (T1 and T2 from the dashboard filter), *Confronto automatico (shift)* (T1 moved back by 1 year, 1 month, 28 days, 52 weeks or any text such as `3 months ago`), and the advanced *due metriche già calcolate* mode, kept for existing charts.
+- Shift choice in the control panel (`comparison_shift`), shown only with the automatic mode.
+- Notice above the chart, in the language of the filter, when the second period cannot be drawn.
+- Tests for the comparison modes, date shifts, tooltip polarity and the category/series combinations (`test/comparisonModes.test.ts`).
+
+### Changed
+- **Control panel in Italian**: every section and control has a tooltip with an explanation and an example. Control names are unchanged, so saved charts keep their settings.
+- With the comparison on and a series breakdown, categories read `Categoria · Serie` and each one shows its T1 and T2 bars. The breakdown toggle of the toolbar has no effect while the comparison is on.
+- The delta between T1 and T2 follows the chart options: the tooltip no longer guesses the pair from series names or colors. The polarity (normal or inverted) now applies.
+- Period names come from the Calendar Filter (names and readable ranges, in its language); without a filter they are in Italian.
+
+### Fixed
+- The T1 and T2 labels typed in the control panel were ignored (saved as `time1_label`, read as `time_1_label`).
+- A chart with the comparison off still asked the dashboard for the second period.
+- A comparison metric left in a chart with the comparison off switched the comparison on again.
+- The offset column of a comparison was drawn as a third series when the comparison was off.
+- Without a closed period in the filter, the query failed on the server. The chart now shows an explanatory notice instead.
+- Old English defaults of the label controls (`Time 1 (reference)`, `Time 2 (comparison)`) are treated as "automatic names".
+
 ## [0.5.4] - 2026-11-02
 
 ### Changed

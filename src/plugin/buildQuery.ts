@@ -1,5 +1,6 @@
 import { buildQueryContext, QueryContext, ensureIsArray } from '@superset-ui/core';
 import { StratumBarFormData } from '../types';
+import { DEFAULT_COMPARISON_SHIFT, getQueryTimeRange, isValidShift, resolveComparisonMode } from '../utils/comparison';
 
 export default function buildQuery(formData: StratumBarFormData): QueryContext {
   const fd: any = { ...(formData || {}) };
@@ -69,7 +70,7 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       ? [fd.metric]
       : [];
     const candidateMetrics = [...rawMetrics];
-    if (fd.time_comparison_mode === 'dual_metric' && fd.comparison_metric) {
+    if (resolveComparisonMode(fd.time_comparison_mode) === 'dual_metric' && fd.comparison_metric) {
       candidateMetrics.push(fd.comparison_metric);
     }
     if (target_metric) {
@@ -162,10 +163,24 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       orderby = baseQueryObject.orderby;
     }
 
+    // Time offsets exist only in the two modes that need them. The period T1 must be a closed range,
+    // otherwise Superset rejects the whole query with "An enclosed time range ... must be specified".
+    const comparisonMode = resolveComparisonMode(fd.time_comparison_mode);
+    const t1Range = getQueryTimeRange(fd);
     const dashboardTimeCompare = ensureIsArray(
       fd.extra_form_data?.time_compare ||
       baseQueryObject.extra_form_data?.time_compare,
     ).filter(Boolean);
+    let timeOffsets: string[] = [];
+    if (comparisonMode === 'time_offsets' && t1Range && dashboardTimeCompare.length > 0) {
+      timeOffsets = dashboardTimeCompare;
+    } else if (comparisonMode === 'time_shift' && t1Range) {
+      // An unreadable shift (typo in the control) would make Superset fail the whole query: send nothing
+      const shift = fd.comparison_shift || DEFAULT_COMPARISON_SHIFT;
+      if (isValidShift(shift)) {
+        timeOffsets = [shift];
+      }
+    }
 
     const query: any = {
       ...baseQueryObject,
@@ -176,9 +191,10 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       orderby,
       filters: mergedFilters,
     };
-
-    if (dashboardTimeCompare.length > 0) {
-      query.time_offsets = dashboardTimeCompare;
+    // A saved chart with comparison off must not query the dashboard's time_compare
+    delete query.time_offsets;
+    if (timeOffsets.length > 0) {
+      query.time_offsets = timeOffsets;
     }
 
     return [query];

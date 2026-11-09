@@ -1,5 +1,6 @@
 import { DataRecord } from '@superset-ui/core';
 import { StratumBarSeries, StratumBarSeriesItem, TimeComparisonMode } from '../types';
+import { comparisonTexts, ChartLocale } from '../utils/comparison';
 import { sortCategories } from '../utils/sortingUtils';
 
 export interface BuildRepresentationOptions {
@@ -30,6 +31,8 @@ export interface BuildRepresentationOptions {
   comparisonMetric?: any;
   time1Label?: string;
   time2Label?: string;
+  /** Language of the default names of the two periods */
+  locale?: ChartLocale;
 }
 
 export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
@@ -40,9 +43,10 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     secondary_line_color, secondary_series_type, secPalette,
     combineFlag, sampleRow, potentialPivotedKeys,
     sortBy = 'original', isOrderDesc = false,
-    timeComparisonMode, comparisonMetric, time1Label, time2Label,
+    timeComparisonMode, comparisonMetric, time1Label, time2Label, locale = 'it',
   } = options;
 
+  const texts = comparisonTexts(locale);
   const categoriesSet = new Set<string>();
   data.forEach(row => {
     const val = row[actualXKey] ?? row[resolvedXAxis] ?? Object.values(row)[0];
@@ -84,9 +88,10 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
   const repSeries: StratumBarSeries[] = [];
 
+  // The second period is drawn only when a mode asks for it. A comparison metric left in a chart
+  // whose comparison is off must not switch the comparison on.
   const isDualComparison =
-    timeComparisonMode === 'dual_metric' ||
-    Boolean(comparisonMetric && (metricList.length >= 1 || (sampleRow && String(comparisonMetric) in sampleRow)));
+    timeComparisonMode !== undefined && timeComparisonMode !== 'none' && Boolean(comparisonMetric);
 
   if (isDualComparison) {
     const t1Key = metricList[0] || actualMetricKey;
@@ -94,8 +99,18 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       ? comparisonMetric.label || comparisonMetric.metric_name
       : String(comparisonMetric || (metricList.length > 1 ? metricList[1] : '')));
 
-    const t1Display = time1Label || 'Time 1 (reference)';
-    const t2Display = time2Label || 'Time 2 (comparison)';
+    const t1Display = time1Label || texts.current;
+    const t2Display = time2Label || texts.comparison;
+
+    // Rows are matched by category, and by series too when the categories are combined: the two
+    // periods of the same category and series sit on the same row
+    const rowByCategory = new Map<string, DataRecord>();
+    data.forEach(r => {
+      const x = String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]);
+      const b = actualBreakdownKey ? r[actualBreakdownKey] : undefined;
+      const key = combineFlag && actualBreakdownKey && b !== undefined && b !== null ? `${x} · ${b}` : x;
+      if (!rowByCategory.has(key)) rowByCategory.set(key, r);
+    });
 
     const t1Data: (number | null)[] = [];
     const t2Data: (number | null)[] = [];
@@ -103,7 +118,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     const t2Items: StratumBarSeriesItem[] = [];
 
     repCategories.forEach(cat => {
-      const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
+      const row = rowByCategory.get(cat);
       const v1Raw = row ? row[t1Key] : null;
       const v2Raw = row && t2Key ? row[t2Key] : null;
 
@@ -202,7 +217,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
       if (isOffsetKey) {
         seriesColor = getColor(sName, sIdx) || '#7aa8cf';
-        if (time2Label && time2Label !== 'Time 2 (comparison)') {
+        if (time2Label) {
           displayName = time2Label;
         } else {
           const rowConfLabel = sampleRow?.MESE_CONFRONTO_ETICHETTA || sampleRow?.DATA_RIFERIMENTO || sampleRow?.PERIODO_CONFRONTO;
@@ -212,24 +227,24 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
             const parts = sName.split('__');
             const offsetToken = parts[1] || 'confronto';
             if (offsetToken.includes('year') || offsetToken.includes('anno')) {
-              displayName = 'Previous year';
+              displayName = texts.previousYear;
             } else if (offsetToken.includes('month') || offsetToken.includes('mese')) {
-              displayName = 'Previous month';
+              displayName = texts.previousMonth;
             } else {
-              displayName = `Comparison (${offsetToken.replace(/_/g, ' ')})`;
+              displayName = `${texts.comparison} (${offsetToken.replace(/_/g, ' ')})`;
             }
           }
         }
       } else if (hasAnyOffset) {
         seriesColor = getColor(sName, sIdx) || '#1c3d5e';
-        if (time1Label && time1Label !== 'Time 1 (reference)') {
+        if (time1Label) {
           displayName = time1Label;
         } else {
           const rowCorrLabel = sampleRow?.MESE_CORRENTE_ETICHETTA || sampleRow?.DATA_CORRENTE || sampleRow?.PERIODO_CORRENTE;
           if (rowCorrLabel) {
             displayName = String(rowCorrLabel);
           } else {
-            displayName = 'Current period';
+            displayName = texts.current;
           }
         }
       }

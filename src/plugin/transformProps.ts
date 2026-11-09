@@ -1,5 +1,15 @@
 import { resolveColors, resolveDimensions, computeBenchmark } from './transformPropsUtils';
 import { periodTitle, readDashboardPeriods, withNoData } from '../utils/dashboardPeriods';
+import {
+  comparisonTexts,
+  formatRange,
+  getQueryTimeRange,
+  parseRange,
+  resolveComparisonMode,
+  shiftName,
+  shiftRange,
+  DEFAULT_COMPARISON_SHIFT,
+} from '../utils/comparison';
 import { buildSeriesRepresentation } from './seriesBuilder';
 import { buildCrossFilterHandler } from './crossFilterHandler';
 import {
@@ -10,10 +20,20 @@ import {
   ensureIsArray,
 } from '@superset-ui/core';
 import {
+  ComparisonInfo,
   StratumBarChartProps,
   StratumBarFormData,
   StratumBarTransformedProps,
 } from '../types';
+
+/** Old English defaults of the label controls: a saved chart still holds them, they mean "automatic" */
+const LEGACY_LABELS = ['Time 1 (reference)', 'Time 2 (comparison)'];
+
+const cleanLabel = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed && !LEGACY_LABELS.includes(trimmed) ? trimmed : undefined;
+};
 
 
 
@@ -72,10 +92,9 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     x_axis_title,
     y_axis_title,
     time_comparison_mode,
-    time_1_label,
-    time_2_label,
     show_comparison_delta,
     comparison_delta_polarity,
+    comparison_shift,
   } = fd;
 
   const rawFd = ((chartProps as any).rawFormData || {}) as any;
@@ -125,10 +144,18 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     .filter(Boolean)
     .map(s => s.toLowerCase());
 
-  // With native time offsets the query returns the second period as `<metric>__<offset>`, where the
-  // offset is a shift (`1 year ago`) or an explicit range sent by a dashboard filter
+  // ----- Comparison between two periods -----
+  const dashboardPeriods = readDashboardPeriods(fd.extra_form_data);
+  const mode = resolveComparisonMode(time_comparison_mode);
+  const locale: 'it' | 'en' = dashboardPeriods.locale === 'en' ? 'en' : 'it';
+  const texts = comparisonTexts(locale);
+  const t1Range = getQueryTimeRange(fd);
+  const shift: string = comparison_shift || DEFAULT_COMPARISON_SHIFT;
+  const dashboardTimeCompare = ensureIsArray((fd.extra_form_data as any)?.time_compare).filter(Boolean);
+
+  // With time offsets the query returns the second period as `<metric>__<offset>`
   const offsetKey =
-    time_comparison_mode === 'time_offsets'
+    mode === 'time_offsets' || mode === 'time_shift'
       ? Object.keys(sampleRow).find(
           k =>
             k.toLowerCase() !== primaryMetric.toLowerCase() &&
@@ -136,18 +163,71 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
             (typeof sampleRow[k] === 'number' || sampleRow[k] === null),
         )
       : undefined;
+  const comparisonMetricName = typeof fd.comparison_metric === 'object' && fd.comparison_metric !== null
+    ? fd.comparison_metric.label || fd.comparison_metric.metric_name
+    : fd.comparison_metric;
+  const comparisonKey: string | undefined =
+    mode === 'dual_metric' ? (comparisonMetricName ? String(comparisonMetricName) : undefined) : offsetKey;
+  // The second period is drawn when its column came back from the query: buildQuery asks for offsets
+  // only when T1 is a closed range, so a column in the data is the proof that the comparison ran
+  const comparisonActive = mode !== 'none' && Boolean(comparisonKey);
 
-  // Names and readable ranges of the periods when a dashboard filter (the Calendar Filter) chose them
-  const dashboardPeriods = readDashboardPeriods(fd.extra_form_data);
+  // Names of the two periods: the labels typed in the control panel win, then the names and ranges of
+  // the Calendar Filter, then what can be computed from the period itself
+  // The control is saved as `time1_label`; `time_1_label` is read too, for charts saved with that name
+  const typedT1 = cleanLabel(fd.time1_label) || cleanLabel(fd.time_1_label);
+  const typedT2 = cleanLabel(fd.time2_label) || cleanLabel(fd.time_2_label);
+  const t1Name =
+    typedT1 ||
+    periodTitle(dashboardPeriods.referenceName, dashboardPeriods.referenceText) ||
+    (t1Range ? `${texts.current} · ${formatRange(t1Range, locale)}` : texts.current);
+
+  let t2Name: string;
+  if (mode === 'time_shift') {
+    const shifted = t1Range ? shiftRange(t1Range, shift) : undefined;
+    t2Name =
+      typedT2 ||
+      (shifted ? `${shiftName(shift, locale)} · ${formatRange(shifted, locale)}` : shiftName(shift, locale));
+  } else if (mode === 'time_offsets') {
+    // Without names from the filter, the range of the comparison period is shown when it is readable
+    const offsetRange = parseRange(dashboardTimeCompare[0]);
+    t2Name =
+      typedT2 ||
+      periodTitle(dashboardPeriods.comparisonName, dashboardPeriods.comparisonText) ||
+      (offsetRange ? `${texts.comparison} · ${formatRange(offsetRange, locale)}` : texts.comparison);
+  } else {
+    t2Name = typedT2 || texts.comparison;
+  }
+
   // A comparison period without a single value (no rows in it) is still shown, and said to be empty
-  const comparisonIsEmpty = Boolean(offsetKey) && data.every(row => row[offsetKey as string] === null || row[offsetKey as string] === undefined);
-  const comparisonName = offsetKey
-    ? periodTitle(dashboardPeriods.comparisonName, dashboardPeriods.comparisonText, offsetKey.slice(primaryMetric.length + 2))
-    : undefined;
-  const comparisonTitle = comparisonIsEmpty ? withNoData(comparisonName, dashboardPeriods.locale) : comparisonName;
+  const comparisonIsEmpty =
+    Boolean(offsetKey) && data.every(row => row[offsetKey as string] === null || row[offsetKey as string] === undefined);
+  const t2Title = comparisonIsEmpty ? withNoData(t2Name, locale) || t2Name : t2Name;
+
+  // Why the second period cannot be drawn, in the language of the filter
+  let comparisonNotice: string | undefined;
+  if (mode === 'time_offsets' && !comparisonActive) {
+    comparisonNotice = !t1Range ? texts.noRangeForShift : dashboardTimeCompare.length === 0 ? texts.noFilterComparison : undefined;
+  } else if (mode === 'time_shift' && !comparisonActive) {
+    comparisonNotice = texts.noRangeForShift;
+  }
+
+  const comparisonInfo: ComparisonInfo = {
+    mode,
+    active: comparisonActive,
+    t1Name,
+    t2Name: t2Title,
+    showDelta: show_comparison_delta !== false,
+    polarity: comparison_delta_polarity === 'inverted' ? 'inverted' : 'normal',
+    locale,
+    notice: comparisonNotice,
+  };
 
   const potentialPivotedKeys = Object.keys(sampleRow).filter(k =>
+    // Columns `<metric>__<offset>` are never series of their own: they belong to the comparison
+    !k.toLowerCase().startsWith(`${primaryMetric.toLowerCase()}__`) &&
     k !== offsetKey &&
+    k !== comparisonKey &&
     k.toLowerCase() !== actualXKey.toLowerCase() &&
     k !== '__timestamp' &&
     !k.startsWith('__') &&
@@ -183,17 +263,21 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       secondary_line_color, secondary_series_type, secPalette,
       combineFlag, sampleRow, potentialPivotedKeys,
       sortBy, isOrderDesc,
-      timeComparisonMode: fd.time_comparison_mode,
-      comparisonMetric: fd.comparison_metric || offsetKey,
-      time1Label: fd.time_1_label || (offsetKey ? periodTitle(dashboardPeriods.referenceName, dashboardPeriods.referenceText, fd.extra_form_data?.time_range || undefined) : undefined),
-      time2Label: fd.time_2_label || comparisonTitle,
+      timeComparisonMode: mode,
+      comparisonMetric: comparisonActive ? comparisonKey : undefined,
+      time1Label: comparisonInfo.t1Name,
+      time2Label: comparisonInfo.t2Name,
+      locale,
     });
   };
 
   const standardRep = buildRepresentation(false);
-  const combinedRep = actualBreakdownKey && actualBreakdownKey in sampleRow ? buildRepresentation(true) : standardRep;
+  const canCombine = Boolean(actualBreakdownKey && actualBreakdownKey in sampleRow);
+  const combinedRep = canCombine ? buildRepresentation(true) : standardRep;
 
-  const currentRep = combine_category_breakdown ? combinedRep : standardRep;
+  // With two periods on screen, the series of the breakdown are shown as "category · series" so that
+  // each bar pair (T1 and T2) belongs to one combination
+  const currentRep = (combine_category_breakdown || (comparisonActive && canCombine)) ? combinedRep : standardRep;
   const categories = currentRep.categories;
   const series = currentRep.series;
 
@@ -282,11 +366,12 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       showAxisBreak: toolbar_show_axis_break !== false,
       showExport: toolbar_show_export !== false,
     },
-    timeComparisonMode: time_comparison_mode,
-    time1Label: time_1_label,
-    time2Label: time_2_label,
-    showComparisonDelta: show_comparison_delta,
-    comparisonDeltaPolarity: comparison_delta_polarity,
+    comparison: comparisonInfo,
+    timeComparisonMode: mode,
+    time1Label: comparisonInfo.t1Name,
+    time2Label: comparisonInfo.t2Name,
+    showComparisonDelta: comparisonInfo.showDelta,
+    comparisonDeltaPolarity: comparisonInfo.polarity,
     formData: fd,
     selectedValues,
     labelColors: combinedLabelColors,

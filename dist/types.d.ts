@@ -7,7 +7,20 @@ export type BenchmarkType = 'fixed_value' | 'average' | 'median' | 'target_metri
 export type DeltaPolarity = 'normal' | 'inverted';
 export type ValuePosition = 'inside' | 'top' | 'outside' | 'slanted';
 export type SortByMode = 'original' | 'category' | 'metric';
-export type TimeComparisonMode = 'none' | 'dual_metric' | 'time_offsets';
+export type TimeComparisonMode = 'none' | 'time_offsets' | 'time_shift' | 'dual_metric';
+/** What the chart shows about the two periods, computed in transformProps */
+export interface ComparisonInfo {
+    mode: TimeComparisonMode;
+    /** True when a second period is actually drawn */
+    active: boolean;
+    t1Name: string;
+    t2Name: string;
+    showDelta: boolean;
+    polarity: DeltaPolarity;
+    locale: 'it' | 'en';
+    /** Short message shown above the chart when the comparison cannot be drawn */
+    notice?: string;
+}
 export interface StratumBarSeriesItem {
     category: string;
     value: number | null;
@@ -92,6 +105,7 @@ export interface StratumBarFormData extends QueryFormData {
     toolbar_show_axis_break?: boolean;
     time_comparison_mode?: TimeComparisonMode;
     comparison_metric?: any;
+    comparison_shift?: string;
     time1_label?: string;
     time2_label?: string;
     show_comparison_delta?: boolean;
@@ -154,6 +168,7 @@ export interface StratumBarTransformedProps {
         showAxisBreak: boolean;
         showExport: boolean;
     };
+    comparison?: ComparisonInfo;
     timeComparisonMode?: TimeComparisonMode;
     time1Label?: string;
     time2Label?: string;

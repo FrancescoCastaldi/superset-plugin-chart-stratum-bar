@@ -4,12 +4,24 @@ import {
   sharedControls,
 } from '@superset-ui/chart-controls';
 
-const t = (str: string) => str;
+/*
+ * Pannello di controllo del grafico, in italiano.
+ * Ogni sezione e ogni controllo ha un tooltip (`description`) con l'indicazione di cosa fa e un esempio.
+ * I nomi dei controlli sono quelli salvati nei chart: non cambiarli, altrimenti i grafici esistenti perdono le impostazioni.
+ */
+
+const isComparing = ({ controls }: ControlPanelsContainerProps) =>
+  Boolean(controls?.time_comparison_mode?.value) && controls?.time_comparison_mode?.value !== 'none';
+
+const hasSecondary = ({ controls }: ControlPanelsContainerProps) =>
+  Boolean(controls?.secondary_metrics?.value && (controls.secondary_metrics.value as any[]).length > 0);
 
 const config: ControlPanelConfig = {
   controlPanelSections: [
     {
-      label: t('Query Configuration'),
+      label: 'Dati',
+      description:
+        'Cosa mostrare sull\'asse orizzontale, quanto alta è ogni barra e come dividere le barre per colore. Il grafico legge i dati dalla query del dataset.',
       expanded: true,
       controlSetRows: [
         [
@@ -17,8 +29,9 @@ const config: ControlPanelConfig = {
             name: 'x_axis',
             config: {
               ...sharedControls.groupby,
-              label: t('X-Axis / Categoria Principale'),
-              description: t('Primary dimension for the X axis categories (e.g. month, department, channel)'),
+              label: 'Asse X (categoria principale)',
+              description:
+                'La dimensione che compone le barre sull\'asse orizzontale. Esempio: Mese, Reparto, Canale di prenotazione. Una sola colonna.',
               multi: false,
               clearable: true,
               validators: [],
@@ -30,8 +43,9 @@ const config: ControlPanelConfig = {
             name: 'groupby',
             config: {
               ...sharedControls.groupby,
-              label: t('Series / breakdown by color'),
-              description: t('Optional dimension to split the bars into distinct colored series (e.g. regime: private / public)'),
+              label: 'Serie per colore (suddivisione)',
+              description:
+                'Divide ogni categoria in più barre colorate. Esempio: sull\'asse X il Canale e qui il Regime (Privato, Pubblico), così ogni canale mostra una barra per regime. Con il confronto tra periodi attivo, le categorie diventano "Canale · Regime".',
               multi: true,
               clearable: true,
               validators: [],
@@ -43,8 +57,9 @@ const config: ControlPanelConfig = {
             name: 'combine_category_breakdown',
             config: {
               type: 'CheckboxControl',
-              label: t('Compound labels on the axis'),
-              description: t('Show category and series together on the X axis instead of side-by-side bars'),
+              label: 'Unisci asse e serie nelle etichette',
+              description:
+                'Mostra "Categoria · Serie" sull\'asse X invece di barre affiancate. Esempio: "Ambulatorio · Privato". Con il confronto tra periodi attivo le etichette sono sempre unite.',
               default: false,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -57,8 +72,9 @@ const config: ControlPanelConfig = {
             name: 'metrics',
             config: {
               ...sharedControls.metrics,
-              label: t('Main metric (bar value)'),
-              description: t('Numeric metric that sets the bar height (e.g. number of requests, revenue)'),
+              label: 'Metrica principale (altezza delle barre)',
+              description:
+                'Il valore numerico che decide l\'altezza delle barre del periodo corrente. Esempio: Numero richieste, Fatturato, Accessi.',
               clearable: true,
               validators: [],
             },
@@ -69,12 +85,13 @@ const config: ControlPanelConfig = {
             name: 'sort_by',
             config: {
               type: 'SelectControl',
-              label: t('Sort by'),
-              description: t('Choose whether to sort by category or dimension (e.g. days Mon-Sun, months in order) or by metric value (e.g. top N rankings)'),
+              label: 'Ordina per',
+              description:
+                'Come mettere in ordine le barre. "Ordine originale": come arrivano dalla query. "Categoria": in ordine alfabetico o cronologico, per esempio Lun-Dom. "Valore della metrica": dalla più alta alla più bassa, utile per le classifiche (Top 10).',
               choices: [
-                ['original', t('Ordine Originale / Query')],
-                ['category', t('Category / dimension (e.g. Mon-Sun, months, A-Z)')],
-                ['metric', t('Metric value (e.g. top N, request volume)')],
+                ['original', 'Ordine originale (come nella query)'],
+                ['category', 'Categoria (A-Z, mesi, giorni della settimana)'],
+                ['metric', 'Valore della metrica (classifiche, Top N)'],
               ],
               default: 'original',
               renderTrigger: false,
@@ -84,8 +101,9 @@ const config: ControlPanelConfig = {
             name: 'order_desc',
             config: {
               type: 'CheckboxControl',
-              label: t('Descending sort'),
-              description: t('When on: Z-A or the highest value on top. When off: A-Z or 1-7 in order, or the lowest value on top.'),
+              label: 'Ordine decrescente',
+              description:
+                'Attivo: Z-A, oppure il valore più alto in cima. Disattivo: A-Z, oppure 1-7 in ordine, oppure il valore più basso in cima. Esempio: per una classifiche dei reparti più richiesti, attiva questa opzione con "Valore della metrica".',
               default: false,
               renderTrigger: false,
             },
@@ -96,7 +114,9 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Time comparison (Time 1 vs Time 2)'),
+      label: 'Confronto tra due periodi',
+      description:
+        'Mette accanto al periodo corrente (T1) un secondo periodo (T2), per vedere quanto è cambiato. Il periodo T1 segue sempre il filtro di tempo della dashboard, per esempio il Calendar Filter. Scegli la modalità in base a come vuoi scegliere il secondo periodo.',
       expanded: true,
       controlSetRows: [
         [
@@ -104,15 +124,39 @@ const config: ControlPanelConfig = {
             name: 'time_comparison_mode',
             config: {
               type: 'SelectControl',
-              label: t('Time comparison mode'),
-              description: t('Choose how to feed the comparison: paired metrics (anti-Cartesian) or native Superset time offsets'),
+              label: 'Modalità di confronto',
+              description:
+                'Nessun confronto: mostra solo il periodo del filtro. Periodo corrente e confronto dal Calendar Filter: il secondo periodo è quello selezionato nel filtro (T2). Confronto automatico (shift): il secondo periodo è il T1 spostato indietro di un anno, un mese, 28 giorni o di un intervallo a scelta. Avanzato: due metriche già calcolate, per esempio "Richieste 2026" e "Richieste 2025".',
               choices: [
-                ['none', t('Off (single period)')],
-                ['dual_metric', t('Paired metrics (e.g. richieste_corr vs richieste_conf)')],
-                ['time_offsets', t('Time Offsets Nativi Superset (__1 year ago)')],
+                ['none', 'Nessun confronto (solo il periodo del filtro)'],
+                ['time_offsets', 'Periodo corrente e confronto dal Calendar Filter'],
+                ['time_shift', 'Confronto automatico (shift di 1 anno, 1 mese, 28 giorni)'],
+                ['dual_metric', 'Avanzato: due metriche già calcolate'],
               ],
               default: 'none',
-              renderTrigger: false,
+              renderTrigger: true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'comparison_shift',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              label: 'Di quanto spostare il periodo',
+              description:
+                'Lo spostamento all\'indietro del periodo corrente. Scegli una voce o scrivi il tuo. Esempi: "1 year ago" (anno precedente), "1 month ago" (mese precedente), "28 days ago" (28 giorni prima), "52 weeks ago" (52 settimane prima), "3 months ago" (trimestre precedente).',
+              choices: [
+                ['1 year ago', 'Anno precedente (1 year ago)'],
+                ['1 month ago', 'Mese precedente (1 month ago)'],
+                ['28 days ago', '28 giorni prima (28 days ago)'],
+                ['52 weeks ago', '52 settimane prima (52 weeks ago)'],
+              ],
+              default: '1 year ago',
+              renderTrigger: true,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.time_comparison_mode?.value === 'time_shift',
             },
           },
         ],
@@ -121,8 +165,9 @@ const config: ControlPanelConfig = {
             name: 'comparison_metric',
             config: {
               ...sharedControls.metric,
-              label: t('Comparison period metric (Time 2)'),
-              description: t('Select the metric of the second period to pair it with the main metric'),
+              label: 'Metrica del secondo periodo (T2)',
+              description:
+                'Solo per la modalità avanzata: la metrica già calcolata del secondo periodo, da confrontare con la metrica principale. Esempio: Richieste 2025 da confrontare con Richieste 2026.',
               clearable: true,
               validators: [],
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -135,24 +180,24 @@ const config: ControlPanelConfig = {
             name: 'time1_label',
             config: {
               type: 'TextControl',
-              label: t('Time 1 label (reference)'),
-              description: t('Name shown for the main period. Supports dynamic tokens or an explicit name (e.g. October 2026, Current)'),
-              default: 'Time 1 (reference)',
+              label: 'Nome del periodo corrente (T1)',
+              description:
+                'Il nome che compare nella legenda e nel tooltip. Lascia vuoto per il nome automatico preso dal filtro. Esempi: "Ottobre 2026", "Anno corrente".',
+              default: '',
               renderTrigger: true,
-              visibility: ({ controls }: ControlPanelsContainerProps) =>
-                controls?.time_comparison_mode?.value !== 'none',
+              visibility: isComparing,
             },
           },
           {
             name: 'time2_label',
             config: {
               type: 'TextControl',
-              label: t('Time 2 label (comparison)'),
-              description: t('Name shown for the comparison period (e.g. October 2025, Previous year)'),
-              default: 'Time 2 (comparison)',
+              label: 'Nome del periodo di confronto (T2)',
+              description:
+                'Il nome del secondo periodo nella legenda e nel tooltip. Lascia vuoto per il nome automatico. Esempi: "Ottobre 2025", "Anno precedente".',
+              default: '',
               renderTrigger: true,
-              visibility: ({ controls }: ControlPanelsContainerProps) =>
-                controls?.time_comparison_mode?.value !== 'none',
+              visibility: isComparing,
             },
           },
         ],
@@ -161,35 +206,38 @@ const config: ControlPanelConfig = {
             name: 'show_comparison_delta',
             config: {
               type: 'CheckboxControl',
-              label: t('Show delta % and comparison deviations'),
-              description: t('Calculates and shows in the tooltips and above the bars the percentage and absolute deviation between Time 1 and Time 2'),
+              label: 'Mostra lo scostamento tra T1 e T2',
+              description:
+                'Nel tooltip, sotto le due barre, compare la differenza in valore assoluto e in percentuale tra il periodo corrente e il confronto. Esempio: 120 contro 100 mostra "+20,0% (+20)". Se il confronto è zero compare "Nuovo".',
               default: true,
               renderTrigger: true,
-              visibility: ({ controls }: ControlPanelsContainerProps) =>
-                controls?.time_comparison_mode?.value !== 'none',
+              visibility: isComparing,
             },
           },
           {
             name: 'comparison_delta_polarity',
             config: {
               type: 'SelectControl',
-              label: t('Polarita Scostamento Comparativo'),
-              description: t('Normal: increase green, decrease red. Inverted: increase red (for waiting times or costs).'),
+              label: 'Colore dello scostamento',
+              description:
+                'Normale: l\'aumento è verde, il calo rosso (es. accessi, fatturato). Invertito: l\'aumento è rosso, il calo verde (es. tempi di attesa, costi).',
               choices: [
-                ['normal', t('Normal (green = growth, red = decline)')],
-                ['inverted', t('Invertita (Rosso = Crescita, Verde = Calo)')],
+                ['normal', 'Normale (aumento verde, calo rosso)'],
+                ['inverted', 'Invertito (aumento rosso, calo verde)'],
               ],
               default: 'normal',
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
-                controls?.time_comparison_mode?.value !== 'none' && Boolean(controls?.show_comparison_delta?.value),
+                isComparing({ controls } as ControlPanelsContainerProps) && Boolean(controls?.show_comparison_delta?.value),
             },
           },
         ],
       ],
     },
     {
-      label: t('Chart Mode & Visual Engine'),
+      label: 'Aspetto e motore di disegno',
+      description:
+        'Come appare il grafico: forma 3D o 2D, colori, tema e formato dei numeri.',
       expanded: true,
       controlSetRows: [
         [
@@ -197,11 +245,12 @@ const config: ControlPanelConfig = {
             name: 'viewMode',
             config: {
               type: 'SelectControl',
-              label: t('View Mode'),
-              description: t('Visualization engine: 3D Isometric or Modern 2D Curved (can also be switched at runtime)'),
+              label: 'Visualizzazione',
+              description:
+                '3D isometrico: barre a volume con ombre. 2D moderno: barre piatte con angoli arrotondati e, se attivo, lo sfondo di riferimento. Chi guarda può cambiarla anche in dashboard, se la barra degli strumenti è attiva.',
               choices: [
-                ['3d', t('3D Isometrico Volumetrico')],
-                ['2d', t('2D Moderno (Curved & Track)')],
+                ['3d', '3D isometrico (volume)'],
+                ['2d', '2D moderno (piatto, angoli arrotondati)'],
               ],
               default: '3d',
               renderTrigger: true,
@@ -211,11 +260,11 @@ const config: ControlPanelConfig = {
             name: 'theme_mode',
             config: {
               type: 'SelectControl',
-              label: t('Color Theme'),
-              description: t('Visual color theme: Light Enterprise or Dark Obsidian'),
+              label: 'Tema colori',
+              description: 'Chiaro per le dashboard con sfondo bianco, scuro per quelle con sfondo scuro.',
               choices: [
-                ['light', t('Light Enterprise')],
-                ['dark', t('Dark Obsidian')],
+                ['light', 'Chiaro (Light Enterprise)'],
+                ['dark', 'Scuro (Dark Obsidian)'],
               ],
               default: 'light',
               renderTrigger: true,
@@ -227,8 +276,9 @@ const config: ControlPanelConfig = {
             name: 'color_scheme',
             config: {
               type: 'ColorSchemeControl',
-              label: t('Color Palette'),
-              description: t('Color palette applied to primary bars and grouped series'),
+              label: 'Palette di colori',
+              description:
+                'Palette usata per le barre principali e per le serie. Se la dashboard ha già colori assegnati alle etichette, questi hanno la precedenza.',
               renderTrigger: true,
               default: 'supersetColors',
             },
@@ -237,25 +287,24 @@ const config: ControlPanelConfig = {
             name: 'enable_a11y_decal',
             config: {
               type: 'CheckboxControl',
-              label: t('A11y Pattern Decals'),
-              description: t('Enable accessible geometric texture decals for color-blind viewers (W3C A11y)'),
+              label: 'Motivi per daltonici',
+              description:
+                'Aggiunge un motivo geometrico alle barre, così le serie si distinguono anche senza colore. Utile per chi ha difficoltà a distinguere i colori.',
               default: false,
               renderTrigger: true,
             },
           },
         ],
-
-        // 3D Specific Controls (Only visible when viewMode === '3d')
         [
           {
             name: 'barShape3D',
             config: {
               type: 'SelectControl',
-              label: t('3D Geometry Shape'),
-              description: t('Geometric shape for 3D rendering: Rectangular Prism or Cylinder'),
+              label: 'Forma delle barre 3D',
+              description: 'Parallelepipedo: barre squadrate. Cilindro: barre tonde. Vale solo con visualizzazione 3D.',
               choices: [
-                ['prism', t('Rectangular prism')],
-                ['cylinder', t('Cilindrico (Cylinder)')],
+                ['prism', 'Parallelepipedo'],
+                ['cylinder', 'Cilindro'],
               ],
               default: 'prism',
               renderTrigger: true,
@@ -266,8 +315,8 @@ const config: ControlPanelConfig = {
             name: 'shadow3D',
             config: {
               type: 'CheckboxControl',
-              label: t('3D Ground Shadows'),
-              description: t('Render soft ambient drop shadow beneath each 3D column'),
+              label: 'Ombre sotto le barre 3D',
+              description: 'Disegna un\'ombra morbida sotto ogni barra 3D, per dare profondità. Disattivala per un disegno più essenziale.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => controls?.viewMode?.value === '3d',
@@ -279,8 +328,8 @@ const config: ControlPanelConfig = {
             name: 'depth3D',
             config: {
               type: 'SliderControl',
-              label: t('3D Depth (px)'),
-              description: t('Isometric extrusion depth of 3D columns in pixels'),
+              label: 'Profondità 3D (px)',
+              description: 'Quanto è profonda la barra 3D, in pixel. Valori bassi (5-10) per barre quasi piatte, alti (30-50) per un effetto molto marcato.',
               min: 5,
               max: 50,
               step: 1,
@@ -293,8 +342,8 @@ const config: ControlPanelConfig = {
             name: 'tilt3D',
             config: {
               type: 'SliderControl',
-              label: t('3D Tilt Angle (deg)'),
-              description: t('Projection angle of top and side column facets'),
+              label: 'Inclinazione 3D (gradi)',
+              description: 'L\'angolo di vista delle facce superiori e laterali delle barre. Esempio: 25 gradi è l\'impostazione standard, 45 le rende più visibili dall\'alto.',
               min: 15,
               max: 60,
               step: 1,
@@ -307,7 +356,8 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Layout, Labels & 2D Options'),
+      label: 'Layout, etichette e valori',
+      description: 'Direzione delle barre, come sono impilate le serie, dove compaiono i numeri e come sono formattati.',
       expanded: true,
       controlSetRows: [
         [
@@ -315,11 +365,11 @@ const config: ControlPanelConfig = {
             name: 'orientation',
             config: {
               type: 'SelectControl',
-              label: t('Orientation'),
-              description: t('Vertical columns or Horizontal bars'),
+              label: 'Direzione',
+              description: 'Verticale: colonne che salgono. Orizzontale: barre distese da sinistra a destra, utili con nomi lunghi (es. reparti).',
               choices: [
-                ['vertical', t('Vertical (columns)')],
-                ['horizontal', t('Horizontal (bars)')],
+                ['vertical', 'Verticale (colonne)'],
+                ['horizontal', 'Orizzontale (barre)'],
               ],
               default: 'vertical',
               renderTrigger: true,
@@ -329,11 +379,12 @@ const config: ControlPanelConfig = {
             name: 'stacking',
             config: {
               type: 'SelectControl',
-              label: t('Series Stacking'),
-              description: t('Display series side-by-side (Grouped) or stacked on top of each other'),
+              label: 'Serie affiancate o impilate',
+              description:
+                'Affiancate: una barra per serie accanto all\'altra. Impilate: le serie una sopra l\'altra, il totale è l\'altezza. Esempio: Pubblico e Privato impilati mostrano il totale del canale.',
               choices: [
-                ['none', t('Grouped')],
-                ['stack', t('Stacked')],
+                ['none', 'Affiancate'],
+                ['stack', 'Impilate'],
               ],
               default: 'none',
               renderTrigger: true,
@@ -345,8 +396,8 @@ const config: ControlPanelConfig = {
             name: 'showValue',
             config: {
               type: 'CheckboxControl',
-              label: t('Show Values on Bars'),
-              description: t('Display formatted metric numbers directly on or above bars'),
+              label: 'Mostra i valori sulle barre',
+              description: 'Scrive il numero di ogni barra, formattato come scelto qui sotto.',
               default: true,
               renderTrigger: true,
             },
@@ -355,13 +406,14 @@ const config: ControlPanelConfig = {
             name: 'valuePosition',
             config: {
               type: 'SelectControl',
-              label: t('Value position'),
-              description: t('Position and orientation of the numeric values on the bars (above, inside, slanted)'),
+              label: 'Posizione dei valori',
+              description:
+                'Sopra la barra, dentro la barra, inclinato di 45 gradi (utile con molte barre), o fuori dalla barra. Vale solo se "Mostra i valori" è attivo.',
               choices: [
-                ['top', t('Above the bar (top)')],
-                ['inside', t('Inside the bar (inside)')],
-                ['slanted', t('Slanted (45°)')],
-                ['outside', t('Outside')],
+                ['top', 'Sopra la barra'],
+                ['inside', 'Dentro la barra'],
+                ['slanted', 'Inclinato (45 gradi)'],
+                ['outside', 'Fuori dalla barra'],
               ],
               default: 'top',
               renderTrigger: true,
@@ -375,27 +427,27 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               freeForm: true,
-              label: t('Primary Number Format'),
-              description: t('D3 format string for primary metrics (e.g. ,.0f, .2%, $, etc.)'),
+              label: 'Formato dei numeri',
+              description:
+                'Come scrivere i numeri delle barre. Puoi anche scrivere un formato tuo. Esempi: ",.0f" = 1.234, ",.2f" = 1.234,56, ".2%" = 12,34%, "~s" = 1,2k.',
               choices: [
-                [',.0f', t('Integer with separator (1,234)')],
-                [',.2f', t('Decimale 2 cifre (1,234.56)')],
-                ['.2%', t('Percentage (12.34%)')],
-                ['~s', t('Prefisso SI (1.2k, 3.4M)')],
+                [',.0f', 'Intero con separatore (1.234)'],
+                [',.2f', 'Due decimali (1.234,56)'],
+                ['.2%', 'Percentuale (12,34%)'],
+                ['~s', 'Abbreviato (1,2k, 3,4M)'],
               ],
               default: ',.0f',
               renderTrigger: true,
             },
           },
         ],
-        // 2D Specific Options
         [
           {
             name: 'barBorderRadius',
             config: {
               type: 'SliderControl',
-              label: t('Bar Corner Radius (2D)'),
-              description: t('Rounded corners for 2D bars'),
+              label: 'Arrotondamento degli angoli (2D)',
+              description: 'Quanto sono arrotondati gli angoli delle barre 2D. 0 per barre squadrate, 6 per l\'impostazione standard.',
               min: 0,
               max: 20,
               step: 1,
@@ -408,8 +460,8 @@ const config: ControlPanelConfig = {
             name: 'showTrackBackground',
             config: {
               type: 'CheckboxControl',
-              label: t('Track Background (2D)'),
-              description: t('Render subtle background track guide behind each bar indicating maximum scale'),
+              label: 'Sfondo di riferimento (2D)',
+              description: 'Disegna una barra chiara dietro ogni barra, come scala del valore massimo. Utile per vedere quanto manca al massimo.',
               default: false,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => controls?.viewMode?.value === '2d',
@@ -419,7 +471,9 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Dual Y-Axis (Secondary Metrics)'),
+      label: 'Secondo asse (metriche aggiuntive)',
+      description:
+        'Metriche in più disegnate su un secondo asse verticale a destra, con un colore proprio. Esempio: barre per numero di accessi e una linea per il tasso di ricovero in percentuale.',
       expanded: false,
       controlSetRows: [
         [
@@ -427,8 +481,9 @@ const config: ControlPanelConfig = {
             name: 'secondary_metrics',
             config: {
               ...sharedControls.metrics,
-              label: t('Secondary Metrics (Right Axis)'),
-              description: t('Optional metrics plotted on the independent right secondary Y-axis (e.g., Rate %, Average stay, Unit cost)'),
+              label: 'Metriche sul secondo asse',
+              description:
+                'Le metriche da disegnare sull\'asse di destra. Esempi: Tasso di ricovero %, Degenza media, Costo unitario.',
               multi: true,
               validators: [],
             },
@@ -439,16 +494,15 @@ const config: ControlPanelConfig = {
             name: 'secondary_series_type',
             config: {
               type: 'SelectControl',
-              label: t('Secondary Visualization'),
-              description: t('How to render secondary metrics: Smooth Line with markers or Secondary Bars'),
+              label: 'Come disegnarle',
+              description: 'Linea con punti: un andamento continuo. Barre: barre secondarie sull\'asse di destra.',
               choices: [
-                ['line', t('Line with markers')],
-                ['bar', t('Secondary bar (bar)')],
+                ['line', 'Linea con punti'],
+                ['bar', 'Barre'],
               ],
               default: 'line',
               renderTrigger: true,
-              visibility: ({ controls }: ControlPanelsContainerProps) =>
-                Boolean(controls?.secondary_metrics?.value && (controls.secondary_metrics.value as any[]).length > 0),
+              visibility: hasSecondary,
             },
           },
         ],
@@ -457,12 +511,11 @@ const config: ControlPanelConfig = {
             name: 'y_axis_2_title',
             config: {
               type: 'TextControl',
-              label: t('Right Axis Title'),
-              description: t('Custom label displayed on the right secondary Y-axis'),
+              label: 'Titolo del secondo asse',
+              description: 'Il testo sopra l\'asse di destra. Esempio: "Tasso di ricovero %".',
               default: '',
               renderTrigger: true,
-              visibility: ({ controls }: ControlPanelsContainerProps) =>
-                Boolean(controls?.secondary_metrics?.value && (controls.secondary_metrics.value as any[]).length > 0),
+              visibility: hasSecondary,
             },
           },
           {
@@ -470,19 +523,18 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               freeForm: true,
-              label: t('Right Axis Number Format'),
-              description: t('D3 format string for right Y-axis (e.g. .2% for rates/percentages, ,.2f for currency)'),
+              label: 'Formato dei numeri del secondo asse',
+              description: 'Come scrivere i numeri dell\'asse di destra. Esempio: ".2%" per le percentuali, "$,.2f" per le valute.',
               choices: [
-                ['.2%', t('Percentage (12.34%)')],
-                [',.2f', t('Decimale 2 cifre (1,234.56)')],
-                [',.0f', t('Intero (1,234)')],
-                ['$,.2f', t('Valuta ($1,234.56)')],
-                ['~s', t('Prefisso SI (1.2k, 3.4M)')],
+                ['.2%', 'Percentuale (12,34%)'],
+                [',.2f', 'Due decimali (1.234,56)'],
+                [',.0f', 'Intero (1.234)'],
+                ['$,.2f', 'Valuta ($1.234,56)'],
+                ['~s', 'Abbreviato (1,2k, 3,4M)'],
               ],
               default: ',.2f',
               renderTrigger: true,
-              visibility: ({ controls }: ControlPanelsContainerProps) =>
-                Boolean(controls?.secondary_metrics?.value && (controls.secondary_metrics.value as any[]).length > 0),
+              visibility: hasSecondary,
             },
           },
         ],
@@ -491,30 +543,28 @@ const config: ControlPanelConfig = {
             name: 'secondary_line_color',
             config: {
               type: 'TextControl',
-              label: t('Secondary Color'),
-              description: t('Hex color code for the secondary line and right axis (e.g. #ea580c, #f59e0b, #ec4899)'),
+              label: 'Colore del secondo asse',
+              description: 'Codice esadecimale del colore della linea e dei numeri di destra. Esempi: #ea580c (arancio), #f59e0b (ambra), #ec4899 (rosa).',
               default: '#ea580c',
               renderTrigger: true,
-              visibility: ({ controls }: ControlPanelsContainerProps) =>
-                Boolean(controls?.secondary_metrics?.value && (controls.secondary_metrics.value as any[]).length > 0),
+              visibility: hasSecondary,
             },
           },
           {
             name: 'secondary_line_width',
             config: {
               type: 'SelectControl',
-              label: t('Line Thickness'),
-              description: t('Thickness in pixels of the secondary trend line'),
+              label: 'Spessore della linea',
+              description: 'Lo spessore della linea del secondo asse, in pixel.',
               choices: [
-                [2, '2px (Sottile)'],
-                [3, '3px (Standard Moderno)'],
-                [4, '4px (Marcato)'],
+                [2, '2 px (sottile)'],
+                [3, '3 px (standard)'],
+                [4, '4 px (marcato)'],
               ],
               default: 3,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
-                Boolean(controls?.secondary_metrics?.value && (controls.secondary_metrics.value as any[]).length > 0) &&
-                controls?.secondary_series_type?.value === 'line',
+                hasSecondary({ controls } as ControlPanelsContainerProps) && controls?.secondary_series_type?.value === 'line',
             },
           },
         ],
@@ -523,20 +573,21 @@ const config: ControlPanelConfig = {
             name: 'secondary_area_gradient',
             config: {
               type: 'CheckboxControl',
-              label: t('Glowing Area Gradient'),
-              description: t('Render a subtle, glowing color gradient beneath the secondary trend line'),
+              label: 'Sfumatura sotto la linea',
+              description: 'Colora leggermente l\'area sotto la linea del secondo asse, con una sfumatura.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
-                Boolean(controls?.secondary_metrics?.value && (controls.secondary_metrics.value as any[]).length > 0) &&
-                controls?.secondary_series_type?.value === 'line',
+                hasSecondary({ controls } as ControlPanelsContainerProps) && controls?.secondary_series_type?.value === 'line',
             },
           },
         ],
       ],
     },
     {
-      label: t('Analisi Avanzata (Target & Annotazioni)'),
+      label: 'Soglia e annotazioni',
+      description:
+        'Una linea di riferimento (obiettivo o media) per confrontare le barre, e l\'evidenziazione automatica di massimi e minimi.',
       expanded: true,
       controlSetRows: [
         [
@@ -544,8 +595,8 @@ const config: ControlPanelConfig = {
             name: 'show_smart_annotations',
             config: {
               type: 'CheckboxControl',
-              label: t('Smart Annotations (Max/Min Highlight)'),
-              description: t('Automatically highlights the highest and lowest peaks in the chart with dynamic labels (🏆/📉).'),
+              label: 'Evidenzia massimo e minimo',
+              description: 'Segnala automaticamente la barra più alta (🏆) e quella più bassa (📉) con la loro etichetta.',
               default: false,
               renderTrigger: true,
             },
@@ -556,8 +607,8 @@ const config: ControlPanelConfig = {
             name: 'showBenchmark',
             config: {
               type: 'CheckboxControl',
-              label: t('Show threshold line (target)'),
-              description: t('Draws a horizontal reference line to compare the values.'),
+              label: 'Mostra la linea di soglia (obiettivo)',
+              description: 'Disegna una linea orizzontale di riferimento, per vedere quali barre superano l\'obiettivo.',
               default: false,
               renderTrigger: true,
             },
@@ -566,13 +617,14 @@ const config: ControlPanelConfig = {
             name: 'benchmarkType',
             config: {
               type: 'SelectControl',
-              label: t('Target calculation'),
-              description: t('How to compute the threshold: fixed manual value, average, median or dynamic metric.'),
+              label: 'Come calcolare la soglia',
+              description:
+                'Valore fisso: un numero scritto a mano. Media o mediana: calcolate sulle barre. Metrica obiettivo: un valore per ogni barra, da un\'altra metrica (es. Budget).',
               choices: [
-                ['fixed_value', t('Fixed value')],
-                ['average', t('Average of values')],
-                ['median', t('Median of values')],
-                ['target_metric', t('Target metric')],
+                ['fixed_value', 'Valore fisso'],
+                ['average', 'Media delle barre'],
+                ['median', 'Mediana delle barre'],
+                ['target_metric', 'Metrica obiettivo'],
               ],
               default: 'fixed_value',
               renderTrigger: true,
@@ -585,8 +637,8 @@ const config: ControlPanelConfig = {
             name: 'benchmarkValue',
             config: {
               type: 'TextControl',
-              label: t('Fixed Target Value'),
-              description: t('Numeric benchmark target when Calculation Type is Fixed Value'),
+              label: 'Valore dell\'obiettivo',
+              description: 'Il numero della linea di soglia. Esempio: 100 per "almeno 100 richieste al mese".',
               default: 100,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -597,8 +649,8 @@ const config: ControlPanelConfig = {
             name: 'target_metric',
             config: {
               ...sharedControls.metric,
-              label: t('Dynamic Target Metric'),
-              description: t('Dynamic benchmark target metric (e.g. Budget, Target) used for reference line and delta %'),
+              label: 'Metrica obiettivo',
+              description: 'La metrica che fornisce l\'obiettivo di ogni barra. Esempio: Budget richieste, Target accessi.',
               clearable: true,
               validators: [],
               renderTrigger: true,
@@ -610,8 +662,8 @@ const config: ControlPanelConfig = {
             name: 'showDeltaBadge',
             config: {
               type: 'CheckboxControl',
-              label: t('Show Delta % Badges'),
-              description: t('Calculate and display real-time percentage deviation badges (+/- %) against target'),
+              label: 'Mostra lo scostamento dalla soglia',
+              description: 'Nel tooltip, la differenza in percentuale rispetto alla soglia. Esempio: "vs Target: +12,5%".',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.showBenchmark?.value),
@@ -623,11 +675,12 @@ const config: ControlPanelConfig = {
             name: 'deltaPolarity',
             config: {
               type: 'SelectControl',
-              label: t('Delta Polarity'),
-              description: t('Normal: positive is green. Inverted: positive is red (essential for wait times, delays, costs)'),
+              label: 'Colore dello scostamento dalla soglia',
+              description:
+                'Normale: sopra la soglia è verde. Invertito: sopra la soglia è rosso (es. tempi di attesa, costi).',
               choices: [
-                ['normal', t('Normal (green = positive, red = negative)')],
-                ['inverted', t('Inverted (red = increase, e.g. times or costs)')],
+                ['normal', 'Normale (sopra soglia verde)'],
+                ['inverted', 'Invertito (sopra soglia rosso)'],
               ],
               default: 'normal',
               renderTrigger: true,
@@ -639,7 +692,9 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('✂️ Broken axis & outlier handling (axis break)'),
+      label: 'Asse spezzato (valori anomali)',
+      description:
+        'Quando una barra è molto più alta delle altre, il grafico tronca la sua scala: le barre piccole restano leggibili e sopra la barra troncata compare il valore reale.',
       expanded: false,
       controlSetRows: [
         [
@@ -647,8 +702,9 @@ const config: ControlPanelConfig = {
             name: 'enable_axis_break',
             config: {
               type: 'CheckboxControl',
-              label: t('Enable broken axis / outlier capping'),
-              description: t('Cuts the scale of the anomalous outlier bars, preserving the proportions and readability of the smaller bars, and keeping the real absolute value on top'),
+              label: 'Attiva l\'asse spezzato',
+              description:
+                'Taglia la scala delle barre anomale, mantenendo leggibili quelle piccole. Esempio: un reparto con 900 richieste e gli altri con 40 restano entrambi visibili.',
               default: false,
               renderTrigger: true,
             },
@@ -657,13 +713,14 @@ const config: ControlPanelConfig = {
             name: 'axis_break_mode',
             config: {
               type: 'SelectControl',
-              label: t('Threshold calculation mode'),
-              description: t('How to choose the cut point: Automatic (detects skewness), 90th percentile, 95th percentile, or Manual'),
+              label: 'Come scegliere dove tagliare',
+              description:
+                'Automatico: rileva da solo le barre anomale. 90° o 95° percentile: taglia sopra il valore che lascia il 10% o il 5% delle barre più alte. Manuale: un valore fisso che scrivi tu.',
               choices: [
-                ['auto', t('Automatic (outlier detection)')],
-                ['p90', t('90th percentile (P90)')],
-                ['p95', t('95th percentile (P95)')],
-                ['manual', t('Fixed manual threshold')],
+                ['auto', 'Automatico (rilevamento anomalie)'],
+                ['p90', '90° percentile'],
+                ['p95', '95° percentile'],
+                ['manual', 'Valore fisso manuale'],
               ],
               default: 'auto',
               renderTrigger: true,
@@ -676,8 +733,8 @@ const config: ControlPanelConfig = {
             name: 'axis_break_threshold',
             config: {
               type: 'TextControl',
-              label: t('Manual cut threshold'),
-              description: t('Maximum scale value above which the bars are cut, with the marker //'),
+              label: 'Soglia di taglio manuale',
+              description: 'Il valore sopra il quale le barre vengono tagliate, con il segno //. Esempio: 150.',
               default: 150,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>
@@ -688,7 +745,8 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Axes & Dashboard Interactivity'),
+      label: 'Assi, legenda e interattività',
+      description: 'Titoli degli assi, legenda e cosa succede quando si clicca una barra.',
       expanded: false,
       controlSetRows: [
         [
@@ -696,8 +754,8 @@ const config: ControlPanelConfig = {
             name: 'x_axis_title',
             config: {
               type: 'TextControl',
-              label: t('X-Axis Title'),
-              description: t('Custom label displayed at the bottom of the X axis'),
+              label: 'Titolo dell\'asse X',
+              description: 'Il testo sotto l\'asse orizzontale. Esempio: "Mese di prenotazione". Lascia vuoto per nessun titolo.',
               default: '',
               renderTrigger: true,
             },
@@ -706,8 +764,8 @@ const config: ControlPanelConfig = {
             name: 'y_axis_title',
             config: {
               type: 'TextControl',
-              label: t('Left Y-Axis Title'),
-              description: t('Custom label displayed at the top of the primary Y axis'),
+              label: 'Titolo dell\'asse Y',
+              description: 'Il testo sopra l\'asse verticale principale. Esempio: "Richieste".',
               default: '',
               renderTrigger: true,
             },
@@ -718,8 +776,8 @@ const config: ControlPanelConfig = {
             name: 'show_legend',
             config: {
               type: 'CheckboxControl',
-              label: t('Show Legend'),
-              description: t('Display series legend'),
+              label: 'Mostra la legenda',
+              description: 'La legenda elenca le serie e i loro colori. Con il confronto tra periodi indica quale barra è T1 e quale T2.',
               default: true,
               renderTrigger: true,
             },
@@ -728,11 +786,11 @@ const config: ControlPanelConfig = {
             name: 'legendOrientation',
             config: {
               type: 'SelectControl',
-              label: t('Legend Position'),
+              label: 'Posizione della legenda',
               choices: [
-                ['top', t('Top')],
-                ['bottom', t('Bottom')],
-                ['right', t('A destra (Right)')],
+                ['top', 'In alto'],
+                ['bottom', 'In basso'],
+                ['right', 'A destra'],
               ],
               default: 'top',
               renderTrigger: true,
@@ -745,8 +803,9 @@ const config: ControlPanelConfig = {
             name: 'emit_filter',
             config: {
               type: 'CheckboxControl',
-              label: t('Cross-Filtering (setDataMask)'),
-              description: t('Clicking a bar emits native filter events across all companion dashboard charts'),
+              label: 'Filtra le altre viste cliccando una barra',
+              description:
+                'Cliccando una barra, le altre viste della dashboard si filtrano su quella categoria. Cliccando di nuovo la barra il filtro si toglie. Esempio: clic su "Ambulatorio" filtra i grafici della pagina su quell\'ambulatorio.',
               default: true,
               renderTrigger: true,
             },
@@ -755,7 +814,9 @@ const config: ControlPanelConfig = {
       ],
     },
     {
-      label: t('Runtime Dashboard Toolbar'),
+      label: 'Barra degli strumenti (in dashboard)',
+      description:
+        'La barra piccola sopra il grafico, visibile a chi guarda la dashboard. Ogni pulsante può essere nascosto. Il grafico resta uguale, cambia solo ciò che l\'utente può modificare al volo.',
       expanded: false,
       controlSetRows: [
         [
@@ -763,8 +824,8 @@ const config: ControlPanelConfig = {
             name: 'enableToolbar',
             config: {
               type: 'CheckboxControl',
-              label: t('Enable Runtime Interactive Toolbar'),
-              description: t('Display the sleek, non-intrusive floating toolbar above the chart in dashboard view'),
+              label: 'Mostra la barra degli strumenti',
+              description: 'Attiva la barra con i pulsanti qui sotto. Disattivala per un grafico senza pulsanti.',
               default: true,
               renderTrigger: true,
             },
@@ -775,8 +836,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_view_mode',
             config: {
               type: 'CheckboxControl',
-              label: t('2D / 3D Switcher'),
-              description: t('Allow viewers to switch between 2D Modern and 3D Isometric at runtime'),
+              label: 'Pulsante 2D / 3D',
+              description: 'Permette di passare da visualizzazione 3D a 2D mentre si guarda la dashboard.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
@@ -786,8 +847,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_orientation',
             config: {
               type: 'CheckboxControl',
-              label: t('Orientation Toggle (↕ / ↔)'),
-              description: t('Allow viewers to rotate chart between vertical columns and horizontal bars'),
+              label: 'Pulsante direzione (↕ / ↔)',
+              description: 'Permette di girare il grafico tra colonne verticali e barre orizzontali.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
@@ -799,8 +860,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_stacking',
             config: {
               type: 'CheckboxControl',
-              label: t('Stacking Toggle'),
-              description: t('Allow viewers to toggle between grouped (side-by-side) and stacked bars'),
+              label: 'Pulsante affiancate / impilate',
+              description: 'Permette di passare tra serie affiancate e impilate.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
@@ -810,8 +871,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_dual_axis',
             config: {
               type: 'CheckboxControl',
-              label: t('Dual Y-Axis Toggle'),
-              description: t('Allow viewers to toggle the secondary Y-axis on/off at runtime'),
+              label: 'Pulsante secondo asse',
+              description: 'Permette di mostrare o nascondere il secondo asse.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
@@ -823,8 +884,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_breakdown_toggle',
             config: {
               type: 'CheckboxControl',
-              label: t('Combine Breakdown Dimension Toggle'),
-              description: t('Allow viewers to combine or separate the breakdown dimension on the X-axis at runtime'),
+              label: 'Pulsante unisci asse e serie',
+              description: 'Permette di unire o separare la suddivisione per serie nelle etichette dell\'asse X.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
@@ -834,8 +895,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_benchmark',
             config: {
               type: 'CheckboxControl',
-              label: t('Target / Benchmark Toggle'),
-              description: t('Allow viewers to toggle the benchmark reference line at runtime'),
+              label: 'Pulsante soglia (obiettivo)',
+              description: 'Permette di mostrare o nascondere la linea di soglia.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
@@ -847,8 +908,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_axis_break',
             config: {
               type: 'CheckboxControl',
-              label: t('Broken axis toolbar button (✂️)'),
-              description: t('Shows the "✂️ Broken axis" button on the toolbar at runtime'),
+              label: 'Pulsante asse spezzato (✂️)',
+              description: 'Permette di attivare o disattivare l\'asse spezzato mentre si guarda la dashboard.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),
@@ -858,8 +919,8 @@ const config: ControlPanelConfig = {
             name: 'toolbar_show_export',
             config: {
               type: 'CheckboxControl',
-              label: t('Export Buttons (PNG / CSV)'),
-              description: t('Show high-resolution PNG image and CSV aggregated data export buttons'),
+              label: 'Pulsanti di esportazione (PNG / CSV)',
+              description: 'Scarica il grafico come immagine PNG o i dati aggregati come CSV.',
               default: true,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) => Boolean(controls?.enableToolbar?.value),

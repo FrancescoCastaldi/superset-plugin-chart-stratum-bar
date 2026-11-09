@@ -1,4 +1,5 @@
-import { StratumBarSeries } from '../types';
+import { ComparisonInfo, StratumBarSeries } from '../types';
+import { comparisonTexts } from './comparison';
 
 export function getCategoryAxisConfig(categories: string[], isVertical: boolean, isDark: boolean, axisTitle?: string) {
   return {
@@ -115,6 +116,7 @@ export function getTooltipFormatter(
   secondaryLineColor?: string,
   is3D: boolean = false,
   isVertical: boolean = true,
+  comparison?: ComparisonInfo,
 ) {
   return (params: any) => {
     const items = Array.isArray(params) ? params : [params];
@@ -168,43 +170,38 @@ export function getTooltipFormatter(
       }
     });
 
-    const isComparativePair = items.length >= 2 && (
-      items.some(it => it.seriesName?.includes('Tempo') || it.seriesName?.includes('Time') || it.seriesName?.includes('Period') || it.seriesName?.includes('Periodo') || it.seriesName?.includes('Confronto') || it.seriesName?.includes('Comparison') || it.seriesName?.includes('Previous year')) ||
-      (items[0]?.color === '#0A224E' && items[1]?.color === '#E12B72') ||
-      (items[0]?.color === '#1c3d5e' && items[1]?.color === '#7aa8cf')
-    );
+    // The pair T1 / T2 is known from the chart options, not guessed from series names or colors
+    if (comparison?.active && comparison.showDelta && items.length >= 2) {
+      const t = comparisonTexts(comparison.locale);
+      const numeric = (raw: any) => {
+        const v = Array.isArray(raw) ? (is3D ? (isVertical ? raw[1] : raw[0]) : (raw[1] ?? raw[0])) : raw;
+        return typeof v === 'number' ? v : v === null || v === undefined || v === '' || isNaN(Number(v)) ? null : Number(v);
+      };
+      const v1 = numeric(items[0].value);
+      const v2 = numeric(items[1].value);
+      if (v1 !== null && v2 !== null) {
+        const delta = v1 - v2;
+        const isNew = v2 === 0 && v1 > 0;
+        const deltaPct = v2 !== 0 ? (delta / Math.abs(v2)) * 100 : 0;
+        const isUp = delta >= 0;
+        // Inverted polarity: growth is bad news (waiting times, costs), so it turns red
+        const isGood = comparison.polarity === 'inverted' ? !isUp : isUp;
+        const badgeBg = isNew ? '#64748B' : isGood ? '#2E7D32' : '#D32F2F';
+        const sign = isUp ? '+' : '';
+        const numberLocale = comparison.locale === 'en' ? 'en-US' : 'it-IT';
+        const deltaText = isNew
+          ? t.newBaseline
+          : `${sign}${deltaPct.toFixed(1)}% (${sign}${delta.toLocaleString(numberLocale)})`;
 
-    if (isComparativePair) {
-      let val1Raw = items[0].value;
-      if (Array.isArray(val1Raw)) {
-        val1Raw = is3D ? (isVertical ? val1Raw[1] : val1Raw[0]) : (val1Raw[1] ?? val1Raw[0]);
+        html += `
+          <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <span style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; font-weight: 600;">${t.deltaLabel}</span>
+            <span style="background: ${badgeBg}; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700;">
+              ${deltaText}
+            </span>
+          </div>
+        `;
       }
-      let val2Raw = items[1].value;
-      if (Array.isArray(val2Raw)) {
-        val2Raw = is3D ? (isVertical ? val2Raw[1] : val2Raw[0]) : (val2Raw[1] ?? val2Raw[0]);
-      }
-      const val1 = typeof val1Raw === 'number' ? val1Raw : Number(val1Raw) || 0;
-      const val2 = typeof val2Raw === 'number' ? val2Raw : Number(val2Raw) || 0;
-
-      const delta = val1 - val2;
-      const isNew = val2 === 0 && val1 > 0;
-      const deltaPct = val2 !== 0 ? ((val1 - val2) / Math.abs(val2)) * 100 : 0;
-      const isPositive = delta >= 0;
-
-      const badgeBg = isNew ? '#64748B' : isPositive ? '#2E7D32' : '#D32F2F';
-      const badgeSign = isPositive ? '+' : '';
-      const deltaText = isNew
-        ? 'Nuovo'
-        : `${badgeSign}${deltaPct.toFixed(1)}% (${badgeSign}${delta.toLocaleString('en-US')})`;
-
-      html += `
-        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}; display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; font-weight: 600;">Scostamento (T1 vs T2):</span>
-          <span style="background: ${badgeBg}; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700;">
-            ${deltaText}
-          </span>
-        </div>
-      `;
     }
 
     return html;

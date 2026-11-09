@@ -268,3 +268,20 @@
   text-align: center;
   padding: 20px;
 }
+
+/* Notice shown when the comparison period cannot be drawn (see comparison.ts) */
+.stratum-bar-notice {
+  margin: 0 0 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.stratum-bar-container.dark .stratum-bar-notice {
+  border-color: #334155;
+  background: #1e293b;
+  color: #cbd5e1;
+}

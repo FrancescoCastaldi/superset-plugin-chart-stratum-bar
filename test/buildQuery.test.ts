@@ -75,20 +75,44 @@ describe('StratumBar buildQuery', () => {
     expect((q.filters || []).map((f: any) => f.col)).toContain('ESCLUDI_LABORATORIO');
   });
 
-  it('should forward dashboard time_compare to query.time_offsets', () => {
-    const formData: any = {
-      viz_type: 'stratum_bar',
-      datasource: '70__table',
-      x_axis: 'CANALE',
-      metrics: ['richieste'],
-      extra_form_data: {
-        time_compare: ['2026-08-01 : 2026-08-31'],
-      },
-    };
+  const firstQuery = (formData: any) => {
+    const queryContext: any = buildQuery(formData);
+    return queryContext.queries ? queryContext.queries[0] : queryContext[0];
+  };
+  const withComparison = (mode: string, extra: Record<string, unknown> = {}) => ({
+    viz_type: 'stratum_bar',
+    datasource: '70__table',
+    x_axis: 'CANALE',
+    metrics: ['richieste'],
+    time_range: '2026-09-01 : 2026-10-01',
+    time_comparison_mode: mode,
+    extra_form_data: {
+      time_range: '2026-09-01 : 2026-10-01',
+      time_compare: ['2026-08-01 : 2026-08-31'],
+    },
+    ...extra,
+  });
 
-    const queryContext = buildQuery(formData);
-    const q = (queryContext as any).queries ? (queryContext as any).queries[0] : (queryContext as any)[0];
+  it('forwards the dashboard time_compare to query.time_offsets in time_offsets mode', () => {
+    const q = firstQuery(withComparison('time_offsets'));
     expect(q.time_offsets).toEqual(['2026-08-01 : 2026-08-31']);
+  });
+
+  it('ignores the dashboard time_compare when the comparison is off', () => {
+    const q = firstQuery(withComparison('none'));
+    expect(q.time_offsets).toBeUndefined();
+  });
+
+  it('asks for the shift chosen in the control panel in time_shift mode', () => {
+    expect(firstQuery(withComparison('time_shift', { comparison_shift: '1 month ago' })).time_offsets).toEqual(['1 month ago']);
+    expect(firstQuery(withComparison('time_shift')).time_offsets).toEqual(['1 year ago']);
+  });
+
+  it('sends no offsets when the period T1 is not a closed range', () => {
+    const noRange = withComparison('time_shift', { time_range: 'No filter', extra_form_data: { time_range: 'No filter' } });
+    expect(firstQuery(noRange).time_offsets).toBeUndefined();
+    const noRangeOffsets = withComparison('time_offsets', { time_range: 'No filter', extra_form_data: { time_compare: ['2026-08-01 : 2026-08-31'] } });
+    expect(firstQuery(noRangeOffsets).time_offsets).toBeUndefined();
   });
 
   it('should conditionally append comparison_metric when time_comparison_mode is dual_metric', () => {

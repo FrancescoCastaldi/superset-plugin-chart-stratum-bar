@@ -77,6 +77,21 @@ Dashboard viewers can dynamically interact with the chart without entering Super
 
 The other charts must have the filtered column in their dataset: a chart without it ignores the filter.
 
+## 🔁 Time comparison: two periods side by side
+
+The chart can show the current period (**T1**) next to a second period (**T2**). T1 always follows the dashboard time filter, for example the **Calendar Filter**. Choose the mode in *Confronto tra due periodi* in the control panel:
+
+| Mode | T2 is… | Example |
+|:---|:---|:---|
+| *Nessun confronto* | not drawn | only the filtered period |
+| *Periodo corrente e confronto dal Calendar Filter* | the second period selected in the filter | filter October 2026 as T1 and October 2025 as T2 |
+| *Confronto automatico (shift)* | T1 moved back by a fixed interval (`1 year ago`, `1 month ago`, `28 days ago`, or any text such as `3 months ago`) | October 2026 against October 2025 without selecting it |
+| *Avanzato: due metriche già calcolate* | another metric of the dataset | `Richieste 2026` against `Richieste 2025` |
+
+Under the chart, the tooltip shows the difference between T1 and T2 (absolute and percentage). *Colore dello scostamento* chooses whether growth is green (accessi, fatturato) or red (tempi di attesa, costi).
+
+Requirements on the Superset server: the Calendar Filter and the automatic shift need the `DATE_RANGE_TIMESHIFTS_ENABLED` feature flag, which is on by default in Superset 6.1. When T1 is not a closed range, the chart shows a notice instead of an error.
+
 ## 🏛️ Architecture Overview
 
 ```mermaid
@@ -133,7 +148,7 @@ superset-plugin-chart-stratum-bar/
 Run the installer script specifying your Apache Superset root directory:
 
 ```powershell
-.\install-plugin.ps1 -SupersetPath "D:\Sviluppo\superset"
+.\install-plugin.ps1 -SupersetPath "<SSD_DRIVE>:\Actual\03_Sviluppo_Software\Repositories\apache-superset-6.1.0"
 ```
 
 The script autonomously handles the entire installation lifecycle:
