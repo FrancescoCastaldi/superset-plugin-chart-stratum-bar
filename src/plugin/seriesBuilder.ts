@@ -1,5 +1,5 @@
 import { DataRecord } from '@superset-ui/core';
-import { StratumBarSeries, StratumBarSeriesItem, TimeComparisonMode } from '../types';
+import { StratumBarSeries, StratumBarSeriesItem, TimeComparisonMode, ValueKind } from '../types';
 import { comparisonTexts, ChartLocale } from '../utils/comparison';
 import { sortCategories } from '../utils/sortingUtils';
 
@@ -33,6 +33,10 @@ export interface BuildRepresentationOptions {
   time2Label?: string;
   /** Language of the default names of the two periods */
   locale?: ChartLocale;
+  /** Lowercase names of the metric columns that hold seconds of a Time field */
+  timeKeys?: Set<string>;
+  /** Writes seconds as a duration */
+  timeFormatter?: (seconds: number) => string;
 }
 
 export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
@@ -44,7 +48,13 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     combineFlag, sampleRow, potentialPivotedKeys,
     sortBy = 'original', isOrderDesc = false,
     timeComparisonMode, comparisonMetric, time1Label, time2Label, locale = 'it',
+    timeKeys, timeFormatter,
   } = options;
+
+  // Metrics of type Time are written as durations, the others with the number format
+  const isTimeKey = (key: string): boolean => Boolean(timeKeys && timeFormatter && timeKeys.has(String(key).toLowerCase()));
+  const fmtFor = (key: string): ((v: number) => string) => (isTimeKey(key) ? (timeFormatter as (v: number) => string) : formatter);
+  const kindOf = (key: string): ValueKind | undefined => (isTimeKey(key) ? 'time' : undefined);
 
   const texts = comparisonTexts(locale);
   const categoriesSet = new Set<string>();
@@ -147,7 +157,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       t1Items.push({
         category: cat,
         value: v1,
-        formattedValue: v1 !== null ? formatter(v1) : undefined,
+        formattedValue: v1 !== null ? fmtFor(t1Key)(v1) : undefined,
         comparisonValue: v2,
         delta,
         deltaPercent: deltaPct,
@@ -158,7 +168,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       t2Items.push({
         category: cat,
         value: v2,
-        formattedValue: v2 !== null ? formatter(v2) : undefined,
+        formattedValue: v2 !== null ? fmtFor(t2Key)(v2) : undefined,
         comparisonValue: v1,
         delta: delta !== null ? -delta : null,
         deltaPercent: deltaPct !== null ? -deltaPct : null,
@@ -176,6 +186,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       items: t1Items,
       yAxisIndex: 0,
       seriesType: 'bar',
+      valueKind: kindOf(t1Key),
     });
 
     // Series 1: Time 2 Comparison (Steel Azure #7aa8cf)
@@ -188,6 +199,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       items: t2Items,
       yAxisIndex: 0,
       seriesType: 'bar',
+      valueKind: kindOf(t2Key),
     });
   } else if (isPivoted) {
     potentialPivotedKeys.forEach((sName, sIdx) => {
@@ -204,7 +216,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         seriesItems.push({
           category: cat,
           value: numVal,
-          formattedValue: numVal !== null ? formatter(numVal) : undefined,
+          formattedValue: numVal !== null ? fmtFor(sName)(numVal) : undefined,
           targetValue: targetVal,
           rawData: row,
         });
@@ -257,6 +269,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         items: seriesItems,
         yAxisIndex: 0,
         seriesType: 'bar',
+        valueKind: kindOf(sName),
       });
     });
   } else if (actualBreakdownKey && actualBreakdownKey in sampleRow) {
@@ -285,7 +298,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           seriesItems.push({
             category: cat,
             value: numVal,
-            formattedValue: numVal !== null ? formatter(numVal) : undefined,
+            formattedValue: numVal !== null ? fmtFor(actualMetricKey)(numVal) : undefined,
             targetValue: targetVal,
             rawData: matchingRow,
           });
@@ -299,6 +312,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           items: seriesItems,
           yAxisIndex: 0,
           seriesType: 'bar',
+          valueKind: kindOf(actualMetricKey),
         });
       });
     } else {
@@ -335,7 +349,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           seriesItems.push({
             category: cat,
             value: numVal,
-            formattedValue: numVal !== null ? formatter(numVal) : undefined,
+            formattedValue: numVal !== null ? fmtFor(actualMetricKey)(numVal) : undefined,
             targetValue: targetVal,
             rawData: row,
           });
@@ -349,6 +363,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           items: seriesItems,
           yAxisIndex: 0,
           seriesType: 'bar',
+          valueKind: kindOf(actualMetricKey),
         });
       });
     }
@@ -374,7 +389,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         seriesItems.push({
           category: cat,
           value: numVal,
-          formattedValue: numVal !== null ? formatter(numVal) : undefined,
+          formattedValue: numVal !== null ? fmtFor(mKey)(numVal) : undefined,
           rawData: row,
         });
       });
@@ -387,6 +402,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         items: seriesItems,
         yAxisIndex: 0,
         seriesType: 'bar',
+        valueKind: kindOf(mKey),
       });
     });
   } else {
@@ -413,7 +429,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       seriesItems.push({
         category: cat,
         value: numVal,
-        formattedValue: numVal !== null ? formatter(numVal) : undefined,
+        formattedValue: numVal !== null ? fmtFor(actualMetricKey)(numVal) : undefined,
         targetValue: targetVal,
         rawData: row,
       });
@@ -427,6 +443,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       items: seriesItems,
       yAxisIndex: 0,
       seriesType: 'bar',
+      valueKind: kindOf(actualMetricKey),
     });
   }
 
@@ -461,7 +478,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         secItems.push({
           category: cat,
           value: numVal,
-          formattedValue: numVal !== null ? secFormatter(numVal) : undefined,
+          formattedValue: numVal !== null ? (isTimeKey(actualSecKey) ? fmtFor(actualSecKey) : secFormatter)(numVal) : undefined,
           rawData: matchingRows[0],
         });
       });
@@ -475,6 +492,7 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         items: secItems,
         yAxisIndex: 1,
         seriesType: (secondary_series_type || 'line') as 'bar' | 'line',
+        valueKind: kindOf(actualSecKey),
       });
     });
   }

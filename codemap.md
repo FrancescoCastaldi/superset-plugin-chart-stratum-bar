@@ -26,12 +26,13 @@ Plugin di Apache Superset per visualizzazioni a barre avanzate:
 | `src/utils/seriesScaffolding.ts` | Costruzione serie lineari, benchmark pill badge, smart annotations e assi combinati |
 | `src/utils/echartsUtils.ts` | Configurazione griglia, padding dinamico anti-clipping, assi e tooltip avanzati |
 | `src/utils/colors.ts` | Palette executive, clinico-sanitarie e calcolo luminosita esadecimale |
+| `src/utils/timeValues.ts` | Campi Time e durate: lettura di `HH:MM:SS.ffffff` e ISO 8601 in secondi, formati di visualizzazione, tick tondi dell'asse |
 | `src/utils/axisBreakUtils.ts` | Rilevamento automatico outlier ed applicazione soglie di compressione visiva |
 | `dev-studio/` | Workbench standalone Vite 6 + React 18 per collaudo visuale live su `http://localhost:5174/` |
 | `dev-studio/src/mockData/` | Dataset reali aziendali (benchmark IDI IRCCS 430, sales regionali, spike outlier) |
 | `dev-studio/src/components/` | Sidebar Explore Controls, Diagnostics Drawer, ECharts Options Modal |
 | `dev.bat` | Script batch Windows con doppio clic per lancio istantaneo del Dev Studio |
-| `test/` | Suite di 10 test Jest con 118 test unitari e test di caratterizzazione ECharts |
+| `test/` | Suite di 16 file Jest con 214 test e test di caratterizzazione ECharts |
 
 ---
 

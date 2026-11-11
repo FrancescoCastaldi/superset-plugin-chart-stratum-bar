@@ -1,4 +1,7 @@
 import { ChartProps, QueryFormData, DataRecord } from '@superset-ui/core';
+import type { TimeDetection, TimeDisplayFormat, TimeFormatOptions, ValueKind } from './utils/timeValues';
+
+export type { TimeDetection, TimeDisplayFormat, TimeFormatOptions, ValueKind };
 
 export type ViewMode = '2d' | '3d';
 export type OrientationType = 'vertical' | 'horizontal';
@@ -44,11 +47,15 @@ export interface StratumBarSeries {
   items: StratumBarSeriesItem[];
   yAxisIndex?: number;
   seriesType?: 'bar' | 'line';
+  /** `time`: the values are seconds of a Time or duration field, shown as a duration */
+  valueKind?: ValueKind;
 }
 
 export interface BenchmarkConfig {
   value: number;
   label: string;
+  /** Text of the value when it is not a plain number (a duration) */
+  display?: string;
 }
 
 export interface StratumBarFormData extends QueryFormData {
@@ -110,6 +117,10 @@ export interface StratumBarFormData extends QueryFormData {
   axis_break_mode?: 'auto' | 'p90' | 'p95' | 'manual';
   axis_break_threshold?: number;
   toolbar_show_axis_break?: boolean;
+  // Time / duration fields
+  time_detection?: TimeDetection;
+  time_display_format?: TimeDisplayFormat;
+  time_fraction_digits?: number | string;
   // Time Comparison Controls
   time_comparison_mode?: TimeComparisonMode;
   comparison_metric?: any;
@@ -178,6 +189,8 @@ export interface StratumBarTransformedProps {
     showAxisBreak: boolean;
     showExport: boolean;
   };
+  /** How the Time fields are written, present when the chart has at least one */
+  timeFormat?: TimeFormatOptions;
   comparison?: ComparisonInfo;
   timeComparisonMode?: TimeComparisonMode;
   time1Label?: string;

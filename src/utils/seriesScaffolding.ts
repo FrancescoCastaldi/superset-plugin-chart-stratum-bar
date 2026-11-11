@@ -26,6 +26,9 @@ export function getItemOpacity(isSelected: boolean): number {
 }
 
 export function formatBenchmarkLabel(benchmark: BenchmarkConfig): string {
+  if (benchmark.display !== undefined) {
+    return benchmark.label.includes(benchmark.display) ? benchmark.label : `${benchmark.label}: ${benchmark.display}`;
+  }
   return `${benchmark.label}: ${benchmark.value.toLocaleString('en-US')}`;
 }
 
@@ -55,7 +58,7 @@ export function getBenchmarkLabel(benchmark: BenchmarkConfig, position: 'start' 
 }
 
 /** markLine data item for the dashed "// Axis cut" cutoff of an active axis break. */
-export function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff: number) {
+export function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff: number, formatCutoff?: (v: number) => string) {
   const item: any = isVertical ? { yAxis: cutoff } : { xAxis: cutoff };
   item.lineStyle = {
     color: isDark ? '#a855f7' : '#9333ea',
@@ -64,7 +67,7 @@ export function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff
   };
   item.label = {
     position: 'insideEndTop',
-    formatter: `// Axis cut: ${cutoff.toLocaleString('en-US')}`,
+    formatter: `// Axis cut: ${formatCutoff ? formatCutoff(cutoff) : cutoff.toLocaleString('en-US')}`,
     color: isDark ? '#d8b4fe' : '#7e22ce',
     fontSize: 10,
     fontWeight: 600,
@@ -133,8 +136,9 @@ export function getSmartAnnotationMarkPoint(baseColor: string, isDark: boolean, 
 }
 
 /** Value label of line series: percentage for `.2%` secondary axes, Italian locale otherwise. */
-export function formatLineSeriesValue(value: any, yAxis2Format?: string): string {
+export function formatLineSeriesValue(value: any, yAxis2Format?: string, formatTime?: (seconds: number) => string): string {
   if (value === null || value === undefined) return '';
+  if (formatTime && typeof value === 'number') return formatTime(value);
   if (yAxis2Format === '.2%') {
     return `${(Number(value) * 100).toFixed(1)}%`;
   }
@@ -150,6 +154,8 @@ export interface LineSeriesOptions {
   isDark: boolean;
   showValue: boolean;
   yAxis2Format?: string;
+  /** Writes the values as durations, for the lines of a Time field */
+  formatTime?: (seconds: number) => string;
   lineWidth: number;
   areaGradient: boolean;
   /** Alpha of the glow under the line stroke. */
@@ -162,7 +168,7 @@ export interface LineSeriesOptions {
 /** Smooth line series (with optional area gradient) used for secondary metrics. */
 export function buildLineSeries(options: LineSeriesOptions) {
   const {
-    name, data, baseColor, isVertical, yAxisIndex, isDark, showValue, yAxis2Format,
+    name, data, baseColor, isVertical, yAxisIndex, isDark, showValue, yAxis2Format, formatTime,
     lineWidth, areaGradient, shadowAlpha, areaAlpha, z,
   } = options;
 
@@ -203,7 +209,7 @@ export function buildLineSeries(options: LineSeriesOptions) {
       color: baseColor,
       fontWeight: 700,
       fontSize: 11,
-      formatter: (params: any) => formatLineSeriesValue(params.value, yAxis2Format),
+      formatter: (params: any) => formatLineSeriesValue(params.value, yAxis2Format, formatTime),
     },
     z,
   };

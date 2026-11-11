@@ -3,6 +3,7 @@ import {
   ControlPanelsContainerProps,
   sharedControls,
 } from '@superset-ui/chart-controls';
+import { hasTimeMetric } from './timeMetricHints';
 
 /*
  * Pannello di controllo del grafico, in italiano.
@@ -443,6 +444,67 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'time_detection',
+            config: {
+              type: 'SelectControl',
+              label: 'Campi Time e durate',
+              description:
+                'Le metriche di tipo Time (ore:minuti:secondi, per esempio un tempo medio di attesa) arrivano come testo e non si possono disegnare come numeri. Con "Automatico" il grafico le riconosce, le disegna in proporzione e scrive asse, valori e tooltip come durate. Disattivalo solo se una metrica che sembra un orario deve restare testo.',
+              choices: [
+                ['auto', 'Automatico (riconosce i campi Time)'],
+                ['off', 'Disattivato'],
+              ],
+              default: 'auto',
+              clearable: false,
+              renderTrigger: true,
+              visibility: hasTimeMetric,
+            },
+          },
+        ],
+        [
+          {
+            name: 'time_display_format',
+            config: {
+              type: 'SelectControl',
+              label: 'Formato delle durate',
+              description:
+                'Come scrivere i campi Time su asse, barre e tooltip. Automatico: mm:ss, oppure h:mm:ss quando un valore arriva a 1 ora. Gli altri formati sono fissi. Vale solo per le metriche di tipo Time: il formato dei numeri qui sopra non le riguarda.',
+              choices: [
+                ['auto', 'Automatico (mm:ss oppure h:mm:ss)'],
+                ['hms', 'Ore, minuti, secondi (1:05:30)'],
+                ['ms', 'Minuti e secondi (65:30)'],
+                ['minutes', 'Minuti decimali (65,5 min)'],
+                ['hours', 'Ore decimali (1,09 h)'],
+                ['seconds', 'Secondi (3930 s)'],
+              ],
+              default: 'auto',
+              clearable: false,
+              renderTrigger: true,
+              visibility: hasTimeMetric,
+            },
+          },
+          {
+            name: 'time_fraction_digits',
+            config: {
+              type: 'SelectControl',
+              label: 'Decimali delle durate',
+              description:
+                'Quante cifre dopo la virgola mostrare nei secondi (formati a orologio) o nel valore (formati decimali). Esempio: 0 scrive 12:54, 1 scrive 12:54.4, 3 scrive 12:54.425.',
+              choices: [
+                [0, 'Nessuno'],
+                [1, 'Uno'],
+                [2, 'Due'],
+                [3, 'Tre'],
+              ],
+              default: 0,
+              clearable: false,
+              renderTrigger: true,
+              visibility: hasTimeMetric,
+            },
+          },
+        ],
+        [
+          {
             name: 'barBorderRadius',
             config: {
               type: 'SliderControl',
@@ -638,7 +700,7 @@ const config: ControlPanelConfig = {
             config: {
               type: 'TextControl',
               label: 'Valore dell\'obiettivo',
-              description: 'Il numero della linea di soglia. Esempio: 100 per "almeno 100 richieste al mese".',
+              description: 'Il numero della linea di soglia. Esempio: 100 per "almeno 100 richieste al mese". Con i campi Time il valore è in secondi: 600 vale 10:00.',
               default: 100,
               renderTrigger: true,
               visibility: ({ controls }: ControlPanelsContainerProps) =>

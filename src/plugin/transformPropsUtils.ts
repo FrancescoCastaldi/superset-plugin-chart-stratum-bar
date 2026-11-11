@@ -220,7 +220,8 @@ export function computeBenchmark(
   showBenchmark: boolean,
   benchmarkType: string,
   benchmarkValue: number,
-  formatter: (v: number) => string
+  formatter: (v: number) => string,
+  isTime: boolean = false,
 ): BenchmarkConfig | undefined {
   if (!showBenchmark) return undefined;
 
@@ -251,5 +252,7 @@ export function computeBenchmark(
   return {
     value: resolvedBenchmarkVal,
     label: bLabel,
+    // A duration reads "10:00", not "600": the label shows the formatted text
+    ...(isTime ? { display: formatter(resolvedBenchmarkVal) } : {}),
   };
 }

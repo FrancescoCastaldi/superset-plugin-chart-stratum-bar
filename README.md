@@ -92,6 +92,18 @@ Under the chart, the tooltip shows the difference between T1 and T2 (absolute an
 
 Requirements on the Superset server: the Calendar Filter and the automatic shift need the `DATE_RANGE_TIMESHIFTS_ENABLED` feature flag, which is on by default in Superset 6.1. When T1 is not a closed range, the chart shows a notice instead of an error.
 
+## ⏱️ Time and duration fields
+
+A metric of type **Time** (for example the average waiting time at the counter, `00:12:54.425000`) is drawn like any other metric. The chart reads the value as a number of seconds, lays the bars out in proportion and writes the axis, the bar labels, the tooltip, the benchmark and the CSV export as durations.
+
+| Control | What it does |
+|:---|:---|
+| *Campi Time e durate* (`time_detection`) | `Automatico` recognizes the Time metrics, `Disattivato` leaves them as text |
+| *Formato delle durate* (`time_display_format`) | `mm:ss` (or `h:mm:ss` when a value reaches one hour), `h:mm:ss`, `mm:ss` with minutes above 59, decimal minutes, decimal hours, seconds |
+| *Decimali delle durate* (`time_fraction_digits`) | 0 to 3 digits for the seconds (`12:54`, `12:54.4`, `12:54.425`) |
+
+Only the metric columns are read as times, never the categories. A fixed benchmark on a Time field is typed in seconds (`600` is `10:00`). Texts accepted: `HH:MM:SS(.ffffff)`, hours above 24, `1 day, 2:03:04`, `0 days 00:12:54.425000` and ISO 8601 (`PT12M54S`); two-part values such as `12:54` are ambiguous and are not read.
+
 ## 🏛️ Architecture Overview
 
 ```mermaid
@@ -224,6 +236,9 @@ Open `http://localhost:8088`, create a new chart, and select **StratumBar**!
 | | `showValue` | Show Values on Bars | Checkbox | `true` | Displays formatted metric numbers directly on or above bars. |
 | | `valuePosition` | Value Position | Select | `top` | Label position: `top`, `inside`, or `outside`. |
 | | `numberFormat` | Number Format | Select/Free | `,.0f` | D3 number format string (e.g. `,.0f`, `,.2f`, `.2%`, `~s`). |
+| | `time_detection` | Time and duration fields | Select | `auto` | `auto` reads Time metrics as durations, `off` leaves them as text. |
+| | `time_display_format` | Duration format | Select | `auto` | `auto`, `hms`, `ms`, `minutes`, `hours`, `seconds`. |
+| | `time_fraction_digits` | Duration decimals | Select | `0` | Decimals of the seconds (0 to 3). |
 | | `color_scheme` | Color Scheme | Palette | `supersetColors` | Color palette for bars and series. |
 | **Benchmark & Delta %** | `showBenchmark` | Show Benchmark Line | Checkbox | `false` | Draws highlighted target benchmark reference line across the chart. |
 | | `benchmarkType` | Benchmark Type | Select | `fixed_value` | Calculation mode: `fixed_value`, `average`, `median`, or `target_metric`. |

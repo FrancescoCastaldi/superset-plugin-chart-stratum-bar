@@ -4,6 +4,24 @@ All notable changes to **StratumBar** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.7.0] - 2026-11-11
+
+### Added
+- **Time and duration fields**: a metric of type Time (SQL Server `time`, a waiting time such as `00:12:54.425000`) used to arrive as text, was read as "not a number" and the chart stayed empty. The chart now recognizes these metrics on its own, draws them in proportion and writes them as durations on the axis, on the bars, in the tooltip, in the benchmark label, in the difference between two periods and in the CSV export.
+- Accepted texts: `HH:MM:SS`, `H:MM:SS.ffffff`, more than 24 hours (`26:10:00`), `1 day, 2:03:04`, `0 days 00:12:54.425000` and ISO 8601 durations (`PT12M54S`). Two-part values such as `12:54` are not read, because they could be hours and minutes or minutes and seconds.
+- Time axis with round ticks (every 5 minutes, 10 minutes, 30 minutes, 1 hour and so on) instead of ticks on arbitrary numbers of seconds, in 2D and 3D, on the primary and on the secondary axis.
+- Three controls: `time_detection` (automatic or off), `time_display_format` (automatic `mm:ss` or `h:mm:ss`, hours minutes seconds, minutes and seconds, decimal minutes, decimal hours, seconds) and `time_fraction_digits` (0 to 3).
+- A fixed benchmark on a Time field is typed in seconds (`600` is `10:00`); average and median follow the data.
+- `test/timeValues.test.ts`: 19 tests.
+- **The Time controls show up on their own.** In Explore the controls of the durations appear only when a metric picked in the Data section looks like a Time field (a saved metric whose expression uses a TIME or INTERVAL column, a simple metric on such a column, a custom SQL naming one, or a name such as attesa, durata, tempo, lead time, wait, duration). Otherwise they stay hidden. It is only a hint for the panel: the data still decide at render time, so a chart is never changed by it.
+- `test/timeMetricHints.test.ts`: 9 tests (223 in total).
+
+### Changed
+- Only the metric columns are converted (metrics, comparison metric, target and secondary metrics and their `<metric>__<offset>` columns): categories that look like times, such as `08:00:00`, stay text.
+- A chart that mixes Time metrics and plain numbers on the same axis keeps a numeric axis (seconds); each bar and tooltip row is still written in its own way.
+
 ## [0.6.0] - 2026-11-09
 
 ### Added

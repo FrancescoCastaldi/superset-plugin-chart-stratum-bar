@@ -1,5 +1,6 @@
 import { ComparisonInfo, StratumBarSeries } from '../types';
 import { comparisonTexts } from './comparison';
+import { formatDuration, timeAxisSettings, TimeFormatOptions } from './timeValues';
 
 export function getCategoryAxisConfig(categories: string[], isVertical: boolean, isDark: boolean, axisTitle?: string) {
   return {
@@ -33,15 +34,19 @@ export function getValueAxisConfig(
   axisTitle?: string,
   maxVal?: number,
   minVal?: number,
+  /** Set when the bars are Time fields: the axis shows durations on round ticks */
+  timeFormat?: TimeFormatOptions,
 ) {
+  const time = timeFormat ? timeAxisSettings(timeFormat, maxVal) : undefined;
   return {
     type: 'value' as const,
-    max: maxVal !== undefined && maxVal > 0 ? maxVal : undefined,
+    max: time?.max ?? (maxVal !== undefined && maxVal > 0 ? maxVal : undefined),
     min: minVal !== undefined && minVal < 0 ? minVal : undefined,
+    ...(time?.interval ? { interval: time.interval } : {}),
     axisLabel: {
       color: isDark ? '#94a3b8' : '#6b7280',
       fontSize: 11,
-      formatter: (val: number) => {
+      formatter: time ? time.formatter : (val: number) => {
         if (Math.abs(val) >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
         if (Math.abs(val) >= 1_000) return (val / 1_000).toFixed(1) + 'k';
         return String(val);
@@ -57,16 +62,21 @@ export function getSecondaryValueAxisConfig(
   isVertical: boolean,
   secondaryLineColor: string,
   yAxis2Format?: string,
-  yAxis2Title?: string
+  yAxis2Title?: string,
+  /** Set when the secondary series are Time fields: the axis shows durations on round ticks */
+  timeFormat?: TimeFormatOptions,
+  timeMax?: number,
 ) {
+  const time = timeFormat ? timeAxisSettings(timeFormat, timeMax) : undefined;
   return {
     type: 'value' as const,
     position: isVertical ? ('right' as const) : ('top' as const),
+    ...(time?.interval ? { interval: time.interval } : {}),
     axisLabel: {
       color: secondaryLineColor,
       fontWeight: 600,
       fontSize: 11,
-      formatter: (val: number) => {
+      formatter: time ? time.formatter : (val: number) => {
         if (yAxis2Format === '.2%') {
           return `${(val * 100).toFixed(1)}%`;
         }
@@ -117,7 +127,11 @@ export function getTooltipFormatter(
   is3D: boolean = false,
   isVertical: boolean = true,
   comparison?: ComparisonInfo,
+  /** Series of Time fields: their values are written as durations */
+  time?: { options: TimeFormatOptions; seriesNames: string[] },
 ) {
+  const isTimeSeries = (name: string) => Boolean(time && time.seriesNames.includes(name));
+  const durationText = (seconds: number) => formatDuration(seconds, time?.options);
   return (params: any) => {
     const items = Array.isArray(params) ? params : [params];
     if (items.length === 0) return '';
@@ -139,7 +153,9 @@ export function getTooltipFormatter(
         val = is3D ? (isVertical ? val[1] : val[0]) : (val[1] ?? val[0]);
       }
       const isSec = it.seriesName === yAxis2Title || (it.seriesIndex != null && it.seriesIndex === items.length - 1 && secondaryLineColor !== undefined) || it.seriesType === 'line';
-      const formatted = yAxis2Format === '.2%' && isSec && typeof val === 'number'
+      const formatted = time && isTimeSeries(it.seriesName) && typeof val === 'number'
+        ? durationText(val)
+        : yAxis2Format === '.2%' && isSec && typeof val === 'number'
         ? `${(val * 100).toFixed(1)}%`
         : (typeof val === 'number' ? val.toLocaleString('en-US') : (val !== null && val !== undefined ? String(val) : (is3D ? '-' : 'N/D')));
       
@@ -164,7 +180,7 @@ export function getTooltipFormatter(
         const sign = isPositive ? '+' : '';
         html += `
           <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 2px;">
-            vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${delta.toLocaleString('en-US')})
+            vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${isTimeSeries(it.seriesName) ? durationText(Math.abs(delta)) : delta.toLocaleString('en-US')})
           </div>
         `;
       }
@@ -189,9 +205,12 @@ export function getTooltipFormatter(
         const badgeBg = isNew ? '#64748B' : isGood ? '#2E7D32' : '#D32F2F';
         const sign = isUp ? '+' : '';
         const numberLocale = comparison.locale === 'en' ? 'en-US' : 'it-IT';
+        const deltaAmount = isTimeSeries(items[0].seriesName)
+          ? `${delta < 0 ? '-' : sign}${durationText(Math.abs(delta))}`
+          : `${sign}${delta.toLocaleString(numberLocale)}`;
         const deltaText = isNew
           ? t.newBaseline
-          : `${sign}${deltaPct.toFixed(1)}% (${sign}${delta.toLocaleString(numberLocale)})`;
+          : `${sign}${deltaPct.toFixed(1)}% (${deltaAmount})`;
 
         html += `
           <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}; display: flex; justify-content: space-between; align-items: center; gap: 12px;">

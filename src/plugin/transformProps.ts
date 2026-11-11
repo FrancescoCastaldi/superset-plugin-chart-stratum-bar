@@ -12,6 +12,7 @@ import {
 } from '../utils/comparison';
 import { buildSeriesRepresentation } from './seriesBuilder';
 import { buildCrossFilterHandler } from './crossFilterHandler';
+import { convertTimeColumns, formatDuration, TimeFormatOptions } from '../utils/timeValues';
 import {
   ChartProps,
   DataRecord,
@@ -42,7 +43,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   // On a dashboard Superset hands over `formData` in camelCase while the options of this chart are
   // read in snake_case: `rawFormData` keeps the names typed in the control panel
   const fd = { ...((chartProps as any).rawFormData || {}), ...(formData || {}) } as StratumBarFormData;
-  const data = (queriesData?.[0]?.data || []) as DataRecord[];
+  const queryData = (queriesData?.[0]?.data || []) as DataRecord[];
 
   const {
     target_metric,
@@ -91,6 +92,9 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     toolbar_show_axis_break = true,
     x_axis_title,
     y_axis_title,
+    time_detection = 'auto',
+    time_display_format = 'auto',
+    time_fraction_digits = 0,
     time_comparison_mode,
     show_comparison_delta,
     comparison_delta_polarity,
@@ -101,10 +105,8 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const filterState = (chartProps as any).filterState || {};
   const selectedValues: string[] = ensureIsArray(filterState.selectedValues || filterState.value);
 
-  const sampleRow = data[0] || {};
-
-  // Extract dimension candidates
-  const { resolvedXAxis, actualXKey, actualBreakdownKey } = resolveDimensions(fd, sampleRow);
+  // The dimensions are found on the rows as they come: a category written like a time ("08:00") stays text
+  const { resolvedXAxis, actualXKey, actualBreakdownKey } = resolveDimensions(fd, queryData[0] || {});
 
   // Resolve metrics
   const rawMetrics = fd.metrics && (Array.isArray(fd.metrics) ? fd.metrics.length > 0 : true)
@@ -119,6 +121,43 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     : target_metric ? String(target_metric) : undefined;
 
   const formatter = getNumberFormatter(numberFormat);
+
+  // Metrics of type Time arrive as text ("00:12:54.425000"): they become seconds, only the metric
+  // columns are looked at, never the categories
+  const comparisonMetricRaw = fd.comparison_metric;
+  const declaredMetrics = [
+    ...metricList,
+    targetMetricKey,
+    ...ensureIsArray(secondary_metrics).map((m: any) => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m))),
+    typeof comparisonMetricRaw === 'object' && comparisonMetricRaw !== null
+      ? comparisonMetricRaw.label || comparisonMetricRaw.metric_name
+      : comparisonMetricRaw,
+  ].filter((m): m is string => typeof m === 'string' && m.length > 0);
+  const firstRowKeys = Object.keys(queryData[0] || {});
+  // Columns of the second period (`<metric>__<offset>`) are times when their metric is
+  const timeCandidates = [
+    ...declaredMetrics,
+    ...firstRowKeys.filter(k => declaredMetrics.some(m => k.toLowerCase().startsWith(`${m.toLowerCase()}__`))),
+  ];
+  const { rows: data, timeKeys } =
+    time_detection === 'off' ? { rows: queryData, timeKeys: [] as string[] } : convertTimeColumns(queryData, timeCandidates);
+  const timeKeySet = new Set(timeKeys.map(k => k.toLowerCase()));
+  const sampleRow = data[0] || {};
+
+  let timeFormat: TimeFormatOptions | undefined;
+  if (timeKeys.length > 0) {
+    let referenceSeconds = 0;
+    data.forEach(row => timeKeys.forEach(k => {
+      const v = row[k];
+      if (typeof v === 'number' && Math.abs(v) > referenceSeconds) referenceSeconds = Math.abs(v);
+    }));
+    timeFormat = {
+      format: time_display_format,
+      fractionDigits: Number(time_fraction_digits) || 0,
+      referenceSeconds,
+    };
+  }
+  const timeFormatter = (seconds: number) => formatDuration(seconds, timeFormat);
 
   // 1. Resolve Dashboard Label Colors & Manual JSON Colors
   // Effective color scheme: prioritize dashboard color scheme if present
@@ -264,6 +303,8 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       combineFlag, sampleRow, potentialPivotedKeys,
       sortBy, isOrderDesc,
       timeComparisonMode: mode,
+      timeKeys: timeKeySet,
+      timeFormatter,
       comparisonMetric: comparisonActive ? comparisonKey : undefined,
       time1Label: comparisonInfo.t1Name,
       time2Label: comparisonInfo.t2Name,
@@ -283,7 +324,14 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
 
 
   // 3. Compute Benchmark if enabled
-  const benchmark = computeBenchmark(series, showBenchmark, benchmarkType || '', Number(benchmarkValue) || 0, formatter);
+  // The benchmark is written as a duration when every bar of the primary axis is a Time field
+  const primaryBars = series.filter(s => s.yAxisIndex !== 1 && s.seriesType !== 'line');
+  const benchmarkIsTime = primaryBars.length > 0 && primaryBars.every(s => s.valueKind === 'time');
+  const benchmark = computeBenchmark(
+    series, showBenchmark, benchmarkType || '', Number(benchmarkValue) || 0,
+    benchmarkIsTime ? timeFormatter : formatter,
+    benchmarkIsTime,
+  );
     // Calculate delta % for each item against benchmark if not set by targetMetric
     series.forEach(s => {
       s.items.forEach(item => {
@@ -366,6 +414,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       showAxisBreak: toolbar_show_axis_break !== false,
       showExport: toolbar_show_export !== false,
     },
+    timeFormat,
     comparison: comparisonInfo,
     timeComparisonMode: mode,
     time1Label: comparisonInfo.t1Name,

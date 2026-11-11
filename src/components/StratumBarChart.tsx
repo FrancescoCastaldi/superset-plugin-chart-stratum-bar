@@ -14,6 +14,7 @@ import { CanvasRenderer, SVGRenderer } from 'echarts/renderers';
 import { StratumBarTransformedProps, ViewMode, StackingMode, StratumBarSeries, BarShape3D, ValuePosition } from '../types';
 import { get2DBarOption } from './renderers2D';
 import { comparisonTexts } from '../utils/comparison';
+import { formatDuration } from '../utils/timeValues';
 import { get3DBarOption } from './renderers3D';
 import './StratumBarChart.css';
 
@@ -257,7 +258,12 @@ const StratumBarChart: React.FC<StratumBarTransformedProps> = props => {
     if (!activeCategories || !activeSeries) return;
     const headers = ['Category', ...activeSeries.map((s: StratumBarSeries) => s.name)];
     const rows = activeCategories.map((cat: string, idx: number) => {
-      const vals = activeSeries.map((s: StratumBarSeries) => (s.data[idx] !== null && s.data[idx] !== undefined ? s.data[idx] : ''));
+      // Time fields are written as h:mm:ss.fff, not as a number of seconds
+      const vals = activeSeries.map((s: StratumBarSeries) => {
+        const v = s.data[idx];
+        if (v === null || v === undefined) return '';
+        return s.valueKind === 'time' ? formatDuration(v, { format: 'hms', fractionDigits: 3 }) : v;
+      });
       return [cat, ...vals].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
     });
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');

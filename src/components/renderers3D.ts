@@ -28,16 +28,22 @@ import {
   buildZeroFootprintElement,
   getBarPalette,
 } from './isometricShapes';
+import { axisDataMax, axisTimeOptions, formatDuration, tooltipTimeInfo, TimeFormatOptions } from '../utils/timeValues';
 
 function isAboveCutoff(rawVal: unknown, axisBreak: AxisBreakCalculation): boolean {
   return axisBreak.enabled && typeof rawVal === 'number' && rawVal > axisBreak.effectiveCutoff;
 }
 
 /** Label of a 3D bar: always the original (uncompressed) value, prefixed with "//" when capped. */
-function format3DValueLabel(rawVal: number | null | undefined, visualVal: number, axisBreak: AxisBreakCalculation): string {
+function format3DValueLabel(
+  rawVal: number | null | undefined,
+  visualVal: number,
+  axisBreak: AxisBreakCalculation,
+  time?: TimeFormatOptions,
+): string {
   const displayVal = rawVal !== undefined && rawVal !== null ? rawVal : visualVal;
   const formattedVal = typeof displayVal === 'number'
-    ? displayVal.toLocaleString('en-US')
+    ? (time ? formatDuration(displayVal, time) : displayVal.toLocaleString('en-US'))
     : String(displayVal);
   return isAboveCutoff(rawVal, axisBreak) ? `// ${formattedVal}` : formattedVal;
 }
@@ -90,9 +96,15 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
   const { stackBottoms, topSeriesIdxPerCat } = layout;
 
   const axisMax = compute3DAxisMax({ layout, axisBreak, isStacked, showBenchmark, benchmark, valuePosition });
-  const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisMax);
+  // Axes of Time fields show durations on round ticks
+  const primaryTime = axisTimeOptions(series, false, props.timeFormat);
+  const secondaryTime = axisTimeOptions(series, true, props.timeFormat);
+  const valueAxis = getValueAxisConfig(isVertical, isDark, isVertical ? yAxisTitle : xAxisTitle, axisMax, undefined, primaryTime);
   const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
-  const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
+  const secondaryValueAxis = getSecondaryValueAxisConfig(
+    isVertical, secondaryLineColor, yAxis2Format, yAxis2Title,
+    secondaryTime, secondaryTime ? axisDataMax(series, true) : undefined,
+  );
   const { topCapOffset, rightCapOffset } = getCapOffsets(barShape3D, offsets);
 
   const echartsSeries: any[] = [];
@@ -164,7 +176,11 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
             topCapOffset,
             rightCapOffset,
           });
-          children.push(buildValueLabelElement(format3DValueLabel(s.data[categoryIndex], val, axisBreak), placement, isDark));
+          children.push(buildValueLabelElement(
+            format3DValueLabel(s.data[categoryIndex], val, axisBreak, s.valueKind === 'time' ? props.timeFormat : undefined),
+            placement,
+            isDark,
+          ));
         }
 
         if (isAboveCutoff(s.data[categoryIndex], axisBreak)) {
@@ -224,6 +240,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
         isDark,
         showValue,
         yAxis2Format,
+        formatTime: s.valueKind === 'time' ? (seconds: number) => formatDuration(seconds, props.timeFormat) : undefined,
         lineWidth: secondaryLineWidth,
         areaGradient: secondaryAreaGradient,
         shadowAlpha: 0.4,
@@ -236,7 +253,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
     echartsSeries.push(customSeries);
   });
 
-  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true, isVertical, props.comparison);
+  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true, isVertical, props.comparison, tooltipTimeInfo(series, props.timeFormat));
   const tooltip = getTooltipConfig(isDark, tooltipFormatter);
 
   // Legend with explicit per-series colors so swatches match bars

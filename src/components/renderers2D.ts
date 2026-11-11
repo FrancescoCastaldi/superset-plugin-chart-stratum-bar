@@ -16,6 +16,7 @@ import {
 } from '../utils/seriesScaffolding';
 
 import { adjustColorBrightness } from '../utils/colors';
+import { axisDataMax, axisTimeOptions, formatDuration, tooltipTimeInfo, TimeFormatOptions } from '../utils/timeValues';
 
 const POSITIVE_BAR_COLOR = '#1e8e3e';
 const NEGATIVE_BAR_COLOR = '#d93025';
@@ -41,9 +42,9 @@ function getBarGradient(color: string, isVertical: boolean, darken: number) {
  */
 export function format2DBarLabel(
   params: any,
-  options: { stacking: StackingMode; effectiveMaxVal?: number; numberFormat?: string },
+  options: { stacking: StackingMode; effectiveMaxVal?: number; numberFormat?: string; time?: TimeFormatOptions },
 ): string {
-  const { stacking, effectiveMaxVal, numberFormat } = options;
+  const { stacking, effectiveMaxVal, numberFormat, time } = options;
   const rawItem = params.data;
   const isCapped = rawItem?.isCapped;
   const realVal = rawItem?.originalVal !== undefined ? rawItem.originalVal : params.value;
@@ -51,6 +52,10 @@ export function format2DBarLabel(
   if (typeof realVal === 'number') {
     const max = effectiveMaxVal || 1;
     if (stacking !== 'none' && max > 0 && Math.abs(realVal) / max < 0.015) return '';
+    if (time) {
+      const duration = formatDuration(realVal, time);
+      return isCapped ? `// ${duration}` : duration;
+    }
     let formatted = '';
     try {
       if (numberFormat) {
@@ -154,16 +159,24 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
 
   const categoryAxis = getCategoryAxisConfig(categories, isVertical, isDark, isVertical ? xAxisTitle : yAxisTitle);
 
+  // Axes of Time fields show durations on round ticks
+  const primaryTime = axisTimeOptions(series, false, props.timeFormat);
+  const secondaryTime = axisTimeOptions(series, true, props.timeFormat);
+
   // Pass effective max and min so the outlier zone or standard scale has a proper limit
   const valueAxis = getValueAxisConfig(
     isVertical,
     isDark,
     isVertical ? yAxisTitle : xAxisTitle,
     effectiveMaxVal,
-    effectiveMinVal
+    effectiveMinVal,
+    primaryTime,
   );
 
-  const secondaryValueAxis = getSecondaryValueAxisConfig(isVertical, secondaryLineColor, yAxis2Format, yAxis2Title);
+  const secondaryValueAxis = getSecondaryValueAxisConfig(
+    isVertical, secondaryLineColor, yAxis2Format, yAxis2Title,
+    secondaryTime, secondaryTime ? axisDataMax(series, true) : undefined,
+  );
 
   const echartsSeries: any[] = [];
 
@@ -196,6 +209,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
         isDark,
         showValue,
         yAxis2Format,
+        formatTime: s.valueKind === 'time' ? (seconds: number) => formatDuration(seconds, props.timeFormat) : undefined,
         lineWidth: secondaryLineWidth,
         areaGradient: secondaryAreaGradient,
         shadowAlpha: 0.35,
@@ -259,7 +273,10 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
         stacking,
         isVertical,
         isDark,
-        formatter: (params: any) => format2DBarLabel(params, { stacking, effectiveMaxVal, numberFormat }),
+        formatter: (params: any) => format2DBarLabel(params, {
+          stacking, effectiveMaxVal, numberFormat,
+          time: s.valueKind === 'time' ? props.timeFormat : undefined,
+        }),
       }),
       z: 2,
     };
@@ -281,7 +298,10 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
       }
 
       if (axisBreak.enabled && axisBreak.effectiveCutoff < axisBreak.displayMax) {
-        markLineData.push(getAxisBreakCutLine(isVertical, isDark, axisBreak.effectiveCutoff));
+        markLineData.push(getAxisBreakCutLine(
+          isVertical, isDark, axisBreak.effectiveCutoff,
+          primaryTime ? (seconds: number) => formatDuration(seconds, props.timeFormat) : undefined,
+        ));
       }
 
       if (markLineData.length > 0) {
@@ -296,7 +316,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
     echartsSeries.push(seriesItem);
   });
 
-  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false, isVertical, props.comparison);
+  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false, isVertical, props.comparison, tooltipTimeInfo(series, props.timeFormat));
   const tooltip = getTooltipConfig(isDark, tooltipFormatter);
 
   // Legend with explicit per-series colors so the legend swatches match the bars
