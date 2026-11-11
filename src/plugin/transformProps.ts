@@ -193,23 +193,38 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const dashboardTimeCompare = ensureIsArray((fd.extra_form_data as any)?.time_compare).filter(Boolean);
 
   // With time offsets the query returns the second period as `<metric>__<offset>`
-  const offsetKey =
-    mode === 'time_offsets' || mode === 'time_shift'
-      ? Object.keys(sampleRow).find(
-          k =>
-            k.toLowerCase() !== primaryMetric.toLowerCase() &&
-            k.toLowerCase().startsWith(`${primaryMetric.toLowerCase()}__`) &&
-            (typeof sampleRow[k] === 'number' || sampleRow[k] === null),
-        )
-      : undefined;
+  const comparisonMetricMap = new Map<string, string>();
+  if (mode === 'time_offsets' || mode === 'time_shift') {
+    metricList.forEach(mKey => {
+      const lower = mKey.toLowerCase();
+      const match = Object.keys(sampleRow).find(
+        k =>
+          k.toLowerCase() !== lower &&
+          k.toLowerCase().startsWith(`${lower}__`) &&
+          (typeof sampleRow[k] === 'number' || sampleRow[k] === null || sampleRow[k] === undefined),
+      );
+      if (match) {
+        comparisonMetricMap.set(mKey, match);
+      }
+    });
+  } else if (mode === 'dual_metric' && fd.comparison_metric) {
+    const compMetricName =
+      typeof fd.comparison_metric === 'object' && fd.comparison_metric !== null
+        ? fd.comparison_metric.label || fd.comparison_metric.metric_name
+        : String(fd.comparison_metric);
+    if (compMetricName) {
+      comparisonMetricMap.set(primaryMetric, compMetricName);
+    }
+  }
+
+  const offsetKey = comparisonMetricMap.get(primaryMetric);
   const comparisonMetricName = typeof fd.comparison_metric === 'object' && fd.comparison_metric !== null
     ? fd.comparison_metric.label || fd.comparison_metric.metric_name
-    : fd.comparison_metric;
+    : (fd.comparison_metric ? String(fd.comparison_metric) : undefined);
   const comparisonKey: string | undefined =
-    mode === 'dual_metric' ? (comparisonMetricName ? String(comparisonMetricName) : undefined) : offsetKey;
-  // The second period is drawn when its column came back from the query: buildQuery asks for offsets
-  // only when T1 is a closed range, so a column in the data is the proof that the comparison ran
-  const comparisonActive = mode !== 'none' && Boolean(comparisonKey);
+    mode === 'dual_metric' ? comparisonMetricName : offsetKey;
+  // The second period is drawn when its columns came back from the query
+  const comparisonActive = mode !== 'none' && (comparisonMetricMap.size > 0 || Boolean(comparisonKey));
 
   // Names of the two periods: the labels typed in the control panel win, then the names and ranges of
   // the Calendar Filter, then what can be computed from the period itself
@@ -239,8 +254,11 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   }
 
   // A comparison period without a single value (no rows in it) is still shown, and said to be empty
+  const compValues = Array.from(comparisonMetricMap.values());
   const comparisonIsEmpty =
-    Boolean(offsetKey) && data.every(row => row[offsetKey as string] === null || row[offsetKey as string] === undefined);
+    compValues.length > 0
+      ? data.every(row => compValues.every(cKey => row[cKey] === null || row[cKey] === undefined))
+      : Boolean(offsetKey) && data.every(row => row[offsetKey as string] === null || row[offsetKey as string] === undefined);
   const t2Title = comparisonIsEmpty ? withNoData(t2Name, locale) || t2Name : t2Name;
 
   // Why the second period cannot be drawn, in the language of the filter
@@ -264,7 +282,8 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
 
   const potentialPivotedKeys = Object.keys(sampleRow).filter(k =>
     // Columns `<metric>__<offset>` are never series of their own: they belong to the comparison
-    !k.toLowerCase().startsWith(`${primaryMetric.toLowerCase()}__`) &&
+    !metricList.some(m => k.toLowerCase().startsWith(`${m.toLowerCase()}__`)) &&
+    !compValues.includes(k) &&
     k !== offsetKey &&
     k !== comparisonKey &&
     k.toLowerCase() !== actualXKey.toLowerCase() &&
@@ -306,6 +325,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
       timeKeys: timeKeySet,
       timeFormatter,
       comparisonMetric: comparisonActive ? comparisonKey : undefined,
+      comparisonMetricMap: comparisonActive ? comparisonMetricMap : undefined,
       time1Label: comparisonInfo.t1Name,
       time2Label: comparisonInfo.t2Name,
       locale,

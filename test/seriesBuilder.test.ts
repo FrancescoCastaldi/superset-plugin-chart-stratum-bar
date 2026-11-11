@@ -1,4 +1,5 @@
 import { BuildRepresentationOptions, buildSeriesRepresentation } from '../src/plugin/seriesBuilder';
+import { adjustColorBrightness } from '../src/utils/colors';
 
 const formatter = (v: number) => `F${v}`;
 const secFormatter = (v: number) => `S${v}`;
@@ -184,5 +185,145 @@ describe('buildSeriesRepresentation — secondary metrics', () => {
     });
     expect(series[1].seriesType).toBe('line');
     expect(series[1].color).toBe('#s0');
+  });
+});
+
+describe('buildSeriesRepresentation — dual comparison (R2)', () => {
+  it('strictly preserves historical behavior for single metric (t1Display, t2Display, navy & azure colors)', () => {
+    const rows = [
+      { canale: 'Web', richieste: 100, richieste_prec: 80 },
+      { canale: 'Cup', richieste: 50, richieste_prec: 60 },
+    ];
+
+    const { series } = build({
+      data: rows,
+      metricList: ['richieste'],
+      primaryMetric: 'richieste',
+      actualMetricKey: 'richieste',
+      timeComparisonMode: 'time_shift',
+      comparisonMetric: 'richieste_prec',
+      time1Label: 'Anno 2026',
+      time2Label: 'Anno 2025',
+    });
+
+    expect(series).toHaveLength(2);
+    expect(series[0].name).toBe('Anno 2026');
+    expect(series[1].name).toBe('Anno 2025');
+    expect(series[0].color).toBe('#1c3d5e');
+    expect(series[1].color).toBe('#7aa8cf');
+    expect(series[0].data).toEqual([100, 50]);
+    expect(series[1].data).toEqual([80, 60]);
+
+    // Deltas: Web 100 vs 80 => +20, +25%
+    expect(series[0].items[0].delta).toBe(20);
+    expect(series[0].items[0].deltaPercent).toBe(25);
+    // Deltas: Cup 50 vs 60 => -10, -16.67%
+    expect(series[0].items[1].delta).toBe(-10);
+    expect(series[0].items[1].deltaPercent).toBeCloseTo(-16.67, 1);
+  });
+
+  it('generates qualified paired series for multi-metric dual comparison with coordinated colors and dedicated deltas', () => {
+    const rows = [
+      { canale: 'Web', richieste: 100, richieste__prev: 80, accessi: 50, accessi__prev: 60 },
+      { canale: 'Cup', richieste: 40, richieste__prev: 0, accessi: 30, accessi__prev: 30 },
+    ];
+
+    const compMap = new Map<string, string>([
+      ['richieste', 'richieste__prev'],
+      ['accessi', 'accessi__prev'],
+    ]);
+
+    const { series } = build({
+      data: rows,
+      metricList: ['richieste', 'accessi'],
+      palette: ['#3b82f6', '#10b981'],
+      timeComparisonMode: 'time_shift',
+      comparisonMetricMap: compMap,
+      time1Label: 'T1',
+      time2Label: 'T2',
+    });
+
+    expect(series).toHaveLength(4);
+
+    // Names: ${mKey} · ${t1Display} / ${mKey} · ${t2Display}
+    expect(series[0].name).toBe('richieste · T1');
+    expect(series[1].name).toBe('richieste · T2');
+    expect(series[2].name).toBe('accessi · T1');
+    expect(series[3].name).toBe('accessi · T2');
+
+    // Colors: palette color for T1, coordinated brighter tint for T2
+    expect(series[0].color).toBe('#3b82f6');
+    expect(series[1].color).toBe(adjustColorBrightness('#3b82f6', 35));
+    expect(series[2].color).toBe('#10b981');
+    expect(series[3].color).toBe(adjustColorBrightness('#10b981', 35));
+
+    // Data values
+    expect(series[0].data).toEqual([100, 40]);
+    expect(series[1].data).toEqual([80, 0]);
+    expect(series[2].data).toEqual([50, 30]);
+    expect(series[3].data).toEqual([60, 30]);
+
+    // Dedicated deltas for richieste
+    // Web: 100 vs 80 => delta 20, deltaPercent 25%
+    expect(series[0].items[0].delta).toBe(20);
+    expect(series[0].items[0].deltaPercent).toBe(25);
+    // Cup: 40 vs 0 => isNewBaseline true, deltaPercent null
+    expect(series[0].items[1].delta).toBe(40);
+    expect(series[0].items[1].isNewBaseline).toBe(true);
+    expect(series[0].items[1].deltaPercent).toBeNull();
+
+    // Dedicated deltas for accessi
+    // Web: 50 vs 60 => delta -10, deltaPercent -16.67%
+    expect(series[2].items[0].delta).toBe(-10);
+    expect(series[2].items[0].deltaPercent).toBeCloseTo(-16.67, 1);
+    // Cup: 30 vs 30 => delta 0, deltaPercent 0%
+    expect(series[2].items[1].delta).toBe(0);
+    expect(series[2].items[1].deltaPercent).toBe(0);
+    expect(series[2].items[1].isNewBaseline).toBe(false);
+  });
+
+  it('handles multi-metric comparison edge cases (missing comparison column, null values)', () => {
+    const rows = [
+      { canale: 'Web', m1: null, m1__prev: 50, m2: 25 },
+      { canale: 'Cup', m1: 30, m1__prev: null, m2: null },
+    ];
+
+    const compMap = new Map<string, string>([
+      ['m1', 'm1__prev'],
+      // m2 has no comparison mapping
+    ]);
+
+    const { series } = build({
+      data: rows,
+      metricList: ['m1', 'm2'],
+      palette: ['#0284c7', '#0d9488'],
+      timeComparisonMode: 'time_shift',
+      comparisonMetric: 'm1__prev',
+      comparisonMetricMap: compMap,
+      time1Label: 'Current',
+      time2Label: 'Previous',
+    });
+
+    expect(series).toHaveLength(4);
+    // Keys must be unique and non-colliding
+    expect(series[0].key).toBe('m1__t1');
+    expect(series[1].key).toBe('m1__t2');
+    expect(series[2].key).toBe('m2__t1');
+    expect(series[3].key).toBe('m2__t2');
+    expect(series[1].key).not.toBe(series[3].key);
+
+    // m1 T1 has null in row 0
+    expect(series[0].data).toEqual([null, 30]);
+    // m1 T2 has null in row 1
+    expect(series[1].data).toEqual([50, null]);
+    // m1 items with nulls have null deltas
+    expect(series[0].items[0].delta).toBeNull();
+    expect(series[0].items[0].deltaPercent).toBeNull();
+    expect(series[0].items[1].delta).toBeNull();
+
+    // m2 has no comparison values
+    expect(series[2].data).toEqual([25, null]);
+    expect(series[3].data).toEqual([null, null]);
+    expect(series[2].items[0].delta).toBeNull();
   });
 });
