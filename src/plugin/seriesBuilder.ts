@@ -1,5 +1,5 @@
 import { DataRecord } from '@superset-ui/core';
-import { StratumBarSeries, StratumBarSeriesItem, TimeComparisonMode, ValueKind } from '../types';
+import { StratumBarSeries, TimeComparisonMode, ValueKind } from '../types';
 import { comparisonTexts, ChartLocale } from '../utils/comparison';
 import { sortCategories } from '../utils/sortingUtils';
 import { adjustColorBrightness } from '../utils/colors';
@@ -10,16 +10,12 @@ export interface BuildRepresentationOptions {
   actualXKey: string;
   actualBreakdownKey?: string;
   actualMetricKey: string;
-  targetMetricKey?: string;
   primaryMetric: string;
   metricList: string[];
   secondaryMetricList: string[];
-  y_axis_2_format: string;
   getColor: (key: string, idx: number) => string;
   palette: string[];
-  formatter: (v: number) => string;
   resolvedXAxis: string;
-  secFormatter: (v: number) => string;
   secondary_line_color: string;
   secondary_series_type: string;
   secPalette: string[];
@@ -37,25 +33,22 @@ export interface BuildRepresentationOptions {
   locale?: ChartLocale;
   /** Lowercase names of the metric columns that hold seconds of a Time field */
   timeKeys?: Set<string>;
-  /** Writes seconds as a duration */
-  timeFormatter?: (seconds: number) => string;
 }
 
 export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
   const {
     data, isPivoted, actualXKey, actualBreakdownKey, actualMetricKey,
-    targetMetricKey, primaryMetric, metricList, secondaryMetricList,
-    getColor, palette, formatter, resolvedXAxis, secFormatter,
+    primaryMetric, metricList, secondaryMetricList,
+    getColor, palette, resolvedXAxis,
     secondary_line_color, secondary_series_type, secPalette,
     combineFlag, sampleRow, potentialPivotedKeys,
     sortBy = 'original', isOrderDesc = false,
     timeComparisonMode, comparisonMetric, comparisonMetricMap, time1Label, time2Label, locale = 'it',
-    timeKeys, timeFormatter,
+    timeKeys,
   } = options;
 
-  // Metrics of type Time are written as durations, the others with the number format
-  const isTimeKey = (key: string): boolean => Boolean(timeKeys && timeFormatter && timeKeys.has(String(key).toLowerCase()));
-  const fmtFor = (key: string): ((v: number) => string) => (isTimeKey(key) ? (timeFormatter as (v: number) => string) : formatter);
+  // Metrics of type Time are flagged here: the renderers write them as durations
+  const isTimeKey = (key: string): boolean => Boolean(timeKeys && timeKeys.has(String(key).toLowerCase()));
   const kindOf = (key: string): ValueKind | undefined => (isTimeKey(key) ? 'time' : undefined);
 
   const texts = comparisonTexts(locale);
@@ -147,8 +140,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
       const t1Data: (number | null)[] = [];
       const t2Data: (number | null)[] = [];
-      const t1Items: StratumBarSeriesItem[] = [];
-      const t2Items: StratumBarSeriesItem[] = [];
 
       repCategories.forEach(cat => {
         const row = rowByCategory.get(cat);
@@ -157,43 +148,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
         t1Data.push(v1);
         t2Data.push(v2);
-
-        let delta: number | null = null;
-        let deltaPct: number | null = null;
-        let isNewBaseline = false;
-
-        if (v1 !== null && v2 !== null) {
-          delta = v1 - v2;
-          if (v2 !== 0) {
-            deltaPct = ((v1 - v2) / Math.abs(v2)) * 100;
-          } else if (v1 > 0) {
-            isNewBaseline = true;
-            deltaPct = null;
-          } else {
-            deltaPct = 0;
-          }
-        }
-
-        t1Items.push({
-          category: cat,
-          value: v1,
-          formattedValue: v1 !== null ? fmtFor(t1Key)(v1) : undefined,
-          comparisonValue: v2,
-          delta,
-          deltaPercent: deltaPct,
-          isNewBaseline,
-          rawData: row,
-        });
-
-        t2Items.push({
-          category: cat,
-          value: v2,
-          formattedValue: v2 !== null ? fmtFor(t2Key ?? '')(v2) : undefined,
-          comparisonValue: v1,
-          delta: delta !== null ? -delta : null,
-          deltaPercent: deltaPct !== null ? -deltaPct : null,
-          rawData: row,
-        });
       });
 
       // Series 0: Time 1 Reference (Navy #1c3d5e)
@@ -203,7 +157,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         key: t1Key,
         color: t1Color,
         data: t1Data,
-        items: t1Items,
         yAxisIndex: 0,
         seriesType: 'bar',
         valueKind: kindOf(t1Key),
@@ -216,7 +169,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         key: t2Key,
         color: t2Color,
         data: t2Data,
-        items: t2Items,
         yAxisIndex: 0,
         seriesType: 'bar',
         valueKind: kindOf(t2Key ?? ''),
@@ -238,8 +190,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
         const t1Data: (number | null)[] = [];
         const t2Data: (number | null)[] = [];
-        const t1Items: StratumBarSeriesItem[] = [];
-        const t2Items: StratumBarSeriesItem[] = [];
 
         repCategories.forEach(cat => {
           const row = rowByCategory.get(cat);
@@ -248,43 +198,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
 
           t1Data.push(v1);
           t2Data.push(v2);
-
-          let delta: number | null = null;
-          let deltaPct: number | null = null;
-          let isNewBaseline = false;
-
-          if (v1 !== null && v2 !== null) {
-            delta = v1 - v2;
-            if (v2 !== 0) {
-              deltaPct = ((v1 - v2) / Math.abs(v2)) * 100;
-            } else if (v1 > 0) {
-              isNewBaseline = true;
-              deltaPct = null;
-            } else {
-              deltaPct = 0;
-            }
-          }
-
-          t1Items.push({
-            category: cat,
-            value: v1,
-            formattedValue: v1 !== null ? fmtFor(t1Key)(v1) : undefined,
-            comparisonValue: v2,
-            delta,
-            deltaPercent: deltaPct,
-            isNewBaseline,
-            rawData: row,
-          });
-
-          t2Items.push({
-            category: cat,
-            value: v2,
-            formattedValue: v2 !== null ? fmtFor(t2Key ?? '')(v2) : undefined,
-            comparisonValue: v1,
-            delta: delta !== null ? -delta : null,
-            deltaPercent: deltaPct !== null ? -deltaPct : null,
-            rawData: row,
-          });
         });
 
         const paletteColor = palette[mIdx % palette.length] || '#1c3d5e';
@@ -300,7 +213,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           key: `${t1Key}__t1`,
           color: t1Color,
           data: t1Data,
-          items: t1Items,
           yAxisIndex: 0,
           seriesType: 'bar',
           valueKind: kindOf(t1Key),
@@ -311,7 +223,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           key: `${t1Key}__t2`,
           color: t2Color,
           data: t2Data,
-          items: t2Items,
           yAxisIndex: 0,
           seriesType: 'bar',
           valueKind: kindOf(t2Key ?? ''),
@@ -321,22 +232,12 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
   } else if (isPivoted) {
     potentialPivotedKeys.forEach((sName, sIdx) => {
       const seriesData: (number | null)[] = [];
-      const seriesItems: StratumBarSeriesItem[] = [];
 
       repCategories.forEach(cat => {
         const row = data.find(r => String(r[actualXKey]) === cat);
         const rawVal = row ? row[sName] : null;
         const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
         seriesData.push(numVal);
-
-        const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
-        seriesItems.push({
-          category: cat,
-          value: numVal,
-          formattedValue: numVal !== null ? fmtFor(sName)(numVal) : undefined,
-          targetValue: targetVal,
-          rawData: row,
-        });
       });
 
       let displayName = sName;
@@ -383,7 +284,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         key: sName,
         color: seriesColor,
         data: seriesData,
-        items: seriesItems,
         yAxisIndex: 0,
         seriesType: 'bar',
         valueKind: kindOf(sName),
@@ -402,7 +302,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     if (combineFlag) {
       groupValues.forEach((gVal, sIdx) => {
         const seriesData: (number | null)[] = [];
-        const seriesItems: StratumBarSeriesItem[] = [];
 
         repCategories.forEach(cat => {
           const matchingRow = data.find(r => `${r[actualXKey]} · ${r[actualBreakdownKey]}` === cat);
@@ -410,15 +309,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           const rawVal = isMatch ? matchingRow[actualMetricKey] : null;
           const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
           seriesData.push(numVal);
-
-          const targetVal = targetMetricKey && matchingRow ? Number(matchingRow[targetMetricKey]) || null : null;
-          seriesItems.push({
-            category: cat,
-            value: numVal,
-            formattedValue: numVal !== null ? fmtFor(actualMetricKey)(numVal) : undefined,
-            targetValue: targetVal,
-            rawData: matchingRow,
-          });
         });
 
         repSeries.push({
@@ -426,7 +316,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           key: gVal,
           color: getColor(gVal, sIdx),
           data: seriesData,
-          items: seriesItems,
           yAxisIndex: 0,
           seriesType: 'bar',
           valueKind: kindOf(actualMetricKey),
@@ -434,42 +323,27 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       });
     } else {
       const lookupVal = new Map<string, Map<string, number>>();
-      const lookupRow = new Map<string, Map<string, DataRecord>>();
 
       data.forEach(row => {
         const rawCat = row[actualXKey] !== null && row[actualXKey] !== undefined ? String(row[actualXKey]) : 'N/D';
         const gVal = row[actualBreakdownKey] !== null && row[actualBreakdownKey] !== undefined ? String(row[actualBreakdownKey]) : 'N/D';
         if (!lookupVal.has(gVal)) {
           lookupVal.set(gVal, new Map());
-          lookupRow.set(gVal, new Map());
         }
         const rawVal = row[actualMetricKey];
         const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && !isNaN(Number(rawVal)) ? Number(rawVal) : 0;
         const currentSum = lookupVal.get(gVal)!.get(rawCat) || 0;
         lookupVal.get(gVal)!.set(rawCat, currentSum + numVal);
-        lookupRow.get(gVal)!.set(rawCat, row);
       });
 
       groupValues.forEach((gVal, sIdx) => {
         const gMapVal = lookupVal.get(gVal) || new Map();
-        const gMapRow = lookupRow.get(gVal) || new Map();
         const seriesData: (number | null)[] = [];
-        const seriesItems: StratumBarSeriesItem[] = [];
 
         repCategories.forEach(cat => {
           const hasCat = gMapVal.has(cat);
           const numVal = hasCat ? gMapVal.get(cat)! : null;
           seriesData.push(numVal);
-
-          const row = gMapRow.get(cat);
-          const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
-          seriesItems.push({
-            category: cat,
-            value: numVal,
-            formattedValue: numVal !== null ? fmtFor(actualMetricKey)(numVal) : undefined,
-            targetValue: targetVal,
-            rawData: row,
-          });
         });
 
         repSeries.push({
@@ -477,7 +351,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
           key: gVal,
           color: getColor(gVal, sIdx),
           data: seriesData,
-          items: seriesItems,
           yAxisIndex: 0,
           seriesType: 'bar',
           valueKind: kindOf(actualMetricKey),
@@ -487,7 +360,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
   } else if (metricList.length > 1) {
     metricList.forEach((mKey, mIdx) => {
       const seriesData: (number | null)[] = [];
-      const seriesItems: StratumBarSeriesItem[] = [];
 
       repCategories.forEach(cat => {
         const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
@@ -502,13 +374,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         }
         const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
         seriesData.push(numVal);
-
-        seriesItems.push({
-          category: cat,
-          value: numVal,
-          formattedValue: numVal !== null ? fmtFor(mKey)(numVal) : undefined,
-          rawData: row,
-        });
       });
 
       repSeries.push({
@@ -516,7 +381,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         key: mKey,
         color: palette[mIdx % palette.length],
         data: seriesData,
-        items: seriesItems,
         yAxisIndex: 0,
         seriesType: 'bar',
         valueKind: kindOf(mKey),
@@ -524,7 +388,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
     });
   } else {
     const seriesData: (number | null)[] = [];
-    const seriesItems: StratumBarSeriesItem[] = [];
 
     repCategories.forEach(cat => {
       const row = data.find(r => String(r[actualXKey] ?? r[resolvedXAxis] ?? Object.values(r)[0]) === cat);
@@ -541,15 +404,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       }
       const numVal = typeof rawVal === 'number' ? rawVal : rawVal !== null && rawVal !== undefined && !isNaN(Number(rawVal)) ? Number(rawVal) : null;
       seriesData.push(numVal);
-
-      const targetVal = targetMetricKey && row ? Number(row[targetMetricKey]) || null : null;
-      seriesItems.push({
-        category: cat,
-        value: numVal,
-        formattedValue: numVal !== null ? fmtFor(actualMetricKey)(numVal) : undefined,
-        targetValue: targetVal,
-        rawData: row,
-      });
     });
 
     repSeries.push({
@@ -557,7 +411,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       key: primaryMetric,
       color: palette[0],
       data: seriesData,
-      items: seriesItems,
       yAxisIndex: 0,
       seriesType: 'bar',
       valueKind: kindOf(actualMetricKey),
@@ -571,7 +424,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
       ) || secMetricName;
 
       const secData: (number | null)[] = [];
-      const secItems: StratumBarSeriesItem[] = [];
 
       repCategories.forEach(cat => {
         const matchingRows = data.filter(r => {
@@ -592,12 +444,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         }
 
         secData.push(numVal);
-        secItems.push({
-          category: cat,
-          value: numVal,
-          formattedValue: numVal !== null ? (isTimeKey(actualSecKey) ? fmtFor(actualSecKey) : secFormatter)(numVal) : undefined,
-          rawData: matchingRows[0],
-        });
       });
 
       const chosenColor = secIdx === 0 && secondary_line_color ? secondary_line_color : secPalette[secIdx % secPalette.length];
@@ -606,7 +452,6 @@ export function buildSeriesRepresentation(options: BuildRepresentationOptions) {
         key: `sec_${secMetricName}`,
         color: chosenColor,
         data: secData,
-        items: secItems,
         yAxisIndex: 1,
         seriesType: (secondary_series_type || 'line') as 'bar' | 'line',
         valueKind: kindOf(actualSecKey),

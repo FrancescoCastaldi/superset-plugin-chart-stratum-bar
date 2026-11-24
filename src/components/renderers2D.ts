@@ -1,7 +1,7 @@
 import { StackingMode, StratumBarTransformedProps, ValuePosition } from '../types';
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 import { calculateAxisBreak, transformValueForAxisBreak } from '../utils/axisBreakUtils';
-import { getNumberFormatter } from '@superset-ui/core';
+import { formatNumber, numberFormatter } from '../utils/numberFormat';
 import { compute2DValueExtent, getBarBorderRadius } from '../utils/barLayout';
 import {
   SMART_ANNOTATION_STYLE_2D,
@@ -56,16 +56,7 @@ export function format2DBarLabel(
       const duration = formatDuration(realVal, time);
       return isCapped ? `// ${duration}` : duration;
     }
-    let formatted = '';
-    try {
-      if (numberFormat) {
-        formatted = getNumberFormatter(numberFormat)(realVal);
-      } else {
-        formatted = realVal.toLocaleString('en-US');
-      }
-    } catch {
-      formatted = realVal.toLocaleString('en-US');
-    }
+    const formatted = numberFormat ? numberFormatter(numberFormat)(realVal) : formatNumber(realVal);
     return isCapped ? `// ${formatted}` : formatted;
   }
   return isCapped ? `// ${String(realVal)}` : String(realVal);
@@ -316,7 +307,7 @@ export function get2DBarOption(props: StratumBarTransformedProps) {
     echartsSeries.push(seriesItem);
   });
 
-  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false, isVertical, props.comparison, tooltipTimeInfo(series, props.timeFormat));
+  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, false, isVertical, props.comparison, tooltipTimeInfo(series, props.timeFormat), { show: props.showDeltaBadge, polarity: props.deltaPolarity === 'inverted' ? 'inverted' : 'normal' });
   const tooltip = getTooltipConfig(isDark, tooltipFormatter);
 
   // Legend with explicit per-series colors so the legend swatches match the bars

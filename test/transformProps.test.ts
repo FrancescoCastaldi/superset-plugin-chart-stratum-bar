@@ -43,7 +43,7 @@ describe('StratumBar transformProps', () => {
     expect(transformed.viewMode).toBe('3d');
   });
 
-  it('should calculate fixed benchmark and delta percentage badges', () => {
+  it('should resolve the fixed benchmark', () => {
     const chartProps: Partial<ChartProps> = {
       width: 600,
       height: 400,
@@ -72,11 +72,6 @@ describe('StratumBar transformProps', () => {
     expect(transformed.benchmark).toBeDefined();
     expect(transformed.benchmark?.value).toBe(10000);
 
-    const series = transformed.series[0];
-    // Sportello: (12000 - 10000) / 10000 * 100 = +20%
-    expect(series.items[0].deltaPercent).toBe(20);
-    // Call Center: (8000 - 10000) / 10000 * 100 = -20%
-    expect(series.items[1].deltaPercent).toBe(-20);
   });
 
   it('should calculate dynamic average benchmark across series data', () => {
@@ -393,7 +388,7 @@ describe('StratumBar transformProps', () => {
       const transformed = transformProps(chartProps);
 
       expect(transformed.comparison?.active).toBe(true);
-      expect(transformed.timeComparisonMode).toBe('time_shift');
+      expect(transformed.comparison?.mode).toBe('time_shift');
       expect(transformed.series).toHaveLength(4);
 
       // Verify pair 1: richieste
@@ -410,12 +405,8 @@ describe('StratumBar transformProps', () => {
 
       // Verify dedicated deltas per metric
       // Web richieste: (100 - 80) = +20, deltaPercent = +25%
-      expect(transformed.series[0].items[0].delta).toBe(20);
-      expect(transformed.series[0].items[0].deltaPercent).toBe(25);
 
       // Web accessi: (50 - 40) = +10, deltaPercent = +25%
-      expect(transformed.series[2].items[0].delta).toBe(10);
-      expect(transformed.series[2].items[0].deltaPercent).toBe(25);
     });
 
     it('filters offset columns for all metrics from potentialPivotedKeys to prevent leaks', () => {

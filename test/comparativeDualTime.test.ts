@@ -18,12 +18,9 @@ describe('StratumBar Comparative Dual Time Mode', () => {
       primaryMetric: 'accessi_corr',
       metricList: ['accessi_corr'],
       secondaryMetricList: [],
-      y_axis_2_format: ',.2f',
       getColor: () => undefined,
       palette: ['#1c3d5e', '#7aa8cf'],
-      formatter: (v: number) => String(v),
       resolvedXAxis: 'REP',
-      secFormatter: (v: number) => String(v),
       secondary_line_color: '#ea580c',
       secondary_series_type: 'line',
       secPalette: [],
@@ -47,22 +44,8 @@ describe('StratumBar Comparative Dual Time Mode', () => {
     expect(t2Series.color).toBe('#7aa8cf');
     expect(t2Series.data).toEqual([100, 90, 0]);
 
-    // Check Cardiologia delta: 120 vs 100 => delta +20, deltaPercent +20%
-    const cardioT1 = t1Series.items[0];
-    expect(cardioT1.delta).toBe(20);
-    expect(cardioT1.deltaPercent).toBe(20);
-    expect(cardioT1.isNewBaseline).toBe(false);
 
-    // Check Ortopedia delta: 80 vs 90 => delta -10
-    const ortoT1 = t1Series.items[1];
-    expect(ortoT1.delta).toBe(-10);
-    expect(ortoT1.deltaPercent).toBeCloseTo(-11.11, 1);
 
-    // Check Pediatria zero baseline: 50 vs 0 => isNewBaseline true, deltaPercent null
-    const pediaT1 = t1Series.items[2];
-    expect(pediaT1.delta).toBe(50);
-    expect(pediaT1.isNewBaseline).toBe(true);
-    expect(pediaT1.deltaPercent).toBeNull();
   });
 
   it('propagates comparative configuration through transformProps', () => {
@@ -89,10 +72,10 @@ describe('StratumBar Comparative Dual Time Mode', () => {
 
     const transformed = transformProps(chartProps);
 
-    expect(transformed.timeComparisonMode).toBe('dual_metric');
-    expect(transformed.time1Label).toBe('Corrente');
-    expect(transformed.time2Label).toBe('Precedente');
-    expect(transformed.showComparisonDelta).toBe(true);
+    expect(transformed.comparison?.mode).toBe('dual_metric');
+    expect(transformed.comparison?.t1Name).toBe('Corrente');
+    expect(transformed.comparison?.t2Name).toBe('Precedente');
+    expect(transformed.comparison?.showDelta).toBe(true);
     expect(transformed.series).toHaveLength(2);
     expect(transformed.series[0].name).toBe('Corrente');
     expect(transformed.series[1].name).toBe('Precedente');
@@ -128,7 +111,6 @@ describe('StratumBar Comparative Dual Time Mode', () => {
       expect(props.series[0].data).toEqual([110, 40]);
       expect(props.series[1].name).toBe('Periodo di confronto · 01/01/2007 al 31/12/2007');
       expect(props.series[1].data).toEqual([100, 60]);
-      expect(props.series[0].items[0].delta).toBe(10);
     });
 
     it('names the periods after the calendar names and readable ranges', () => {

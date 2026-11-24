@@ -1,4 +1,5 @@
 import { StratumBarTransformedProps } from '../types';
+import { formatNumber } from '../utils/numberFormat';
 import { getCategoryAxisConfig, getValueAxisConfig, getSecondaryValueAxisConfig, getLegendConfig, getTooltipConfig, getGridConfig, getTooltipFormatter } from '../utils/echartsUtils';
 import { AxisBreakCalculation, calculateAxisBreak, transformValueForAxisBreak } from '../utils/axisBreakUtils';
 import { compute3DAxisMax, compute3DStackLayout } from '../utils/barLayout';
@@ -43,7 +44,7 @@ function format3DValueLabel(
 ): string {
   const displayVal = rawVal !== undefined && rawVal !== null ? rawVal : visualVal;
   const formattedVal = typeof displayVal === 'number'
-    ? (time ? formatDuration(displayVal, time) : displayVal.toLocaleString('en-US'))
+    ? (time ? formatDuration(displayVal, time) : formatNumber(displayVal))
     : String(displayVal);
   return isAboveCutoff(rawVal, axisBreak) ? `// ${formattedVal}` : formattedVal;
 }
@@ -253,7 +254,7 @@ export function get3DBarOption(props: StratumBarTransformedProps) {
     echartsSeries.push(customSeries);
   });
 
-  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true, isVertical, props.comparison, tooltipTimeInfo(series, props.timeFormat));
+  const tooltipFormatter = getTooltipFormatter(categories, isDark, colorScheme, showBenchmark, benchmark, yAxis2Title, yAxis2Format, hasDualYAxis ? secondaryLineColor : undefined, true, isVertical, props.comparison, tooltipTimeInfo(series, props.timeFormat), { show: props.showDeltaBadge, polarity: props.deltaPolarity === 'inverted' ? 'inverted' : 'normal' });
   const tooltip = getTooltipConfig(isDark, tooltipFormatter);
 
   // Legend with explicit per-series colors so swatches match bars

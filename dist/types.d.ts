@@ -1,9 +1,11 @@
-import { ChartProps, QueryFormData, DataRecord } from '@superset-ui/core';
+import { ChartProps, QueryFormData } from '@superset-ui/core';
+import type { TimeDetection, TimeDisplayFormat, TimeFormatOptions, ValueKind } from './utils/timeValues';
+export type { TimeDetection, TimeDisplayFormat, TimeFormatOptions, ValueKind };
 export type ViewMode = '2d' | '3d';
 export type OrientationType = 'vertical' | 'horizontal';
 export type StackingMode = 'none' | 'stack' | 'expand';
 export type BarShape3D = 'prism' | 'cylinder';
-export type BenchmarkType = 'fixed_value' | 'average' | 'median' | 'target_metric';
+export type BenchmarkType = 'fixed_value' | 'average' | 'median';
 export type DeltaPolarity = 'normal' | 'inverted';
 export type ValuePosition = 'inside' | 'top' | 'outside' | 'slanted';
 export type SortByMode = 'original' | 'category' | 'metric';
@@ -21,29 +23,21 @@ export interface ComparisonInfo {
     /** Short message shown above the chart when the comparison cannot be drawn */
     notice?: string;
 }
-export interface StratumBarSeriesItem {
-    category: string;
-    value: number | null;
-    formattedValue?: string;
-    targetValue?: number | null;
-    comparisonValue?: number | null;
-    delta?: number | null;
-    deltaPercent?: number | null;
-    isNewBaseline?: boolean;
-    rawData?: DataRecord;
-}
 export interface StratumBarSeries {
     name: string;
     key: string;
     color?: string;
     data: (number | null)[];
-    items: StratumBarSeriesItem[];
     yAxisIndex?: number;
     seriesType?: 'bar' | 'line';
+    /** `time`: the values are seconds of a Time or duration field, shown as a duration */
+    valueKind?: ValueKind;
 }
 export interface BenchmarkConfig {
     value: number;
     label: string;
+    /** Text of the value when it is not a plain number (a duration) */
+    display?: string;
 }
 export interface StratumBarFormData extends QueryFormData {
     x_axis?: string | string[];
@@ -51,7 +45,6 @@ export interface StratumBarFormData extends QueryFormData {
     groupby?: string[];
     metrics?: any;
     metric?: any;
-    target_metric?: any;
     secondary_metrics?: any;
     secondary_series_type?: 'line' | 'bar';
     y_axis_2_title?: string;
@@ -103,6 +96,9 @@ export interface StratumBarFormData extends QueryFormData {
     axis_break_mode?: 'auto' | 'p90' | 'p95' | 'manual';
     axis_break_threshold?: number;
     toolbar_show_axis_break?: boolean;
+    time_detection?: TimeDetection;
+    time_display_format?: TimeDisplayFormat;
+    time_fraction_digits?: number | string;
     time_comparison_mode?: TimeComparisonMode;
     comparison_metric?: any;
     comparison_shift?: string;
@@ -136,7 +132,6 @@ export interface StratumBarTransformedProps {
     colorScheme: string[];
     showLegend: boolean;
     legendOrientation: 'top' | 'bottom' | 'left' | 'right';
-    emitFilter: boolean;
     enableToolbar: boolean;
     xAxisTitle?: string;
     yAxisTitle?: string;
@@ -153,8 +148,6 @@ export interface StratumBarTransformedProps {
     combineCategoryBreakdown?: boolean;
     combinedCategories?: string[];
     combinedSeries?: StratumBarSeries[];
-    standardCategories?: string[];
-    standardSeries?: StratumBarSeries[];
     enableAxisBreak?: boolean;
     axisBreakMode?: 'auto' | 'p90' | 'p95' | 'manual';
     axisBreakThreshold?: number;
@@ -168,15 +161,10 @@ export interface StratumBarTransformedProps {
         showAxisBreak: boolean;
         showExport: boolean;
     };
+    /** How the Time fields are written, present when the chart has at least one */
+    timeFormat?: TimeFormatOptions;
     comparison?: ComparisonInfo;
-    timeComparisonMode?: TimeComparisonMode;
-    time1Label?: string;
-    time2Label?: string;
-    showComparisonDelta?: boolean;
-    comparisonDeltaPolarity?: DeltaPolarity;
-    formData: StratumBarFormData;
     selectedValues?: string[];
-    labelColors?: Record<string, string>;
     renderer?: 'canvas' | 'svg';
     onCrossFilter?: (category: string, seriesName?: string) => void;
 }

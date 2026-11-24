@@ -13,11 +13,11 @@ import {
 import { buildSeriesRepresentation } from './seriesBuilder';
 import { buildCrossFilterHandler } from './crossFilterHandler';
 import { convertTimeColumns, formatDuration, TimeFormatOptions } from '../utils/timeValues';
+import { numberFormatter } from '../utils/numberFormat';
 import {
   ChartProps,
   DataRecord,
   CategoricalColorNamespace,
-  getNumberFormatter,
   ensureIsArray,
 } from '@superset-ui/core';
 import {
@@ -46,7 +46,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const queryData = (queriesData?.[0]?.data || []) as DataRecord[];
 
   const {
-    target_metric,
     secondary_metrics,
     secondary_series_type = 'line',
     y_axis_2_title,
@@ -116,18 +115,14 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     : [];
   const metricList = rawMetrics.map((m: any) => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)));
   const primaryMetric = metricList[0] || 'value';
-  const targetMetricKey = typeof target_metric === 'object' && target_metric !== null
-    ? target_metric.label || target_metric.metric_name
-    : target_metric ? String(target_metric) : undefined;
 
-  const formatter = getNumberFormatter(numberFormat);
+  const formatter = numberFormatter(numberFormat);
 
   // Metrics of type Time arrive as text ("00:12:54.425000"): they become seconds, only the metric
   // columns are looked at, never the categories
   const comparisonMetricRaw = fd.comparison_metric;
   const declaredMetrics = [
     ...metricList,
-    targetMetricKey,
     ...ensureIsArray(secondary_metrics).map((m: any) => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m))),
     typeof comparisonMetricRaw === 'object' && comparisonMetricRaw !== null
       ? comparisonMetricRaw.label || comparisonMetricRaw.metric_name
@@ -172,7 +167,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   }
 
   // Dashboard metadata passes label_colors in rawFormData.label_colors or formData.label_colors
-  const { combinedLabelColors, palette, getColor } = resolveColors(fd, rawFd, scaleInstance);
+  const { palette, getColor } = resolveColors(fd, rawFd, scaleInstance);
 
 
   // 2. Determine Data Structure: PIVOTED vs UNPIVOTED
@@ -289,7 +284,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     k.toLowerCase() !== actualXKey.toLowerCase() &&
     k !== '__timestamp' &&
     !k.startsWith('__') &&
-    k !== targetMetricKey &&
     !secondaryMetricNames.includes(k.toLowerCase()) &&
     typeof sampleRow[k] === 'number'
   );
@@ -305,7 +299,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const secondaryMetricList = ensureIsArray(secondary_metrics)
     .map(m => (typeof m === 'object' && m !== null ? m.label || m.metric_name : String(m)))
     .filter(Boolean);
-  const secFormatter = getNumberFormatter(y_axis_2_format);
   const secPalette = ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4'];
 
   // Sorting configuration
@@ -316,14 +309,13 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
   const buildRepresentation = (combineFlag: boolean) => {
     return buildSeriesRepresentation({
       data, isPivoted, actualXKey, actualBreakdownKey, actualMetricKey,
-      targetMetricKey, primaryMetric, metricList, secondaryMetricList,
-      y_axis_2_format, getColor, palette, formatter, resolvedXAxis, secFormatter,
+      primaryMetric, metricList, secondaryMetricList,
+      getColor, palette, resolvedXAxis,
       secondary_line_color, secondary_series_type, secPalette,
       combineFlag, sampleRow, potentialPivotedKeys,
       sortBy, isOrderDesc,
       timeComparisonMode: mode,
       timeKeys: timeKeySet,
-      timeFormatter,
       comparisonMetric: comparisonActive ? comparisonKey : undefined,
       comparisonMetricMap: comparisonActive ? comparisonMetricMap : undefined,
       time1Label: comparisonInfo.t1Name,
@@ -352,16 +344,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     benchmarkIsTime ? timeFormatter : formatter,
     benchmarkIsTime,
   );
-    // Calculate delta % for each item against benchmark if not set by targetMetric
-    series.forEach(s => {
-      s.items.forEach(item => {
-        const target = item.targetValue !== undefined && item.targetValue !== null ? item.targetValue : benchmark?.value;
-        if (item.value !== null && target && target !== 0) {
-          const delta = ((item.value - target) / target) * 100;
-          item.deltaPercent = Math.round(delta * 10) / 10;
-        }
-      });
-    });
 
   // 4. Cross-filtering hook with toggle support
   const { setDataMask, onAddFilter } = (hooks || {}) as any;
@@ -402,7 +384,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     colorScheme: palette,
     showLegend: show_legend,
     legendOrientation,
-    emitFilter: emit_filter,
     enableToolbar,
     xAxisTitle: x_axis_title,
     yAxisTitle: y_axis_title,
@@ -417,8 +398,6 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     breakdownDimName: actualBreakdownKey,
     canCombineBreakdown: Boolean(actualBreakdownKey && actualBreakdownKey in sampleRow),
     combineCategoryBreakdown: combine_category_breakdown,
-    standardCategories: standardRep.categories,
-    standardSeries: standardRep.series,
     combinedCategories: combinedRep.categories,
     combinedSeries: combinedRep.series,
     enableAxisBreak: Boolean(enable_axis_break),
@@ -436,14 +415,7 @@ export default function transformProps(chartProps: ChartProps): StratumBarTransf
     },
     timeFormat,
     comparison: comparisonInfo,
-    timeComparisonMode: mode,
-    time1Label: comparisonInfo.t1Name,
-    time2Label: comparisonInfo.t2Name,
-    showComparisonDelta: comparisonInfo.showDelta,
-    comparisonDeltaPolarity: comparisonInfo.polarity,
-    formData: fd,
     selectedValues,
-    labelColors: combinedLabelColors,
     renderer: fd.renderer || 'canvas',
     onCrossFilter,
   };

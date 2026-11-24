@@ -1,4 +1,5 @@
 import { StackingMode, StratumBarTransformedProps, ValuePosition } from '../types';
+import { TimeFormatOptions } from '../utils/timeValues';
 /**
  * Formats a 2D bar label from the original (pre axis-break) value. In stacked
  * mode near-zero segments (< 1.5% of the axis max) are hidden to avoid clutter.
@@ -7,6 +8,7 @@ export declare function format2DBarLabel(params: any, options: {
     stacking: StackingMode;
     effectiveMaxVal?: number;
     numberFormat?: string;
+    time?: TimeFormatOptions;
 }): string;
 /** ECharts label config of 2D bars for the given value position (stacked bars always label inside). */
 export declare function get2DBarLabelConfig(options: {
@@ -117,13 +119,10 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             padding: number[];
         };
     } | {
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -138,14 +137,15 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        max: number | undefined;
+        min: number | undefined;
     } | ({
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -160,14 +160,16 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
-    } | {
+        interval?: number | undefined;
         type: "value";
-        position: "top" | "right";
+        max: number | undefined;
+        min: number | undefined;
+    } | {
         axisLabel: {
             color: string;
             fontWeight: number;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             show: boolean;
@@ -179,6 +181,9 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        position: "top" | "right";
     })[];
     yAxis: {
         type: "category";
@@ -210,13 +215,10 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             padding: number[];
         };
     } | {
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -231,14 +233,15 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        max: number | undefined;
+        min: number | undefined;
     } | ({
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -253,14 +256,16 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
-    } | {
+        interval?: number | undefined;
         type: "value";
-        position: "top" | "right";
+        max: number | undefined;
+        min: number | undefined;
+    } | {
         axisLabel: {
             color: string;
             fontWeight: number;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             show: boolean;
@@ -272,6 +277,9 @@ export declare function get2DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        position: "top" | "right";
     })[];
     series: any[];
 };

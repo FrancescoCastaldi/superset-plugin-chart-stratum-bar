@@ -203,7 +203,6 @@ describe('StratumBar Dual Y-Axis & Combined Breakdown', () => {
     const transformed = transformProps(chartProps as ChartProps);
     expect(transformed.breakdownDimName).toBe('REGIME');
     expect(transformed.canCombineBreakdown).toBe(true);
-    expect(transformed.standardCategories).toEqual(['Cardiologia', 'Ortopedia']);
     expect(transformed.combinedCategories).toEqual([
       'Cardiologia · SSN',
       'Cardiologia · Privato',

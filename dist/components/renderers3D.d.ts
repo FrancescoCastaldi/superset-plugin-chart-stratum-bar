@@ -85,13 +85,10 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             padding: number[];
         };
     } | {
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -106,14 +103,15 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        max: number | undefined;
+        min: number | undefined;
     } | ({
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -128,14 +126,16 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
-    } | {
+        interval?: number | undefined;
         type: "value";
-        position: "top" | "right";
+        max: number | undefined;
+        min: number | undefined;
+    } | {
         axisLabel: {
             color: string;
             fontWeight: number;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             show: boolean;
@@ -147,6 +147,9 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        position: "top" | "right";
     })[];
     yAxis: {
         type: "category";
@@ -178,13 +181,10 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             padding: number[];
         };
     } | {
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -199,14 +199,15 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        max: number | undefined;
+        min: number | undefined;
     } | ({
-        type: "value";
-        max: number | undefined;
-        min: number | undefined;
         axisLabel: {
             color: string;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             lineStyle: {
@@ -221,14 +222,16 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontWeight: number;
             padding: number[];
         };
-    } | {
+        interval?: number | undefined;
         type: "value";
-        position: "top" | "right";
+        max: number | undefined;
+        min: number | undefined;
+    } | {
         axisLabel: {
             color: string;
             fontWeight: number;
             fontSize: number;
-            formatter: (val: number) => string;
+            formatter: (value: number) => string;
         };
         splitLine: {
             show: boolean;
@@ -240,6 +243,9 @@ export declare function get3DBarOption(props: StratumBarTransformedProps): {
             fontSize: number;
             padding: number[];
         };
+        interval?: number | undefined;
+        type: "value";
+        position: "top" | "right";
     })[];
     series: any[];
 };

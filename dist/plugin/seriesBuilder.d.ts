@@ -7,16 +7,12 @@ export interface BuildRepresentationOptions {
     actualXKey: string;
     actualBreakdownKey?: string;
     actualMetricKey: string;
-    targetMetricKey?: string;
     primaryMetric: string;
     metricList: string[];
     secondaryMetricList: string[];
-    y_axis_2_format: string;
     getColor: (key: string, idx: number) => string;
     palette: string[];
-    formatter: (v: number) => string;
     resolvedXAxis: string;
-    secFormatter: (v: number) => string;
     secondary_line_color: string;
     secondary_series_type: string;
     secPalette: string[];
@@ -27,10 +23,13 @@ export interface BuildRepresentationOptions {
     isOrderDesc?: boolean;
     timeComparisonMode?: TimeComparisonMode;
     comparisonMetric?: any;
+    comparisonMetricMap?: Map<string, string>;
     time1Label?: string;
     time2Label?: string;
     /** Language of the default names of the two periods */
     locale?: ChartLocale;
+    /** Lowercase names of the metric columns that hold seconds of a Time field */
+    timeKeys?: Set<string>;
 }
 export declare function buildSeriesRepresentation(options: BuildRepresentationOptions): {
     categories: string[];

@@ -8,7 +8,8 @@ Mappa architetturale e funzionale di dettaglio per il repository `superset-plugi
 
 Plugin di Apache Superset per visualizzazioni a barre avanzate:
 - Motore di rendering duale: 2D Curved Moderno e 3D Isometrico Volumetrico (senza overhead WebGL).
-- Calcolo automatico scostamenti percentuali (Delta %) e linee di benchmark dinamiche (Fixed, Media, Mediana, Target Metric).
+- Calcolo automatico scostamenti percentuali (Delta %) e linee di benchmark dinamiche (Fixed, Media, Mediana).
+- Numeri sempre in formato italiano: punto per le migliaia e virgola per i decimali (1.234,56 e 7,03), da un unico modulo (`src/utils/numberFormat.ts`).
 - Asse secondario duale sincronizzato con trend spline continuo e sfumatura d'area soffusa.
 - Gestione automatica outlier estremi con taglio d'asse (Axis Break).
 - Dev Studio interattivo Vite + React 18 su porta 5174 per testing e sviluppo visuale in tempo reale.
@@ -25,6 +26,8 @@ Plugin di Apache Superset per visualizzazioni a barre avanzate:
 | `src/utils/isometricGeometry.ts` | Matematica geometrica pura per estrusione 3D, ellissi a 32 punti e slot raggruppati |
 | `src/utils/seriesScaffolding.ts` | Costruzione serie lineari, benchmark pill badge, smart annotations e assi combinati |
 | `src/utils/echartsUtils.ts` | Configurazione griglia, padding dinamico anti-clipping, assi e tooltip avanzati |
+| `src/utils/numberFormat.ts` | Formato italiano di ogni numero mostrato: etichette, assi, tooltip, soglia (`numberFormatter`, `formatNumber`, `formatCompact`, `formatPercent`) |
+| `src/plugin/controlPanel/` | Pannello di Explore, una sezione per file (`dati`, `confronto`, `aspetto`, `layout`, `secondoAsse`, `soglia`, `asseSpezzato`, `assiLegenda`, `toolbar`) e `helpers.ts` con le condizioni di visibilità (`isOn`, `isValue`, `allOf`) |
 | `src/utils/colors.ts` | Palette executive, clinico-sanitarie e calcolo luminosita esadecimale |
 | `src/utils/timeValues.ts` | Campi Time e durate: lettura di `HH:MM:SS.ffffff` e ISO 8601 in secondi, formati di visualizzazione, tick tondi dell'asse |
 | `src/utils/axisBreakUtils.ts` | Rilevamento automatico outlier ed applicazione soglie di compressione visiva |

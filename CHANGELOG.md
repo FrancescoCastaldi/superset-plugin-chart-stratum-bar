@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-24
+
+### Changed
+- **Numbers in Italian format.** Thousands are separated by a dot and decimals by a comma everywhere the chart writes a number: bar labels, axes, tooltips, the threshold line and its label, the axis cut, the second axis and the deviation badges (`1.234,56`, `7,03`, `12,3%`, `1,2k`). It works with every number format of Superset, also one typed by hand, because the result of the format is converted in one place (`src/utils/numberFormat.ts`). Numbers without a chosen format keep up to two decimals.
+- The control panel (`controlPanel.tsx`, 1000 lines) is split into a folder with one file per section and shared visibility helpers. Names, defaults and visibility of the controls are unchanged.
+- The number format controls offer one decimal (`,.1f`, for averages) and their descriptions match what the chart writes.
+
+### Fixed
+- **"Mostra lo scostamento dalla soglia" and "Colore dello scostamento dalla soglia" did nothing.** The tooltip always showed "vs Target" in green above the threshold. The switch now hides it, and the inverted polarity turns the rise red (waiting times, costs).
+
+### Removed
+- **"Metrica obiettivo" (`target_metric`)**: the control and the "Metrica obiettivo" mode of the threshold had no effect, the chart never drew a target per bar, and the extra metric was fetched for nothing. A saved chart with that mode draws the fixed value, as it did before.
+- Data that no renderer read: the `items` of every series (formatted value, deltas, new baseline, target) and the props `emitFilter`, `formData`, `labelColors`, `standardCategories`, `standardSeries`, `timeComparisonMode`, `time1Label`, `time2Label`, `showComparisonDelta` and `comparisonDeltaPolarity` (the last five are in `comparison`). The tooltip computes its deviations from the values it receives.
+
 ## [0.7.1] - 2026-11-11
 
 ### Fixed

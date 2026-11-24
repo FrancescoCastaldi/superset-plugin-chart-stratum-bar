@@ -13,11 +13,6 @@ describe('StratumBar 2D & 3D Renderers', () => {
         key: 'Convenzionato',
         color: '#3b82f6',
         data: [150, 280, 90],
-        items: [
-          { category: 'Sportello', value: 150, deltaPercent: 15 },
-          { category: 'Web', value: 280, deltaPercent: 40 },
-          { category: 'Cup', value: 90, deltaPercent: -10 },
-        ],
       },
     ],
     benchmark: { value: 100, label: 'Benchmark (100)' },
@@ -39,7 +34,6 @@ describe('StratumBar 2D & 3D Renderers', () => {
     colorScheme: ['#3b82f6', '#10b981'],
     showLegend: true,
     legendOrientation: 'top',
-    emitFilter: true,
     enableToolbar: true,
     formData: {} as any,
   };

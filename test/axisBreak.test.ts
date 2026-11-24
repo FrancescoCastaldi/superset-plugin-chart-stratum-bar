@@ -86,7 +86,6 @@ describe('Axis Break & Outlier Pinning (//)', () => {
           key: 'Prenotazioni',
           color: '#3b82f6',
           data: [1331, 20, 15],
-          items: [],
         },
       ],
       viewMode: '2d',
@@ -107,7 +106,6 @@ describe('Axis Break & Outlier Pinning (//)', () => {
       colorScheme: ['#3b82f6'],
       showLegend: false,
       legendOrientation: 'top',
-      emitFilter: false,
       enableToolbar: true,
       enableAxisBreak: true,
       axisBreakMode: 'auto',
@@ -132,7 +130,7 @@ describe('Axis Break & Outlier Pinning (//)', () => {
     // Label formatter test
     const label0 = mainSeries.label.formatter({ data: data0, value: data0.value });
     expect(label0).toContain('//');
-    expect(label0).toContain('1,331'); // Real number preserved!
+    expect(label0).toContain('1.331'); // Real number preserved!
 
     const label1 = mainSeries.label.formatter({ data: data1, value: data1.value });
     expect(label1).not.toContain('//');
@@ -150,7 +148,6 @@ describe('Axis Break & Outlier Pinning (//)', () => {
           key: 'Prenotazioni',
           color: '#3b82f6',
           data: [1331, 20, 15],
-          items: [],
         },
       ],
       viewMode: '3d',
@@ -171,7 +168,6 @@ describe('Axis Break & Outlier Pinning (//)', () => {
       colorScheme: ['#3b82f6'],
       showLegend: false,
       legendOrientation: 'top',
-      emitFilter: false,
       enableToolbar: true,
       enableAxisBreak: true,
       axisBreakMode: 'auto',
@@ -201,7 +197,7 @@ describe('Axis Break & Outlier Pinning (//)', () => {
     expect(breakElement).toBeDefined();
 
     // Check label element in children
-    const labelElement = rendered0.children.find((c: any) => c.type === 'text' && c.style?.text?.startsWith('//') && c.style?.text?.includes('1,331'));
+    const labelElement = rendered0.children.find((c: any) => c.type === 'text' && c.style?.text?.startsWith('//') && c.style?.text?.includes('1.331'));
     expect(labelElement).toBeDefined();
   });
 
@@ -231,7 +227,6 @@ describe('Axis Break & Outlier Pinning (//)', () => {
           name: 'Metric',
           key: 'Metric',
           data: [1331, 20, 15],
-          items: [],
         },
       ],
       viewMode: '2d',
@@ -252,7 +247,6 @@ describe('Axis Break & Outlier Pinning (//)', () => {
       colorScheme: ['#3b82f6'],
       showLegend: false,
       legendOrientation: 'top',
-      emitFilter: false,
       enableToolbar: true,
       enableAxisBreak: true,
       axisBreakMode: 'auto',
@@ -276,8 +270,8 @@ describe('Axis Break & Outlier Pinning (//)', () => {
       height: 500,
       categories: ['Cat 1', 'Cat 2'],
       series: [
-        { name: 'Seg A', key: 'Seg A', data: [100, 50], items: [] },
-        { name: 'Seg B', key: 'Seg B', data: [100, 50], items: [] },
+        { name: 'Seg A', key: 'Seg A', data: [100, 50] },
+        { name: 'Seg B', key: 'Seg B', data: [100, 50] },
       ],
       viewMode: '2d',
       orientation: 'vertical',
@@ -297,7 +291,6 @@ describe('Axis Break & Outlier Pinning (//)', () => {
       colorScheme: ['#3b82f6', '#10b981'],
       showLegend: false,
       legendOrientation: 'top',
-      emitFilter: false,
       enableToolbar: true,
       enableAxisBreak: false,
       formData: {} as any,

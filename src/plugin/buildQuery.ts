@@ -16,7 +16,6 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     x_axis,
     x_axis_group,
     groupby = [],
-    target_metric,
     secondary_metrics,
   } = fd;
 
@@ -63,7 +62,7 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
       return String(m);
     };
 
-    // Collect all required metrics including optional target_metric and secondary_metrics
+    // Collect all required metrics including the comparison and secondary metrics
     const rawMetrics = fd.metrics && (Array.isArray(fd.metrics) ? fd.metrics.length > 0 : true)
       ? ensureIsArray(fd.metrics)
       : fd.metric
@@ -72,9 +71,6 @@ export default function buildQuery(formData: StratumBarFormData): QueryContext {
     const candidateMetrics = [...rawMetrics];
     if (resolveComparisonMode(fd.time_comparison_mode) === 'dual_metric' && fd.comparison_metric) {
       candidateMetrics.push(fd.comparison_metric);
-    }
-    if (target_metric) {
-      candidateMetrics.push(target_metric);
     }
     ensureIsArray(secondary_metrics).forEach(sm => {
       if (sm) {

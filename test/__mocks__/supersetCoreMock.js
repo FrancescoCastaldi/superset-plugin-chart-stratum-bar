@@ -1,7 +1,13 @@
 module.exports = {
   getNumberFormatter: (format) => (val) => {
     if (val === null || val === undefined) return '';
-    if (typeof val === 'number') return val.toLocaleString('en-US');
+    if (typeof val === 'number') {
+      // The formats the plugin offers, written as d3 does (en-US separators)
+      if (format === '.2%') return `${(val * 100).toFixed(2)}%`;
+      if (format === ',.2f') return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (format === ',.1f') return val.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      return val.toLocaleString('en-US');
+    }
     return String(val);
   },
   ensureIsArray: (val) => (val ? (Array.isArray(val) ? val : [val]) : []),

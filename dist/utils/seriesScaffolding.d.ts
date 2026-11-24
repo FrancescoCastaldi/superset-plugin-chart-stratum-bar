@@ -31,7 +31,7 @@ export declare function getBenchmarkLabel(benchmark: BenchmarkConfig, position: 
     padding: number[];
 };
 /** markLine data item for the dashed "// Axis cut" cutoff of an active axis break. */
-export declare function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff: number): any;
+export declare function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff: number, formatCutoff?: (v: number) => string): any;
 export interface SmartAnnotationStyle {
     symbolSize: number;
     fontSize: number;
@@ -66,8 +66,8 @@ export declare function getSmartAnnotationMarkPoint(baseColor: string, isDark: b
         name: string;
     }[];
 };
-/** Value label of line series: percentage for `.2%` secondary axes, Italian locale otherwise. */
-export declare function formatLineSeriesValue(value: any, yAxis2Format?: string): string;
+/** Value label of line series: the format of the secondary axis, Italian numbers otherwise. */
+export declare function formatLineSeriesValue(value: any, yAxis2Format?: string, formatTime?: (seconds: number) => string): string;
 export interface LineSeriesOptions {
     name: string;
     data: any[];
@@ -77,6 +77,8 @@ export interface LineSeriesOptions {
     isDark: boolean;
     showValue: boolean;
     yAxis2Format?: string;
+    /** Writes the values as durations, for the lines of a Time field */
+    formatTime?: (seconds: number) => string;
     lineWidth: number;
     areaGradient: boolean;
     /** Alpha of the glow under the line stroke. */

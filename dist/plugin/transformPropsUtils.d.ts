@@ -10,5 +10,5 @@ export declare function resolveDimensions(fd: StratumBarFormData, sampleRow: Rec
     actualBreakdownKey: string | undefined;
     secondaryDimName: string | undefined;
 };
-export declare function computeBenchmark(series: StratumBarSeries[], showBenchmark: boolean, benchmarkType: string, benchmarkValue: number, formatter: (v: number) => string): BenchmarkConfig | undefined;
+export declare function computeBenchmark(series: StratumBarSeries[], showBenchmark: boolean, benchmarkType: string, benchmarkValue: number, formatter: (v: number) => string, isTime?: boolean): BenchmarkConfig | undefined;
 //# sourceMappingURL=transformPropsUtils.d.ts.map

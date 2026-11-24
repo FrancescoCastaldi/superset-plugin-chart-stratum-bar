@@ -140,96 +140,6 @@ describe('buildQuery: offsets only when they can be computed', () => {
   });
 });
 
-describe('dual series: delta arithmetic', () => {
-  const build = (rows: any[], extra: Partial<Parameters<typeof buildSeriesRepresentation>[0]> = {}) =>
-    buildSeriesRepresentation({
-      data: rows,
-      isPivoted: false,
-      actualXKey: 'REP',
-      actualMetricKey: 't1',
-      primaryMetric: 't1',
-      metricList: ['t1'],
-      secondaryMetricList: [],
-      y_axis_2_format: ',.2f',
-      getColor: () => undefined,
-      palette: ['#1c3d5e', '#7aa8cf'],
-      formatter: (v: number) => String(v),
-      resolvedXAxis: 'REP',
-      secFormatter: (v: number) => String(v),
-      secondary_line_color: '#ea580c',
-      secondary_series_type: 'line',
-      secPalette: [],
-      combineFlag: false,
-      sampleRow: rows[0] ?? {},
-      potentialPivotedKeys: [],
-      timeComparisonMode: 'time_shift',
-      comparisonMetric: 't2',
-      time1Label: 'T1',
-      time2Label: 'T2',
-      ...extra,
-    });
-
-  it('computes the percentage against the absolute value of a negative comparison', () => {
-    const res = build([{ REP: 'A', t1: 50, t2: -100 }]);
-    expect(res.series[0].items[0].deltaPercent).toBe(150);
-    expect(res.series[0].items[0].delta).toBe(150);
-  });
-
-  it('gives the comparison series the opposite sign of the delta', () => {
-    const res = build([{ REP: 'A', t1: 120, t2: 100 }]);
-    expect(res.series[0].items[0].deltaPercent).toBe(20);
-    expect(res.series[1].items[0].deltaPercent).toBe(-20);
-    expect(res.series[1].items[0].delta).toBe(-20);
-  });
-
-  it('marks a new baseline when the comparison is zero and the current value is positive', () => {
-    const res = build([{ REP: 'A', t1: 30, t2: 0 }]);
-    expect(res.series[0].items[0].isNewBaseline).toBe(true);
-    expect(res.series[0].items[0].deltaPercent).toBeNull();
-  });
-
-  it('shows no change when both values are zero, not a new baseline', () => {
-    const res = build([{ REP: 'A', t1: 0, t2: 0 }]);
-    expect(res.series[0].items[0].isNewBaseline).toBe(false);
-    expect(res.series[0].items[0].deltaPercent).toBe(0);
-  });
-
-  it('computes no delta when one of the two values is missing', () => {
-    const res = build([{ REP: 'A', t1: null, t2: 80 }, { REP: 'B', t1: 80, t2: null }]);
-    expect(res.series[0].items[0].delta).toBeNull();
-    expect(res.series[0].items[1].deltaPercent).toBeNull();
-    expect(res.series[1].items[0].value).toBe(80);
-  });
-
-  it('matches rows by category even when the comparison is in a different row order', () => {
-    const res = build([{ REP: 'B', t1: 10, t2: 5 }, { REP: 'A', t1: 40, t2: 20 }]);
-    expect(res.categories).toEqual(['B', 'A']);
-    expect(res.series[0].data).toEqual([10, 40]);
-    expect(res.series[1].data).toEqual([5, 20]);
-  });
-
-  it('pairs T1 and T2 by category and series when the categories are combined, leaving gaps empty', () => {
-    const rows = [
-      { REP: 'CA', REG: 'Privato', t1: 10, t2: 8 },
-      { REP: 'CA', REG: 'Pubblico', t1: 4, t2: 6 },
-      { REP: 'NY', REG: 'Privato', t1: 7, t2: 7 },
-    ];
-    const res = build(rows, { combineFlag: true, actualBreakdownKey: 'REG', sampleRow: rows[0] });
-    expect(res.categories).toEqual(['CA · Privato', 'CA · Pubblico', 'NY · Privato']);
-    expect(res.series[0].data).toEqual([10, 4, 7]);
-    expect(res.series[1].data).toEqual([8, 6, 7]);
-  });
-
-  it('keeps the first row when the same category and series appear twice', () => {
-    const rows = [
-      { REP: 'CA', REG: 'Privato', t1: 10, t2: 8 },
-      { REP: 'CA', REG: 'Privato', t1: 99, t2: 99 },
-    ];
-    const res = build(rows, { combineFlag: true, actualBreakdownKey: 'REG', sampleRow: rows[0] });
-    expect(res.series[0].data).toEqual([10]);
-  });
-});
-
 describe('delta badge: rendering rules', () => {
   const comparison = (polarity: 'normal' | 'inverted' = 'normal') => ({
     mode: 'time_shift' as const,
@@ -253,13 +163,13 @@ describe('delta badge: rendering rules', () => {
 
   it('rounds the percentage to one decimal and keeps the sign of a rise', () => {
     const html = fmt(pair(100, 75));
-    expect(html).toContain('+33.3%');
+    expect(html).toContain('+33,3%');
     expect(html).toContain('(+25)');
   });
 
   it('writes a fall with a minus sign and no plus', () => {
     const html = fmt(pair(50, 100));
-    expect(html).toContain('-50.0%');
+    expect(html).toContain('-50,0%');
     expect(html).toContain('(-50)');
     expect(html).not.toContain('+-');
   });

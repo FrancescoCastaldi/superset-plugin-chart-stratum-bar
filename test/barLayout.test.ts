@@ -8,7 +8,7 @@ import {
 import { StratumBarSeries } from '../src/types';
 
 function s(name: string, data: (number | null)[], yAxisIndex = 0): StratumBarSeries {
-  return { name, key: name, data, items: [], yAxisIndex };
+  return { name, key: name, data, yAxisIndex };
 }
 
 const noBreak = calculateAxisBreak([], false, 0, { enabled: false });

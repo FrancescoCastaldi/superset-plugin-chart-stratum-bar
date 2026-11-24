@@ -11,7 +11,7 @@ const TIME_TYPE = /^(time(\(\d+\))?( with(out)? time zone)?|timetz|interval.*)$/
 /** Names that say a metric is a duration */
 const DURATION_NAME = /(^|[^a-z])(tempo|tempi|durata|attesa|lead ?time|leadtime|wait(ing)?|duration|latency|elapsed)([^a-z]|$)/i;
 
-const METRIC_CONTROLS = ['metrics', 'metric', 'secondary_metrics', 'comparison_metric', 'target_metric'];
+const METRIC_CONTROLS = ['metrics', 'metric', 'secondary_metrics', 'comparison_metric'];
 
 const text = (v: unknown): string => (typeof v === 'string' ? v : '');
 

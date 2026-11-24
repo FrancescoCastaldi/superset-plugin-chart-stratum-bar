@@ -50,7 +50,7 @@
 - **Modern 2D Styling**: Configurable corner radii (`barBorderRadius`), vertical and horizontal color gradients, and optional full-height track background guides.
 
 ### 3. 🎯 Benchmark Targets & Percentage Variance (Delta %)
-- **Dynamic Reference Lines**: Configure target benchmarks from a fixed numeric value, dynamic statistical calculations (**Average** or **Median** across current series), or a dedicated **Target Metric** column from your SQL query.
+- **Dynamic Reference Lines**: Configure target benchmarks from a fixed numeric value, dynamic statistical calculations (**Average** or **Median** across current series).
 - **Smart Delta % Badges**: Automatic mathematical evaluation of percentage deviation `((Value - Target) / Target) * 100` displayed directly in tooltips and bar labels.
 - **Configurable Variance Polarity**:
  - *Normal ("Higher is Better")*: Positive gains are highlighted in green; drops appear in red.
@@ -133,14 +133,14 @@ superset-plugin-chart-stratum-bar/
 │   ├── plugin/
 │   │   ├── index.ts                # ChartPlugin registration & metadata
 │   │   ├── buildQuery.ts           # Superset query builder
-│   │   ├── controlPanel.tsx        # Explore UI form controls
+│   │   ├── controlPanel/           # Explore UI form controls, one file per section
 │   │   └── transformProps.ts       # Series aggregation, 3D math & delta calculation
 │   ├── components/
 │   │   ├── StratumBar.tsx          # Main React visualization component
 │   │   └── StratumBarToolbar.tsx   # Runtime interactive floating toolbar
 │   ├── utils/
 │   │   ├── geometry3d.ts           # 3D isometric polygon computation
-│   │   └── benchmark.ts            # Target metrics & variance calculations
+│   │   └── numberFormat.ts         # Italian numbers: 1.234,56 and 7,03
 │   └── images/
 │       ├── thumbnail.png           # Light chart picker thumbnail
 │       ├── thumbnail-dark.png      # Dark chart picker thumbnail
@@ -222,7 +222,6 @@ Open `http://localhost:8088`, create a new chart, and select **StratumBar**!
 | **Query Configuration** | `x_axis` | X-Axis / Category Dimension | Select | N/A | Primary category dimension (e.g., `Department`, `Channel`, `Month`). |
 | | `groupby` | Breakdown Dimension (Series) | Multi-Select | N/A | Secondary dimension to break bars into series (e.g., `Regime`, `Tier`). |
 | | `metrics` | Metrics | Metrics | N/A | Quantitative metrics to measure bar height. |
-| | `target_metric` | Target / Benchmark Metric | Metric | N/A | Dynamic metric providing individual target benchmark values per category. |
 | **3D Isometric Options** | `viewMode` | Default View Mode | Select | `3d` | Initial mode: `3d` (Isometric Volumetric) or `2d` (Modern Curved). |
 | | `barShape3D` | 3D Bar Shape | Select | `prism` | Geometry: `prism` (Rectangular Prism) or `cylinder` (Cylindrical). |
 | | `depth3D` | 3D Depth (px) | Slider | `20` | Isometric extrusion depth in pixels (range: 5px – 50px). |
@@ -241,7 +240,7 @@ Open `http://localhost:8088`, create a new chart, and select **StratumBar**!
 | | `time_fraction_digits` | Duration decimals | Select | `0` | Decimals of the seconds (0 to 3). |
 | | `color_scheme` | Color Scheme | Palette | `supersetColors` | Color palette for bars and series. |
 | **Benchmark & Delta %** | `showBenchmark` | Show Benchmark Line | Checkbox | `false` | Draws highlighted target benchmark reference line across the chart. |
-| | `benchmarkType` | Benchmark Type | Select | `fixed_value` | Calculation mode: `fixed_value`, `average`, `median`, or `target_metric`. |
+| | `benchmarkType` | Benchmark Type | Select | `fixed_value` | Calculation mode: `fixed_value`, `average` or `median`. |
 | | `benchmarkValue` | Fixed Benchmark Value | Text | `100` | Target value when Benchmark Calculation is set to `fixed_value`. |
 | | `showDeltaBadge` | Show Delta % Badges | Checkbox | `true` | Computes and displays percentage variance badges against benchmark. |
 | | `deltaPolarity` | Delta Polarity | Select | `normal` | `normal` (green = positive) or `inverted` (*"Lower is Better"*, e.g., wait times/costs). |

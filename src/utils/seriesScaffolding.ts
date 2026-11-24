@@ -1,5 +1,6 @@
 import { BenchmarkConfig } from '../types';
 import { hexToRgba } from './colors';
+import { formatNumber, numberFormatter } from './numberFormat';
 
 /**
  * Building blocks shared by the 2D and 3D renderers' series loops. Each
@@ -29,7 +30,7 @@ export function formatBenchmarkLabel(benchmark: BenchmarkConfig): string {
   if (benchmark.display !== undefined) {
     return benchmark.label.includes(benchmark.display) ? benchmark.label : `${benchmark.label}: ${benchmark.display}`;
   }
-  return `${benchmark.label}: ${benchmark.value.toLocaleString('en-US')}`;
+  return `${benchmark.label}: ${formatNumber(benchmark.value)}`;
 }
 
 export function getBenchmarkLineStyle() {
@@ -67,7 +68,7 @@ export function getAxisBreakCutLine(isVertical: boolean, isDark: boolean, cutoff
   };
   item.label = {
     position: 'insideEndTop',
-    formatter: `// Axis cut: ${formatCutoff ? formatCutoff(cutoff) : cutoff.toLocaleString('en-US')}`,
+    formatter: `// Axis cut: ${formatCutoff ? formatCutoff(cutoff) : formatNumber(cutoff)}`,
     color: isDark ? '#d8b4fe' : '#7e22ce',
     fontSize: 10,
     fontWeight: 600,
@@ -135,14 +136,12 @@ export function getSmartAnnotationMarkPoint(baseColor: string, isDark: boolean, 
   };
 }
 
-/** Value label of line series: percentage for `.2%` secondary axes, Italian locale otherwise. */
+/** Value label of line series: the format of the secondary axis, Italian numbers otherwise. */
 export function formatLineSeriesValue(value: any, yAxis2Format?: string, formatTime?: (seconds: number) => string): string {
   if (value === null || value === undefined) return '';
   if (formatTime && typeof value === 'number') return formatTime(value);
-  if (yAxis2Format === '.2%') {
-    return `${(Number(value) * 100).toFixed(1)}%`;
-  }
-  return typeof value === 'number' ? value.toLocaleString('en-US') : String(value);
+  if (typeof value !== 'number') return String(value);
+  return yAxis2Format ? numberFormatter(yAxis2Format)(value) : formatNumber(value);
 }
 
 export interface LineSeriesOptions {

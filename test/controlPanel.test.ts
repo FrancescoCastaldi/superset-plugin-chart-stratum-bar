@@ -137,7 +137,6 @@ describe('StratumBar controlPanel configuration (R3)', () => {
       'showBenchmark',
       'benchmarkType',
       'benchmarkValue',
-      'target_metric',
       'showDeltaBadge',
       'deltaPolarity',
       'enable_axis_break',

@@ -140,7 +140,6 @@ describe('StratumBar with Time metrics', () => {
     expect(props.series[0].data[0]).toBeCloseTo(774.425, 6);
     expect(props.series[2].data[1]).toBeCloseTo(1116.022, 6);
     expect(props.series.every(s => s.valueKind === 'time')).toBe(true);
-    expect(props.series[0].items[0].formattedValue).toBe('12:54');
     expect(props.timeFormat?.referenceSeconds).toBeCloseTo(1116.022, 6);
   });
 
@@ -170,10 +169,10 @@ describe('StratumBar with Time metrics', () => {
   });
 
   it('follows the display format and the decimals chosen', () => {
-    const props = build({ time_display_format: 'minutes', time_fraction_digits: 1 });
-    expect(props.series[0].items[0].formattedValue).toBe('12,9 min');
-    const hms = build({ time_display_format: 'hms', time_fraction_digits: 3 });
-    expect(hms.series[0].items[0].formattedValue).toBe('0:12:54.425');
+    const barLabel = (props: ReturnType<typeof build>) =>
+      (get2DBarOption(props) as any).series[0].label.formatter({ value: 774.425, data: { originalVal: 774.425 } });
+    expect(barLabel(build({ time_display_format: 'minutes', time_fraction_digits: 1 }))).toBe('12,9 min');
+    expect(barLabel(build({ time_display_format: 'hms', time_fraction_digits: 3 }))).toBe('0:12:54.425');
   });
 
   it('writes a fixed benchmark in seconds as a duration', () => {
@@ -211,7 +210,7 @@ describe('StratumBar with Time metrics', () => {
     expect(props.series[0].valueKind).toBeUndefined();
     const option: any = get2DBarOption(props);
     expect(option.yAxis.interval).toBeUndefined();
-    expect(option.yAxis.axisLabel.formatter(1200)).toBe('1.2k');
+    expect(option.yAxis.axisLabel.formatter(1200)).toBe('1,2k');
   });
 
   it('writes the difference between two periods as a duration in the tooltip', () => {
@@ -225,6 +224,6 @@ describe('StratumBar with Time metrics', () => {
     ]);
     expect(html).toContain('15:00');
     expect(html).toContain('10:00');
-    expect(html).toContain('+50.0% (+05:00)');
+    expect(html).toContain('+50,0% (+05:00)');
   });
 });

@@ -1,5 +1,6 @@
 import { ComparisonInfo, StratumBarSeries } from '../types';
 import { comparisonTexts } from './comparison';
+import { formatCompact, formatNumber, formatPercent, numberFormatter } from './numberFormat';
 import { formatDuration, timeAxisSettings, TimeFormatOptions } from './timeValues';
 
 export function getCategoryAxisConfig(categories: string[], isVertical: boolean, isDark: boolean, axisTitle?: string) {
@@ -46,11 +47,7 @@ export function getValueAxisConfig(
     axisLabel: {
       color: isDark ? '#94a3b8' : '#6b7280',
       fontSize: 11,
-      formatter: time ? time.formatter : (val: number) => {
-        if (Math.abs(val) >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
-        if (Math.abs(val) >= 1_000) return (val / 1_000).toFixed(1) + 'k';
-        return String(val);
-      },
+      formatter: time ? time.formatter : formatCompact,
     },
     splitLine: { lineStyle: { color: isDark ? '#1e293b' : '#e5e7eb', type: 'dashed' as const } },
     name: axisTitle,
@@ -76,14 +73,7 @@ export function getSecondaryValueAxisConfig(
       color: secondaryLineColor,
       fontWeight: 600,
       fontSize: 11,
-      formatter: time ? time.formatter : (val: number) => {
-        if (yAxis2Format === '.2%') {
-          return `${(val * 100).toFixed(1)}%`;
-        }
-        if (Math.abs(val) >= 1_000_000) return (val / 1_000_000).toFixed(1) + 'M';
-        if (Math.abs(val) >= 1_000) return (val / 1_000).toFixed(1) + 'k';
-        return Number(val.toFixed(2)).toLocaleString('en-US');
-      },
+      formatter: time ? time.formatter : (val: number) => (yAxis2Format === '.2%' ? formatPercent(val) : formatCompact(val)),
     },
     splitLine: { show: false },
     name: yAxis2Title || '',
@@ -129,6 +119,8 @@ export function getTooltipFormatter(
   comparison?: ComparisonInfo,
   /** Series of Time fields: their values are written as durations */
   time?: { options: TimeFormatOptions; seriesNames: string[] },
+  /** Deviation from the threshold in the tooltip: shown or not, and which direction is good news */
+  benchmarkDelta: { show: boolean; polarity: 'normal' | 'inverted' } = { show: true, polarity: 'normal' },
 ) {
   const isTimeSeries = (name: string) => Boolean(time && time.seriesNames.includes(name));
   const durationText = (seconds: number) => formatDuration(seconds, time?.options);
@@ -155,9 +147,9 @@ export function getTooltipFormatter(
       const isSec = it.seriesName === yAxis2Title || (it.seriesIndex != null && it.seriesIndex === items.length - 1 && secondaryLineColor !== undefined) || it.seriesType === 'line';
       const formatted = time && isTimeSeries(it.seriesName) && typeof val === 'number'
         ? durationText(val)
-        : yAxis2Format === '.2%' && isSec && typeof val === 'number'
-        ? `${(val * 100).toFixed(1)}%`
-        : (typeof val === 'number' ? val.toLocaleString('en-US') : (val !== null && val !== undefined ? String(val) : (is3D ? '-' : 'N/D')));
+        : typeof val === 'number'
+        ? (isSec && yAxis2Format ? numberFormatter(yAxis2Format)(val) : formatNumber(val))
+        : (val !== null && val !== undefined ? String(val) : (is3D ? '-' : 'N/D'));
       
       const defaultColor = colorScheme[(it.seriesIndex || 0) % colorScheme.length] || '#38bdf8';
       const color = isSec && secondaryLineColor ? secondaryLineColor : (it.color && typeof it.color === 'string' ? it.color : (it.color?.colorStops?.[0]?.color || defaultColor));
@@ -172,15 +164,17 @@ export function getTooltipFormatter(
         </div>
       `;
 
-      if (showBenchmark && benchmark && typeof benchmark.value === 'number' && typeof val === 'number' && (it.seriesIndex === 0 || !isSec)) {
+      if (showBenchmark && benchmarkDelta.show && benchmark && typeof benchmark.value === 'number' && typeof val === 'number' && (it.seriesIndex === 0 || !isSec)) {
         const delta = val - benchmark.value;
         const deltaPct = benchmark.value !== 0 ? (delta / benchmark.value) * 100 : 0;
         const isPositive = delta >= 0;
-        const badgeColor = isPositive ? '#10b981' : '#ef4444';
+        // Inverted polarity: staying above the threshold is bad news (waiting times, costs)
+        const isGood = benchmarkDelta.polarity === 'inverted' ? !isPositive : isPositive;
+        const badgeColor = isGood ? '#10b981' : '#ef4444';
         const sign = isPositive ? '+' : '';
         html += `
           <div style="font-size: 11px; color: ${badgeColor}; text-align: right; margin-top: 2px;">
-            vs Target: <strong>${sign}${deltaPct.toFixed(1)}%</strong> (${sign}${isTimeSeries(it.seriesName) ? durationText(Math.abs(delta)) : delta.toLocaleString('en-US')})
+            vs Target: <strong>${sign}${formatNumber(deltaPct, 1, 1)}%</strong> (${sign}${isTimeSeries(it.seriesName) ? durationText(Math.abs(delta)) : formatNumber(delta)})
           </div>
         `;
       }
@@ -204,13 +198,12 @@ export function getTooltipFormatter(
         const isGood = comparison.polarity === 'inverted' ? !isUp : isUp;
         const badgeBg = isNew ? '#64748B' : isGood ? '#2E7D32' : '#D32F2F';
         const sign = isUp ? '+' : '';
-        const numberLocale = comparison.locale === 'en' ? 'en-US' : 'it-IT';
         const deltaAmount = isTimeSeries(items[0].seriesName)
           ? `${delta < 0 ? '-' : sign}${durationText(Math.abs(delta))}`
-          : `${sign}${delta.toLocaleString(numberLocale)}`;
+          : `${sign}${formatNumber(delta)}`;
         const deltaText = isNew
           ? t.newBaseline
-          : `${sign}${deltaPct.toFixed(1)}% (${deltaAmount})`;
+          : `${sign}${formatNumber(deltaPct, 1, 1)}% (${deltaAmount})`;
 
         html += `
           <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
